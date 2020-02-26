@@ -1,0 +1,8 @@
+site_name: herald
+repo_url: https://github.com/will-rowe/herald
+site_author: Will Rowe
+nav:
+  - Home: index.md
+  - Installation: installation.md
+  - Developer notes: developer.md
+theme: readthedocs

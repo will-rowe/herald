@@ -1,0 +1,348 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8">
+    <title>Herald</title>
+    <link rel='icon' href='assets/icons/favicon.png' type='image/x-icon' />
+
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="assets/css/fontawesome.min.css">
+
+    <!-- CSS Reset -->
+    <link rel="stylesheet" href="assets/css/normalize.css">
+
+    <!-- Milligram CSS minified -->
+    <link rel="stylesheet" href="assets/css/milligram.min.css">
+
+    <!-- Main Styles -->
+    <link rel="stylesheet" href="assets/css/styles.css">
+
+    <!-- Datatables -->
+    <link rel="stylesheet" href="assets/css/datatables.min.css">
+
+    <!-- Mesages -->
+    <link rel="stylesheet" href="assets/css/overhang.min.css">
+
+    <!--[if lt IE 9]>
+	<script src="http://html5shim.googlecode.com/svn/trunk/html5.js"></script>
+	<![endif]-->
+</head>
+
+<body onload=start()>
+
+    <!--SAMPLE MODAL-->
+    <div id="sampleModal" class="modal">
+        <div class="modal-content">
+            <span class="modal-close">&times;</span>
+            <h1 id="sampleModal_samplename"></h1>
+            <p class="text-large">Details:</p>
+            <pre id=sampleModal_content></pre>
+            <div class="clearfix"></div>
+            <hr class="m-0 mb-2" />
+            <button class="button" id=sampleModal_delete>delete</button>
+        </div>
+    </div>
+
+    <!--NAVBAR-->
+    <div class="navbar">
+        <div class="row">
+
+            <div class="column column-30 col-site-title">
+                <a href="#" class="site-title float-left">Herald</a>
+            </div>
+
+            <div class="icon">
+                <i id="refreshPage" class="fas fa-redo fa-1x"><span class="tooltiptext">Check progress and refresh the
+                        app</span></i>
+            </div>
+
+            <div class="svg-div" id="logoResize">
+                <div class="svg-logo"></div>
+            </div>
+
+            <div class="icon">
+                <i class="fa fa-envelope fa-1x"></i>
+            </div>
+
+            <div class="column column-30">
+                <div class="user-section">
+                    <a href="#">
+                        <div class="username">
+                            <h4 id="dateStamp">Today, Feb | 23:00</h4>
+                            <p id="refreshStamp">na</p>
+                        </div>
+                    </a>
+                </div>
+            </div>
+
+        </div>
+    </div>
+    <div class="row">
+
+        <!--SIDEBAR-->
+        <div id="sidebar" class="column">
+            <h5>Navigation</h5>
+            <ul>
+                <li><a href="#"><em class="fa fa-home"></em> Home</a></li>
+                <li><a href="#overview"><em class="far fa-chart-bar"></em> Overview</a></li>
+                <li><a href="#submission"><em class="far fa-edit"></em> Submission</a></li>
+                <li><a href="#samplesheet"><em class="fa fa-table"></em> Sample Sheet</a></li>
+                <li><a href="#settings"><em class="fa fa-cogs"></em> Settings</a></li>
+            </ul>
+        </div>
+
+        <!--MAIN-->
+        <section id="main-content" class="column column-offset-20">
+
+            <!--BANNER-->
+            <div class="row grid-responsive">
+                <div class="column page-heading">
+                    <div class="large-card">
+                        <h1>Hey there!</h1>
+                        <p class="text-large">Welcome to Herald or some other blurb</p>
+                        <p>Announce your samples</p>
+                        <hr>
+                        <div class="alert"><i class="fas fa-bullhorn"></i> <span id="banner_messageBox">placeholder</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!--OVERVIEW-->
+            <h5>Overview</h5>
+            <a class="anchor" name="overview"></a>
+            <div class="row grid-responsive">
+
+                <!--staging-->
+                <div class="column column-50">
+                    <div class="card">
+                        <div class="card-title">
+                            <h2>Staging</h2>
+                        </div>
+                        <div class="card-block">
+                            <!--db count and db location-->
+                            <div class="mt-1">
+                                <div class="badge background-primary float-left" id="staging_sampleCount">0</div>
+                                <div class="float-left ml-1">
+                                    <p class="m-0"><strong>Samples</strong> <span class="text-muted">in the
+                                            database</span></p>
+                                    <p class="text-small text-muted" id="staging_dbLocation">na</p>
+                                </div>
+                                <div class="clearfix"></div>
+                                <hr class="m-0 mb-2" />
+                            </div>
+                            <!--tagged samples and total number of proccesses-->
+                            <div class="mt-1">
+                                <div class="badge background-primary float-left" id="staging_taggedCount">0</div>
+                                <div class="float-left ml-1">
+                                    <p class="m-0"><strong>Tagged</strong> <span class="text-muted">samples</span></p>
+                                    <p class="text-small text-muted" id="staging_processCount">x processes in total</p>
+                                </div>
+                                <div class="clearfix"></div>
+                                <hr class="m-0 mb-2" />
+                            </div>
+                            <!--announce and unstage buttons-->
+                            <div class="mt-1">
+                                <button class="button" id="staging_announce">announce</button>
+                                <button class="button button-outline" id="staging_unstage">unstage</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!--announcements-->
+                <div class="column column-50">
+                    <div class="card">
+                        <div class="card-title">
+                            <h2>Announcements</h2>
+                        </div>
+                        <div class="card-block">
+                            <div class="canvas-wrapper">
+                                <canvas class="chart" id="pie-chart" height="auto" width="auto"></canvas>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="row grid-responsive mt-1">
+
+                <!--status-->
+                <div class="column column-50">
+                    <div class="card">
+                        <div class="card-title">
+                            <h2 class="float-left">Status</h2>
+                            <div class="clearfix"></div>
+                        </div>
+                        <div class="card-block">
+
+                            <div class="mt-1">
+                                <div class="float-left" id="status_network"></div>
+                                <div class="float-left ml-1">
+                                    <p class="m-0"><strong>Network</strong> <span class="text-muted">connection</span>
+                                    </p>
+                                    <p class="text-small text-muted">x minutes ago</p>
+                                </div>
+                                <div class="clearfix"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!--tasks-->
+                <div class="column column-50">
+                    <div class="card">
+                        <div class="card-title">
+                            <h2 class="float-left">Tasks</h2>
+                            <div class="badge float-right">3 In Progress</div>
+                            <!--<div class="badge background-success float-right mr-1">5 Complete</div>-->
+                            <div class="clearfix"></div>
+                        </div>
+                        <div class="card-block progress-bars">
+                            <h5 class="float-left mt-1">Pipeline A</h5>
+                            <p class="float-right text-small text-muted mt-1">25%</p>
+                            <div class="clearfix"></div>
+                            <div class="progress-bar">
+                                <div class="progress background-primary" style="width: 25%;"></div>
+                            </div>
+                            <h5 class="float-left mt-1">Pipeline B</h5>
+                            <p class="float-right text-small text-muted mt-1">50%</p>
+                            <div class="clearfix"></div>
+                            <div class="progress-bar">
+                                <div class="progress background-primary" style="width: 50%;"></div>
+                            </div>
+                            <h5 class="float-left mt-1">Upload</h5>
+                            <p class="float-right text-small text-muted mt-1">75%</p>
+                            <div class="clearfix"></div>
+                            <div class="progress-bar">
+                                <div class="progress background-primary" style="width: 75%;"></div>
+                            </div>
+                            <h5 class="float-left mt-1">Sequencing</h5>
+                            <p class="float-right text-small text-muted mt-1">100%</p>
+                            <div class="clearfix"></div>
+                            <div class="progress-bar">
+                                <div class="progress background-primary" style="width: 100%;"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!--SUBMISSION-->
+            <h5 class="mt-2">Submission</h5>
+            <a class="anchor" name="submission"></a>
+            <div class="row grid-responsive">
+                <div class="column ">
+                    <div class="card">
+                        <div class="card-title">
+                            <h3>Add a sample to the database</h3>
+                        </div>
+                        <div class="card-block">
+                            <form id="addSampleForm">
+                                <fieldset>
+                                    <label for="nameField">Label</label>
+                                    <input type="text" placeholder="sample xxx" id="formLabel_sampleLabel" required>
+                                    <label for="ageRangeField">Barcode</label>
+                                    <select id="formLabel_sampleBarcode" required>
+                                        <option value="0">0</option>
+                                        <option value="1">1</option>
+                                        <option value="2">2</option>
+                                        <option value="3">3</option>
+                                    </select>
+                                    <label for="nameField">Tags</label>
+                                    <input type="checkbox" id="formLabel_sequenceTag" value="sequence">
+                                    <label class="label-inline" for="formLabel_sequenceTag">Sequence sample</label>
+                                    <label for="commentField">Comment</label>
+                                    <textarea placeholder="insert any additional information" id="formLabel_sampleComment"></textarea>
+                                    <!--
+                                    <div class="float-right">
+                                        <input type="checkbox" id="confirmField">
+                                        <label class="label-inline" for="confirmField">Send a copy to yourself</label>
+                                    </div>
+                                    -->
+                                    <input class="button-primary" type="submit" value="Add">
+                                </fieldset>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!--SAMPLE SHEET-->
+            <h5 class="mt-2">Sample sheet</h5>
+            <a class="anchor" name="samplesheet"></a>
+            <div class="row grid-responsive">
+                <div class="column ">
+                    <div class="card">
+                        <div class="card-title">
+                            <h3>Current samples</h3>
+                        </div>
+                        <div class="card-block">
+                            <table id="sampleTable">
+                                <thead>
+                                    <tr>
+                                        <th>Sample Label</th>
+                                        <th></th>
+                                    </tr>
+                                </thead>
+                                <tbody id="sampleTableContent">
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!--SETTINGS-->
+            <h5 class="mt-2">Settings</h5>
+            <a class="anchor" name="settings"></a>
+            <div class="row grid-responsive">
+                <div class="column ">
+                    <div class="card">
+                        <div class="card-title">
+                            <h3>Database settings</h3>
+                        </div>
+                        <div class="card-block">
+                            <a class="button" id="wipeDatabase">wipe database</a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- end of main section -->
+            <p class="credit">&copy <a href="https://www.willrowe.net">Will Rowe</a> 2020</p>
+        </section>
+    </div>
+
+    <!--JAVASCRIPT-->
+    <!-- connect UI actions to Go functions -->
+    <script src="assets/js/main.js"></script>
+
+    <!-- jquery libs -->
+    <script src="assets/js/jquery-3.4.1.min.js"></script>
+    <script src="assets/js/jquery-ui.min.js"></script>
+    <script src="assets/js/overhang.min.js"></script>
+    <script src="assets/js/datatables.min.js"></script>
+    <script src="assets/js/chart.min.js"></script>
+
+    <!-- set up the page with the Go and JS generated data -->
+    <script>
+        $(document).ready(() => {
+            fullPageRender(true)
+        })
+    </script>
+
+    <!-- resize logo on scroll -->
+    <script>
+        $(window).scroll(function() {
+            if ($(this).scrollTop() > 250) {
+                document.getElementById("logoResize").classList.add("sticky");
+            } else {
+                document.getElementById("logoResize").classList.remove("sticky");
+            }
+        });
+    </script>
+
+</body>
+
+</html>

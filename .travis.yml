@@ -1,0 +1,26 @@
+sudo: required
+dist: precise
+
+os:
+  - linux
+  - osx
+  - windows
+
+language: go
+go:
+  - tip
+
+matrix:
+  include:
+    - os: osx
+      install:
+        - go get -d -t -v ./...
+        - cd build && sh build-osx.sh
+    - os: linux
+      install:
+        - go get -d -t -v ./...
+        - cd build && sh build-linux.sh
+    - os: windows
+      install:
+        - go get -d -t -v ./...
+        - cd build && sh build-windows.bat

@@ -3,7 +3,7 @@
     <h3>announce your samples</h3>
     <hr>
     <a href="https://travis-ci.org/will-rowe/herald"><img src="https://travis-ci.org/will-rowe/herald.svg?branch=master" alt="travis"></a>
-    <a href='http://herald.readthedocs.io/en/latest/?badge=latest'><img src='https://readthedocs.org/projects/herald/badge/?version=latest' alt='Documentation Status' /></a>
+    <a href='http://herald-docs.readthedocs.io/en/latest/?badge=latest'><img src='https://readthedocs.org/projects/herald/badge/?version=latest' alt='Documentation Status' /></a>
     <a href="https://goreportcard.com/report/github.com/will-rowe/herald"><img src="https://goreportcard.com/badge/github.com/will-rowe/herald" alt="reportcard"></a>
     <a href="https://github.com/will-rowe/herald/blob/master/LICENSE"><img src="https://img.shields.io/badge/license-MIT-orange.svg" alt="License"></a>
 </div>
@@ -49,7 +49,7 @@ sh build-osx.sh
 
 ## Documentation
 
-Docs are available via [read the docs](http://herald.readthedocs.io/en/latest/?badge=latest) and are being written during development.
+Docs are available via [read the docs](http://herald-docs.readthedocs.io/en/latest/?badge=latest) and are being written during development.
 
 ## Issues
 

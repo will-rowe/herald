@@ -152,7 +152,7 @@ func (storage *Storage) GetSampleJSONDump(sampleLabel string) (string, error) {
 	buf := &bytes.Buffer{}
 	jsonMarshaller := jsonpb.Marshaler{
 		EnumsAsInts:  false, // Whether to render enum values as integers, as opposed to string values.
-		EmitDefaults: true,  // Whether to render fields with zero values
+		EmitDefaults: false, // Whether to render fields with zero values
 		Indent:       "\t",  // A string to indent each level by
 		OrigName:     false, // Whether to use the original (.proto) name for fields
 	}

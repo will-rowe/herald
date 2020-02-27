@@ -25,8 +25,19 @@ message Sample {
 
     google.protobuf.Timestamp created = 1;
     string label = 2;
-    int32 barcode = 3;
-    repeated Comment history = 4;
-    Tags tags = 5;
+    Status status = 3;
+    int32 barcode = 4;
+    repeated Comment history = 5;
+    Tags tags = 6;
 }
 
+
+/*
+    Status is used to determine if the sample is untagged, tagged or in the announcment queue
+*/
+enum Status {
+    UN_INITIALIZED = 0;
+    untagged = 1;
+    tagged = 2;
+    announced = 3;
+}

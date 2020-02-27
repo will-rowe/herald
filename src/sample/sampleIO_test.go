@@ -52,3 +52,25 @@ func TestTagging(t *testing.T) {
 		t.Fatal("AddTags method returned error when called with a recognised tag (sequence)")
 	}
 }
+
+// TestStatus tests the status assignment for a sample
+func TestStatus(t *testing.T) {
+
+	// set up a basic sample
+	test := InitSample("test", 1, "comment line")
+
+	// check the status is untagged
+	if test.GetStatus().String() != "untagged" {
+		t.Fatal("initialised sample should have status: untagged")
+	}
+
+	// tag it with a recognised tag
+	if err := test.AddTags([]string{"sequence"}); err != nil {
+		t.Fatal("AddTags method returned error when called with a recognised tag (sequence)")
+	}
+
+	// check the status is tagged
+	if test.GetStatus().String() != "tagged" {
+		t.Fatal("tagged sample should have status: tagged")
+	}
+}

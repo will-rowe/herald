@@ -2,6 +2,7 @@
 package herald
 
 import (
+	"fmt"
 	"sync"
 
 	"github.com/will-rowe/herald/src/sample"
@@ -11,14 +12,17 @@ import (
 
 // Herald is the struct for holding runtime data
 type Herald struct {
-	sync.Mutex                         // to make the UI binding thread safe
-	Service           *server.Server   // orchestrates the announcements
-	store             *storage.Storage // the key-value store for the samples
-	storeLocation     string           // where the store is located on disk
-	sampleCount       int              // the number of samples currently in the store
-	taggedSampleCount int              // the number of samples in the store that are tagged with at least one process
-	sampleLabels      []string         // used to store all the label names in memory (for JS to access)
-	taggedSamples     []*sample.Sample // tagged samples
+	sync.Mutex                  // to make the UI binding thread safe
+	service    *server.Server   // orchestrates the announcements
+	store      *storage.Storage // the key-value store for the samples
+
+	// runtime info for JS:
+	storeLocation        string   // where the store is located on disk
+	sampleCount          int      // the number of samples currently in the store
+	untaggedSampleCount  int      // the number of samples in the store that are untagged
+	taggedSampleCount    int      // the number of samples in the store that are tagged with at least one process
+	announcedSampleCount int      // the number of samples in the store that are currently being announced
+	sampleLabels         []string // used to store all the label names in memory (for JS to access)
 }
 
 // InitHerald will initiate the Herald instance
@@ -46,17 +50,23 @@ func (herald *Herald) CheckAllSamples() error {
 	herald.Lock()
 	defer herald.Unlock()
 
-	// get the count
+	// reset the runtime data
+	herald.sampleCount = 0
+	herald.untaggedSampleCount = 0
+	herald.taggedSampleCount = 0
+	herald.announcedSampleCount = 0
+
+	// get the sample count from the store
 	herald.sampleCount = herald.store.GetNumEntries()
 
 	// create the holders
 	herald.sampleLabels = make([]string, herald.sampleCount)
 
-	// range over the store keys (sample labels)
+	// range over the store key channel (sample labels)
 	i := 0
 	for label := range herald.store.GetLabels() {
 
-		// add the sample label to the slice
+		// add the sample label to the holder
 		herald.sampleLabels[i] = string(label)
 
 		// get the full sample
@@ -65,11 +75,18 @@ func (herald *Herald) CheckAllSamples() error {
 			return err
 		}
 
-		// TODO: check the sample for tags
-		// this is just a test hack to get the counters working
-		tags := sample.GetTags()
-		if tags.Sequence {
+		// check the status, update counts and refresh queues
+		// todo: refresh queues
+		status := sample.GetStatus().String()
+		switch status {
+		case "untagged":
+			herald.untaggedSampleCount++
+		case "tagged":
 			herald.taggedSampleCount++
+		case "announced":
+			herald.announcedSampleCount++
+		default:
+			return fmt.Errorf("encountered sample with unknown status (%v)", status)
 		}
 
 		i++
@@ -109,11 +126,25 @@ func (herald *Herald) GetSampleCount() int {
 	return herald.sampleCount
 }
 
+// GetUntaggedSampleCount returns the current number of samples in storage that are untagged
+func (herald *Herald) GetUntaggedSampleCount() int {
+	herald.Lock()
+	defer herald.Unlock()
+	return herald.untaggedSampleCount
+}
+
 // GetTaggedSampleCount returns the current number of samples in storage that are tagged with at least one process
 func (herald *Herald) GetTaggedSampleCount() int {
 	herald.Lock()
 	defer herald.Unlock()
 	return herald.taggedSampleCount
+}
+
+// GetAnnouncedSampleCount returns the current number of samples that have been announced
+func (herald *Herald) GetAnnouncedSampleCount() int {
+	herald.Lock()
+	defer herald.Unlock()
+	return herald.announcedSampleCount
 }
 
 // CreateSample creates a sample record, updates the runtime info and adds the record to storage
@@ -140,32 +171,61 @@ func (herald *Herald) CreateSample(label string, barcode int32, comment string, 
 	// update the runtime info (grow the label slice, tag slice etc.)
 	herald.sampleLabels = append(herald.sampleLabels, label)
 	herald.sampleCount++
+	if len(tags) != 0 {
+		herald.taggedSampleCount++
+	}
 	return nil
 }
 
-// TagSample will add a tag to a sample
-func (herald *Herald) TagSample(sampleLabel string, tags []string) error {
-	return nil
-}
-
-// DeleteSample removes a sample record from storage and updates the counts
-func (herald *Herald) DeleteSample(label string) error {
+// GetSampleStatus will check the status of a sample
+func (herald *Herald) GetSampleStatus(sampleLabel string) (string, error) {
 	herald.Lock()
 	defer herald.Unlock()
 
-	// TODO: check the sample isn't being used (has been announced)
+	// get the sample from storage
+	sample, err := herald.store.GetSample(sampleLabel)
+	if err != nil {
+		return "", err
+	}
 
-	// TODO: add delete logic (inverse of the CreateSample)
+	// return status
+	return sample.GetStatus().String(), nil
+}
 
-	if err := herald.store.DeleteSample(label); err != nil {
+// DeleteSample removes a sample record from storage and updates the counts
+func (herald *Herald) DeleteSample(sampleLabel string) error {
+	herald.Lock()
+	defer herald.Unlock()
+
+	// get the sample from storage
+	sample, err := herald.store.GetSample(sampleLabel)
+	if err != nil {
 		return err
 	}
+
+	// get the status
+	status := sample.GetStatus().String()
+
+	// prevent announced samples from being deleted
+	if status == "announced" {
+		return fmt.Errorf("can't delete sample during announcement: %v", sampleLabel)
+	}
+
+	// delete the sample from the store
+	if err := herald.store.DeleteSample(sampleLabel); err != nil {
+		return err
+	}
+
+	// update the counts
 	herald.sampleCount--
+	if status == "tagged" {
+		herald.taggedSampleCount--
+	}
 	return nil
 }
 
-// PrintSampleToString collects a sample from the database and returns a string of the sample protobuf data in JSON
-func (herald *Herald) PrintSampleToString(label string) string {
+// PrintSampleToJSONstring collects a sample from the database and returns a string of the sample protobuf data in JSON
+func (herald *Herald) PrintSampleToJSONstring(label string) string {
 	herald.Lock()
 	defer herald.Unlock()
 
@@ -175,8 +235,9 @@ func (herald *Herald) PrintSampleToString(label string) string {
 	return sampleString
 }
 
-// GetSampleLabel is used by JS to collect a sample label from the runtime list
+// GetSampleLabel is used by JS to collect a sample label from the runtime slice of sample labels
 // NOTE: this assumes the caller has already run GetSampleCount (or similar) to find the iterator range
+// TODO: add error on return too (will require re-write of JS function)
 func (herald *Herald) GetSampleLabel(iterator int) string {
 	herald.Lock()
 	defer herald.Unlock()

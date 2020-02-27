@@ -19,6 +19,7 @@ func InitSample(label string, barcode int32, comment string) *Sample {
 	sample := &Sample{
 		Created: ptypes.TimestampNow(),
 		Label:   label,
+		Status:  1,
 		Barcode: barcode,
 		History: []*Sample_Comment{},
 		Tags:    tags,
@@ -52,6 +53,8 @@ func (sample *Sample) AddTags(tags []string) error {
 	if len(tags) == 0 {
 		return fmt.Errorf("no tags provided")
 	}
+
+	// add all the tags and check for unknown tags
 	for _, tag := range tags {
 		switch tag {
 		case "sequence":
@@ -63,5 +66,8 @@ func (sample *Sample) AddTags(tags []string) error {
 			return fmt.Errorf("unrecognised tag: %v", tag)
 		}
 	}
+
+	// update the status to "tagged"
+	sample.Status = 2
 	return nil
 }

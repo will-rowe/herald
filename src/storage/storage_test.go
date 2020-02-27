@@ -74,7 +74,13 @@ func TestStorageAdd(t *testing.T) {
 	if sample.GetLabel() != sampleCopy.GetLabel() {
 		t.Fatal("retrieved sample label does not match inserted sample label")
 	}
-	t.Log(sampleStore.GetSampleDump(sample.Label))
+
+	// test a JSON dump
+	jsonDump, err := sampleStore.GetSampleJSONDump(sample.Label)
+	if err != nil {
+		t.Fatal(err)
+	}
+	t.Log(jsonDump)
 
 	// check you can delete a sample
 	if err := sampleStore.DeleteSample(sample.Label); err != nil {

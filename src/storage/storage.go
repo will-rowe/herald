@@ -2,8 +2,10 @@
 package storage
 
 import (
+	"bytes"
 	"fmt"
 
+	"github.com/golang/protobuf/jsonpb"
 	"github.com/golang/protobuf/proto"
 	"github.com/prologic/bitcask"
 
@@ -113,8 +115,8 @@ func (storage *Storage) GetSample(sampleLabel string) (*sample.Sample, error) {
 	return sample, nil
 }
 
-// GetSampleDump is a method to retrieve a sample from the bit cask and return a string dump of the protobuf message
-func (storage *Storage) GetSampleDump(sampleLabel string) (string, error) {
+// GetSampleProtoDump is a method to retrieve a sample from the bit cask and return a string dump of the protobuf message
+func (storage *Storage) GetSampleProtoDump(sampleLabel string) (string, error) {
 
 	// get the sample from the bit cask
 	data, err := storage.db.Get([]byte(sampleLabel))
@@ -129,4 +131,32 @@ func (storage *Storage) GetSampleDump(sampleLabel string) (string, error) {
 	}
 
 	return proto.MarshalTextString(sample), nil
+}
+
+// GetSampleJSONDump is a method to retrieve a sample from the bit cask and return a string dump of the protobuf message in JSON
+func (storage *Storage) GetSampleJSONDump(sampleLabel string) (string, error) {
+
+	// get the sample from the bit cask
+	data, err := storage.db.Get([]byte(sampleLabel))
+	if err != nil {
+		return "", err
+	}
+
+	// unmarshal the sample
+	sample := &sample.Sample{}
+	if err := proto.Unmarshal(data, sample); err != nil {
+		return "", err
+	}
+
+	// convert to JSON
+	buf := &bytes.Buffer{}
+	jsonMarshaller := jsonpb.Marshaler{
+		EnumsAsInts:  false, // Whether to render enum values as integers, as opposed to string values.
+		EmitDefaults: true,  // Whether to render fields with zero values
+		Indent:       "\t",  // A string to indent each level by
+		OrigName:     false, // Whether to use the original (.proto) name for fields
+	}
+	jsonMarshaller.Marshal(buf, sample)
+
+	return string(buf.Bytes()), nil
 }

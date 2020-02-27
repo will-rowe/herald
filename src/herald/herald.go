@@ -11,13 +11,14 @@ import (
 
 // Herald is the struct for holding runtime data
 type Herald struct {
-	sync.Mutex                     // to make the UI binding thread safe
-	Service       *server.Server   // orchestrates the announcements
-	store         *storage.Storage // the key-value store for the samples
-	storeLocation string           // where the store is located on disk
-	sampleCount   int              // the number of samples currently in the store
-	sampleLabels  []string         // used to store all the label names in memory (for JS to access)
-	taggedSamples []*sample.Sample // tagged samples
+	sync.Mutex                         // to make the UI binding thread safe
+	Service           *server.Server   // orchestrates the announcements
+	store             *storage.Storage // the key-value store for the samples
+	storeLocation     string           // where the store is located on disk
+	sampleCount       int              // the number of samples currently in the store
+	taggedSampleCount int              // the number of samples in the store that are tagged with at least one process
+	sampleLabels      []string         // used to store all the label names in memory (for JS to access)
+	taggedSamples     []*sample.Sample // tagged samples
 }
 
 // InitHerald will initiate the Herald instance
@@ -30,22 +31,18 @@ func InitHerald(storeLocation string) (*Herald, error) {
 		return nil, err
 	}
 
-	// create an instance
-	herald := &Herald{
+	// return an instance
+	return &Herald{
 		store:         store,
 		storeLocation: storeLocation,
-	}
-
-	// populate the instance with runtime data and return
-	herald.CheckAllSamples()
-	return herald, nil
+	}, nil
 }
 
 // CheckAllSamples makes a pass of the sample store and populates the Herald instance with data:
 // - how many samples are in the storage
 // - notes any samples with tags
 // - loads all sample labels into a slice (for JS to access)
-func (herald *Herald) CheckAllSamples() {
+func (herald *Herald) CheckAllSamples() error {
 	herald.Lock()
 	defer herald.Unlock()
 
@@ -55,13 +52,29 @@ func (herald *Herald) CheckAllSamples() {
 	// create the holders
 	herald.sampleLabels = make([]string, herald.sampleCount)
 
-	// range over the store keys
+	// range over the store keys (sample labels)
 	i := 0
 	for label := range herald.store.GetLabels() {
+
+		// add the sample label to the slice
 		herald.sampleLabels[i] = string(label)
+
+		// get the full sample
+		sample, err := herald.store.GetSample(herald.sampleLabels[i])
+		if err != nil {
+			return err
+		}
+
+		// TODO: check the sample for tags
+		// this is just a test hack to get the counters working
+		tags := sample.GetTags()
+		if tags.Sequence {
+			herald.taggedSampleCount++
+		}
+
 		i++
 	}
-	return
+	return nil
 }
 
 // Destroy will properly close down the Herald instance and sync the store to disk
@@ -94,6 +107,13 @@ func (herald *Herald) GetSampleCount() int {
 	herald.Lock()
 	defer herald.Unlock()
 	return herald.sampleCount
+}
+
+// GetTaggedSampleCount returns the current number of samples in storage that are tagged with at least one process
+func (herald *Herald) GetTaggedSampleCount() int {
+	herald.Lock()
+	defer herald.Unlock()
+	return herald.taggedSampleCount
 }
 
 // CreateSample creates a sample record, updates the runtime info and adds the record to storage
@@ -144,20 +164,21 @@ func (herald *Herald) DeleteSample(label string) error {
 	return nil
 }
 
-// GetSampleLabel is used by JS to collect a sample label from the runtime list
-func (herald *Herald) GetSampleLabel(iterator int) string {
-	herald.Lock()
-	defer herald.Unlock()
-	return herald.sampleLabels[iterator]
-}
-
-// PrintSampleToString collects a sample from the database and returns a string of the sample protobuf data
+// PrintSampleToString collects a sample from the database and returns a string of the sample protobuf data in JSON
 func (herald *Herald) PrintSampleToString(label string) string {
 	herald.Lock()
 	defer herald.Unlock()
 
-	// TODO: check the error from getSampleDump method
-	sampleString, _ := herald.store.GetSampleDump(label)
+	// TODO: check the error from GetSampleJSONDump method
+	sampleString, _ := herald.store.GetSampleJSONDump(label)
 
 	return sampleString
+}
+
+// GetSampleLabel is used by JS to collect a sample label from the runtime list
+// NOTE: this assumes the caller has already run GetSampleCount (or similar) to find the iterator range
+func (herald *Herald) GetSampleLabel(iterator int) string {
+	herald.Lock()
+	defer herald.Unlock()
+	return herald.sampleLabels[iterator]
 }

@@ -50,10 +50,3 @@ sh build-osx.sh
 ## Documentation
 
 Docs are available via [read the docs](http://herald-docs.readthedocs.io/en/latest/?badge=latest) and are being written during development.
-
-## Issues
-
-Aside from being a work in progress, a couple of things to fix asap are:
-
-- the datatables.js isn't perfect -> the callback on the delete buttons isn't right and any call to wipe will inactivate the table
-- not tested on windows or linux and there are a few issues which will need fixing; for example the hardcoded DB path

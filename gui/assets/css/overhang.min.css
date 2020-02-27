@@ -6,7 +6,27 @@
  * paul@paulkr.com
  */
 
-@import url(https://fonts.googleapis.com/css?family=Roboto);
+@font-face {
+    font-family: 'Lato';
+    src: url("../webfonts/Lato/Lato-Regular.ttf") format("truetype");
+    font-weight: 400;
+    font-style: normal;
+}
+
+@font-face {
+    font-family: 'Lato';
+    src: url("../webfonts/Lato/Lato-Italic.ttf") format("truetype");
+    font-weight: 400;
+    font-style: italic;
+}
+
+@font-face {
+    font-family: 'Lato';
+    src: url("../webfonts/Lato/Lato-Bold.ttf") format("truetype");
+    font-weight: 700;
+    font-style: normal;
+}
+
 .overhang,
 .overhang-overlay {
     position: fixed;
@@ -17,7 +37,7 @@
 
 .overhang,
 .overhang-prompt-field {
-    font-family: Roboto, sans-serif
+    font-family: Lato, sans-serif
 }
 
 .overhang-close,

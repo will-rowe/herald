@@ -40,10 +40,10 @@ window.onclick = function(event) {
     }
 }
 
-// getProtobufDump returns a stringified protobuf dump of a sample from the database
-const getProtobufDump = async function(sampleLabel) {
-    var sampleProtobufDump = `${await window.printSampleToString(sampleLabel)}`
-    return sampleProtobufDump
+// getSampleJSONdump returns a stringified protobuf dump of a sample from the database
+const getSampleJSONdump = async function(sampleLabel) {
+    var sampleJSONdump = `${await window.printSampleToJSONstring(sampleLabel)}`
+    return sampleJSONdump
 }
 
 ////////////////////////////////////////////////////////////////////
@@ -56,7 +56,7 @@ const wipeDatabase = document.getElementById('wipeDatabase')
 refreshPage.addEventListener('click', async() => {
     console.log('refreshing the app')
 
-    fullPageRender()
+    pageRefresh()
     printSuccessMsg('refreshed the app')
 })
 
@@ -66,6 +66,7 @@ wipeDatabase.addEventListener('click', async() => {
 
     // TODO: add a confirm prompt
 
+    // call the Go wipeStorage method
     try {
         await wipeStorage()
     } catch (e) {
@@ -75,7 +76,7 @@ wipeDatabase.addEventListener('click', async() => {
     }
 
     // reset the page and report success
-    fullPageRender(true)
+    fullPageRender()
     printSuccessMsg('database wiped')
 })
 
@@ -125,72 +126,71 @@ addSampleForm.addEventListener('submit', async() => {
         .row.add([elements['formLabel_sampleLabel'].value])
         .draw(true)
 
-    // reset the form, re-render the page and report success
+    // reset the form, refresh the page and report success
     addSampleForm.reset()
-    fullPageRender()
+    pageRefresh()
     printSuccessMsg('sample added')
 })
 
 ////////////////////////////////////////////////////////////////////
 // TABLES
-// clearTable will delete any table content already on the page
-const clearTable = async() => {
-    $('#sampleTable')
-        .DataTable()
-        .destroy()
-    $('#sampleTableContent').empty()
-}
+// set up the table
+var table = $('#sampleTable').DataTable({
+    columnDefs: [{
+        targets: 1,
+        data: null,
+        searchable: true,
+        orderable: true,
+        defaultContent: '<button class="button button-outline">Manage</button>'
+    }]
+})
+
+// set up the manage button
+$('#sampleTable tbody').on('click', 'button', function() {
+    var row = table.row($(this).parents('tr'))
+    var data = row.data()
+    var sampleLabel = data[0]
+    document.getElementById('sampleModal_samplename').innerHTML = sampleLabel
+    getSampleJSONdump(sampleLabel).then(sampleProtobufDump => {
+        // get the sample protobuf dump
+        document.getElementById('sampleModal_content').innerHTML =
+            '<pre>' + sampleProtobufDump + '</pre>'
+
+        // display modal
+        document.getElementById('sampleModal').style.display = 'block'
+
+        // set up delete button
+        document
+            .getElementById('sampleModal_delete')
+            .addEventListener('click', async() => {
+                console.log('deleting sample')
+
+                // delete from the db
+                try {
+                    await deleteSample(sampleLabel)
+                } catch (e) {
+                    console.log(e)
+                    printErrorMsg(e)
+                    return
+                }
+
+                // remove from the table
+                row.remove().draw(true)
+
+                // reset the runtime info and report success
+                await pageRefresh()
+                document.getElementById('sampleModal').style.display = 'none'
+                printSuccessMsg('sample deleted')
+            })
+    })
+})
 
 // buildTable will get the database keys via Go and then populate the table
 const buildTable = async() => {
     console.log('building table from the database')
 
-    // set up the table
-    var table = $('#sampleTable').DataTable({
-        columnDefs: [{
-            targets: 1,
-            data: null,
-            searchable: true,
-            orderable: true,
-            defaultContent: '<button class="button button-outline">Manage</button>'
-        }]
-    })
-
-    // set up the manage button
-    $('#sampleTable tbody').on('click', 'button', function() {
-        var data = table.row($(this).parents('tr')).data()
-        var sampleLabel = data[0]
-        document.getElementById('sampleModal_samplename').innerHTML = sampleLabel
-        getProtobufDump(sampleLabel).then(sampleProtobufDump => {
-            // get the sample protobuf dump
-            document.getElementById('sampleModal_content').innerHTML =
-                '<pre>' + sampleProtobufDump + '</pre>'
-
-            // display modal
-            document.getElementById('sampleModal').style.display = 'block'
-
-            // set up delete button
-            document
-                .getElementById('sampleModal_delete')
-                .addEventListener('click', async() => {
-                    console.log('deleting sample')
-
-                    try {
-                        await deleteSample(sampleLabel)
-                    } catch (e) {
-                        console.log(e)
-                        printErrorMsg(e)
-                        return
-                    }
-                    //table.row($(this).parents('tr')).delete();
-
-                    // reset the page and report success
-                    fullPageRender(true)
-                    document.getElementById('sampleModal').style.display = 'none'
-                    printSuccessMsg('sample deleted')
-                })
-        })
-    })
+    // wipe any existing table
+    table.clear().draw(true)
 
     // get the current sample number so that we can iterate over the samples
     var sampleCount = `${await window.getSampleCount()}`
@@ -227,62 +227,76 @@ function printTimeStamps() {
         today.getMinutes()
 }
 
-// printChart will print the pie chart
-const printChart = async() => {
-    // get total samples
-    var sampleCount = `${await window.getSampleCount()}`
+// set up the empty pie chart
+var pieCanvas = document.getElementById('pieChart')
+var pieData = {
+    labels: ['Active Announcements', 'Tagged Samples', 'Untagged Samples'],
+    datasets: [{
+        label: 'entry point',
+        data: [0, 0, 0],
+        backgroundColor: ['#35cebe', '#a0a0a0', '#dfdfdf'],
+        hoverBackgroundColor: ['#25beae', '#999999', '#cccccc']
+    }]
+}
+var pieOptions = {
+    responsive: true,
+    segmentShowStroke: false,
+    legend: false
+}
+var myPieChart = new Chart(pieCanvas, {
+    type: 'pie',
+    data: pieData,
+    options: pieOptions
+})
 
-    // TODO: get total tagged samples
-    //var taggedSamples = 1
+// updatePieChart will refresh the pie chart with current data
+const updatePieChart = async() => {
+    // get counts
+    var untaggedSampleCount = `${await window.getUntaggedSampleCount()}`
+    var taggedSampleCount = `${await window.getTaggedSampleCount()}`
+    var activeAnnouncementCount = `${await window.getAnnouncedSampleCount()}`
 
-    // TODO: get current announcements
+    // update the chart data
+    myPieChart.data.datasets[0].data[0] = activeAnnouncementCount
+    myPieChart.data.datasets[0].data[1] = taggedSampleCount
+    myPieChart.data.datasets[0].data[2] = untaggedSampleCount
 
-    // tmp holder for the data (will get this from Go)
-    var pieData = [{
-            value: 300,
-            color: '#35cebe',
-            highlight: '#25beae',
-            label: 'Active Announcements'
-        },
-        {
-            value: 50,
-            color: '#a0a0a0',
-            highlight: '#999999',
-            label: 'Tagged Samples'
-        },
-        {
-            value: 220,
-            color: '#dfdfdf',
-            highlight: '#cccccc',
-            label: 'Untagged Samples'
-        }
-    ]
+    // update the chart
+    myPieChart.update()
+}
 
-    // print it
-    var chart = document.getElementById('pie-chart').getContext('2d')
-    window.myPie = new Chart(chart).Pie(pieData, {
-        responsive: true,
-        segmentShowStroke: false
-    })
+// pageRefresh will refresh the Herald runtime info in Go and then freshen up the page (does not rebuild the table)
+const pageRefresh = async() => {
+    console.log('refreshing runtime info and re-rendering the page')
+
+    // reload the Go Herald instance and repopulate the page data
+    var retVal = `${await window.loadRuntimeInfo()}`
+    if (retVal !== '') {
+        printErrorMsg(retVal)
+    }
+
+    // update the pie chart
+    await updatePieChart()
+
+    // print a new timestamp
+    printTimeStamps()
 }
 
 // fullPageRender will insert various bits of runtime info from JS and Go into the app
-const fullPageRender = async tableFlag => {
-    // clear and re-build the table if requested
-    if (tableFlag === undefined) {
-        tableFlag = false
-    }
-    if (tableFlag === true) {
-        await clearTable()
-        await buildTable()
-    }
+const fullPageRender = async() => {
+    console.log('starting Go Herald instance and rendering the page')
 
-    // render the data from Go
-    console.log('collecting data via Go and rendering the page')
-    await window.renderPage()
+    // load the Go Herald instance and populate the page data
+    var retVal = `${await window.loadRuntimeInfo()}`
+    if (retVal !== '') {
+        printErrorMsg(retVal)
+    }
 
     // print the pie chart
-    printChart()
+    await updatePieChart()
+
+    // print the table
+    await buildTable()
 
     // print a new timestamp
     printTimeStamps()

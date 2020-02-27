@@ -15,14 +15,17 @@
     <!-- Milligram CSS minified -->
     <link rel="stylesheet" href="assets/css/milligram.min.css">
 
-    <!-- Main Styles -->
-    <link rel="stylesheet" href="assets/css/styles.css">
-
     <!-- Datatables -->
     <link rel="stylesheet" href="assets/css/datatables.min.css">
 
     <!-- Mesages -->
     <link rel="stylesheet" href="assets/css/overhang.min.css">
+
+    <!-- Charts -->
+    <link rel="stylesheet" href="assets/css/chart.min.css">
+
+    <!-- Main Styles -->
+    <link rel="stylesheet" href="assets/css/styles.css">
 
     <!--[if lt IE 9]>
 	<script src="http://html5shim.googlecode.com/svn/trunk/html5.js"></script>
@@ -102,9 +105,6 @@
                         <h1>Hey there!</h1>
                         <p class="text-large">Welcome to Herald or some other blurb</p>
                         <p>Announce your samples</p>
-                        <hr>
-                        <div class="alert"><i class="fas fa-bullhorn"></i> <span id="banner_messageBox">placeholder</span>
-                        </div>
                     </div>
                 </div>
             </div>
@@ -159,7 +159,7 @@
                         </div>
                         <div class="card-block">
                             <div class="canvas-wrapper">
-                                <canvas class="chart" id="pie-chart" height="auto" width="auto"></canvas>
+                                <canvas class="chart" id="pieChart" height="auto" width="auto"></canvas>
                             </div>
                         </div>
                     </div>
@@ -315,9 +315,6 @@
     </div>
 
     <!--JAVASCRIPT-->
-    <!-- connect UI actions to Go functions -->
-    <script src="assets/js/main.js"></script>
-
     <!-- jquery libs -->
     <script src="assets/js/jquery-3.4.1.min.js"></script>
     <script src="assets/js/jquery-ui.min.js"></script>
@@ -325,10 +322,13 @@
     <script src="assets/js/datatables.min.js"></script>
     <script src="assets/js/chart.min.js"></script>
 
+    <!-- connect UI actions to Go functions -->
+    <script src="assets/js/main.js"></script>
+
     <!-- set up the page with the Go and JS generated data -->
     <script>
         $(document).ready(() => {
-            fullPageRender(true)
+            fullPageRender()
         })
     </script>
 
@@ -342,7 +342,6 @@
             }
         });
     </script>
-
 </body>
 
 </html>

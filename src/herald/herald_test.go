@@ -36,7 +36,7 @@ func TestHeraldCreateSample(t *testing.T) {
 	}
 
 	// check runtime info was updated
-	count, _, _, _ := tmp.GetSampleCounts()
+	count := tmp.GetSampleCount()
 	if count != 1 {
 		t.Fatal("herald sample count not updated (should be 1)")
 	}

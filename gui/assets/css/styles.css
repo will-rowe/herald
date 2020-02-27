@@ -425,6 +425,25 @@ select:focus {
   .navbar .icon i:hover .tooltiptext {
     visibility: visible; }
 
+.formLabel .tooltiptext {
+  visibility: hidden;
+  background-color: #888;
+  color: #f9f9f9;
+  text-align: center;
+  font-family: lato;
+  width: 10vw;
+  padding: 1em 0;
+  border-radius: 6px;
+  /* Position the tooltip text - see examples below! */
+  position: absolute;
+  z-index: 1; }
+.formLabel i:hover {
+  color: #35cebe;
+  cursor: pointer; }
+.formLabel i:hover .tooltiptext {
+  position: absolute;
+  visibility: visible; }
+
 #sidebar {
   position: fixed;
   z-index: 0;

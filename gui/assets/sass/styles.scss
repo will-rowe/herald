@@ -515,6 +515,30 @@ select:focus {
     }
 }
 
+.formLabel {
+    .tooltiptext {
+        visibility: hidden;
+        background-color: $medium-gray;
+        color: $light-gray;
+        text-align: center;
+        font-family: lato;
+        width: 10vw;
+        padding: 1em 0;
+        border-radius: 6px;
+        /* Position the tooltip text - see examples below! */
+        position: absolute;
+        z-index: 1;
+    }
+    i:hover {
+        color: $primary-color;
+        cursor: pointer;
+    }
+    i:hover .tooltiptext {
+        position: absolute;
+        visibility: visible;
+    }
+}
+
 #sidebar {
     position: fixed;
     z-index: 0;

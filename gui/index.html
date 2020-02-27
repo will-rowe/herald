@@ -240,19 +240,33 @@
                         <div class="card-block">
                             <form id="addSampleForm">
                                 <fieldset>
-                                    <label for="nameField">Label</label>
+
+                                    <label for="formLabel_sampleLabel" class="formLabel">Label
+                                        <i class="far fa-question-circle"><span class="tooltiptext">the name of the
+                                                sample</span></i>
+                                    </label>
+
                                     <input type="text" placeholder="sample xxx" id="formLabel_sampleLabel" required>
-                                    <label for="ageRangeField">Barcode</label>
+
+                                    <label for="formLabel_sampleBarcode">Barcode</label>
                                     <select id="formLabel_sampleBarcode" required>
                                         <option value="0">0</option>
                                         <option value="1">1</option>
                                         <option value="2">2</option>
                                         <option value="3">3</option>
                                     </select>
-                                    <label for="nameField">Tags</label>
+
+                                    <label for="formLabel_dataPath" class="formLabel">Data directory
+                                        <i class="far fa-question-circle"><span class="tooltiptext">enter a path to
+                                                store data for this sample<br />(note: it must exist)</span></i>
+                                    </label>
+                                    <input type="text" placeholder="/Users/me/data" id="formLabel_dataPath">
+
+                                    <label>Tags</label>
                                     <input type="checkbox" id="formLabel_sequenceTag" value="sequence">
                                     <label class="label-inline" for="formLabel_sequenceTag">Sequence sample</label>
-                                    <label for="commentField">Comment</label>
+
+                                    <label for="formLabel_sampleComment">Comment</label>
                                     <textarea placeholder="insert any additional information" id="formLabel_sampleComment"></textarea>
                                     <!--
                                     <div class="float-right">

@@ -13,6 +13,7 @@ import (
 
 	"github.com/zserge/lorca"
 
+	"github.com/will-rowe/herald/src/helpers"
 	"github.com/will-rowe/herald/src/herald"
 	"github.com/will-rowe/herald/src/server"
 )
@@ -65,6 +66,9 @@ func main() {
 	ui.Bind("deleteSample", heraldObj.DeleteSample)
 	ui.Bind("getSampleLabel", heraldObj.GetSampleLabel)
 	ui.Bind("printSampleToJSONstring", heraldObj.PrintSampleToJSONstring)
+
+	// Bind helper functions to the UI
+	ui.Bind("checkDir", helpers.CheckDir)
 
 	// Setup a JS function to init the HERALD and populate all storage data fields in the app
 	ui.Bind("loadRuntimeInfo", func() string {

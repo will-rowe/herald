@@ -23,7 +23,7 @@ function printSuccessMsg(msg) {
 }
 
 ////////////////////////////////////////////////////////////////////
-// SAMPLE MODAL
+// SAMPLE DETAILS MODAL
 // Get the required elements
 const sampleModalClose = document.getElementsByClassName('modal-close')[0]
 const sampleModal = document.getElementById('sampleModal')
@@ -81,9 +81,21 @@ wipeDatabase.addEventListener('click', async() => {
 })
 
 ////////////////////////////////////////////////////////////////////
-// FORMS
-// get the forms
+// SAMPLE UPLOAD FORM
+// get the form
 const addSampleForm = document.getElementById('addSampleForm')
+
+// listen out for the directory picker and check the supplied path
+const dataPath = document.getElementById('formLabel_dataPath')
+dataPath.addEventListener('change', async() => {
+    try {
+        await checkDir(dataPath.value)
+    } catch (e) {
+        console.log(e)
+        printErrorMsg(e)
+        return
+    }
+})
 
 // prevent default form action on the addSampleForm
 function handleForm(event) {

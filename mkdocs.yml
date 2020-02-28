@@ -4,5 +4,6 @@ site_author: Will Rowe
 nav:
   - Home: index.md
   - Installation: installation.md
+  - Quick start: quick-start.md
   - Developer notes: developer.md
 theme: readthedocs

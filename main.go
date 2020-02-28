@@ -35,20 +35,6 @@ func main() {
 	}
 	defer ui.Close()
 
-	// UI is ready
-	ui.Bind("start", func() {
-		log.Println("UI is ready")
-	})
-
-	// Load HTML
-	ln, err := net.Listen("tcp", "127.0.0.1:0")
-	if err != nil {
-		log.Fatal(err)
-	}
-	defer ln.Close()
-	go http.Serve(ln, http.FileServer(FS))
-	ui.Load(fmt.Sprintf("http://%s", ln.Addr()))
-
 	// create the HERALD
 	var heraldObj *herald.Herald
 	if heraldObj, err = herald.InitHerald(dbLocation); err != nil {
@@ -97,6 +83,20 @@ func main() {
 		// print a message
 		return nil
 	})
+
+	// UI is ready
+	ui.Bind("start", func() {
+		log.Println("UI is ready")
+	})
+
+	// Load HTML
+	ln, err := net.Listen("tcp", "127.0.0.1:0")
+	if err != nil {
+		log.Fatal(err)
+	}
+	defer ln.Close()
+	go http.Serve(ln, http.FileServer(FS))
+	ui.Load(fmt.Sprintf("http://%s", ln.Addr()))
 
 	// Wait until the interrupt signal arrives or browser window is closed
 	sigc := make(chan os.Signal)

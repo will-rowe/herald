@@ -27,8 +27,9 @@ message Sample {
     string label = 2;
     Status status = 3;
     int32 barcode = 4;
-    repeated Comment history = 5;
-    Tags tags = 6;
+    string output_path = 5;
+    repeated Comment history = 6;
+    Tags tags = 7;
 }
 
 

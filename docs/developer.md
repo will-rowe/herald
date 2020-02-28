@@ -13,10 +13,10 @@ The protocol buffer definitions are stored under `protobuf/*.proto`.
 
 #### updating the schema
 
-If editing the `*.proto` files, the Go and JavaScript bindings will need to be re-compiled. For example, the bindings for the sample message:
+If editing the `*.proto` files, the Go bindings will need to be re-compiled. For example, the bindings for the sample message:
 
 ```
-protoc --js_out=import_style=commonjs,binary:gui/assets/js --go_out=plugins=grpc:src/sample -I=protobuf protobuf/sample.proto
+protoc --go_out=plugins=grpc:src/sample -I=protobuf protobuf/sample.proto
 go generate
 sh build-osx.sh
 ```

@@ -41,6 +41,7 @@ func InitHerald(storeLocation string) (*Herald, error) {
 	return &Herald{
 		store:         store,
 		storeLocation: storeLocation,
+		sampleDetails: make([][]string, 3),
 	}, nil
 }
 

@@ -262,7 +262,10 @@ addSampleForm.addEventListener('submit', async() => {
     // update the table
     $('#sampleTable')
         .DataTable()
-        .row.add([elements['formLabel_sampleLabel'].value])
+        .row.add([
+            elements['formLabel_sampleLabel'].value,
+            elements['formLabel_sampleExperiment'].value
+        ])
         .draw(true)
 
     // reset the form, refresh the page and report success
@@ -276,7 +279,7 @@ addSampleForm.addEventListener('submit', async() => {
 // set up the table
 var table = $('#sampleTable').DataTable({
     columnDefs: [{
-        targets: 1,
+        targets: 2,
         data: null,
         searchable: true,
         orderable: true,
@@ -337,9 +340,11 @@ const buildTable = async() => {
     // process each sample label
     for (var i = 0; i < sampleCount; i++) {
         var sampleLabel = `${await window.getSampleLabel(i)}`
+            //var sampleCreation = `${await window.getSampleCreation(i)}`
+        var sampleExperiment = `${await window.getSampleExperiment(i)}`
 
         // create the table entry
-        table.row.add([sampleLabel]).draw(true)
+        table.row.add([sampleLabel, sampleExperiment]).draw(true)
     }
 }
 

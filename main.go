@@ -51,6 +51,8 @@ func main() {
 	ui.Bind("createSample", heraldObj.CreateSample)
 	ui.Bind("deleteSample", heraldObj.DeleteSample)
 	ui.Bind("getSampleLabel", heraldObj.GetSampleLabel)
+	ui.Bind("getSampleCreation", heraldObj.GetSampleCreation)
+	ui.Bind("getSampleExperiment", heraldObj.GetSampleExperiment)
 	ui.Bind("printSampleToJSONstring", heraldObj.PrintSampleToJSONstring)
 	ui.Bind("createExperiment", heraldObj.CreateExperiment)
 	ui.Bind("getExperimentCount", heraldObj.GetExperimentCount)

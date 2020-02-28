@@ -17,14 +17,14 @@ type Herald struct {
 	store      *storage.Storage // the key-value store for the samples
 
 	// runtime info for JS:
-	storeLocation        string   // where the store is located on disk
-	experimentCount      int      // the number of experiments currently in the store
-	sampleCount          int      // the number of samples currently in the store
-	untaggedSampleCount  int      // the number of samples in the store that are untagged
-	taggedSampleCount    int      // the number of samples in the store that are tagged with at least one process
-	announcedSampleCount int      // the number of samples in the store that are currently being announced
-	sampleLabels         []string // used to store all the sample labels in memory (for JS to access)
-	experimentNames      []string // used to store all the experiment names in memory (for JS to access)
+	storeLocation        string     // where the store is located on disk
+	experimentCount      int        // the number of experiments currently in the store
+	sampleCount          int        // the number of samples currently in the store
+	untaggedSampleCount  int        // the number of samples in the store that are untagged
+	taggedSampleCount    int        // the number of samples in the store that are tagged with at least one process
+	announcedSampleCount int        // the number of samples in the store that are currently being announced
+	sampleDetails        [][]string // used to store all the sample labels, creation dates and corresponding experiment in memory (for JS to access)
+	experimentNames      []string   // used to store all the experiment names in memory (for JS to access)
 }
 
 // InitHerald will initiate the Herald instance
@@ -65,20 +65,25 @@ func (herald *Herald) GetRuntimeInfo() error {
 
 	// create the holders
 	herald.experimentNames = make([]string, herald.experimentCount)
-	herald.sampleLabels = make([]string, herald.sampleCount)
+	herald.sampleDetails = make([][]string, 3)
+	for i := 0; i < 3; i++ {
+		herald.sampleDetails[i] = make([]string, herald.sampleCount)
+	}
 
 	// range over the sample labels via the key channel from the bit cask
 	i := 0
 	for label := range herald.store.GetSampleLabels() {
 
-		// add the sample label to the holder
-		herald.sampleLabels[i] = string(label)
-
 		// get the full sample
-		sample, err := herald.store.GetSample(herald.sampleLabels[i])
+		sample, err := herald.store.GetSample(string(label))
 		if err != nil {
 			return err
 		}
+
+		// add the details to the store
+		herald.sampleDetails[0][i] = sample.Label
+		herald.sampleDetails[1][i] = sample.Created.String()
+		herald.sampleDetails[2][i] = sample.GetExperiment().Name
 
 		// check the status, update counts and refresh queues
 		// todo: refresh queues
@@ -215,7 +220,9 @@ func (herald *Herald) CreateSample(label string, experimentName string, barcode 
 	}
 
 	// update the runtime info (grow the label slice, tag slice etc.)
-	herald.sampleLabels = append(herald.sampleLabels, label)
+	herald.sampleDetails[0] = append(herald.sampleDetails[0], label)
+	herald.sampleDetails[1] = append(herald.sampleDetails[1], sample.GetCreated().String())
+	herald.sampleDetails[2] = append(herald.sampleDetails[2], experimentName)
 	herald.sampleCount++
 	if len(tags) != 0 {
 		herald.taggedSampleCount++
@@ -281,13 +288,31 @@ func (herald *Herald) PrintSampleToJSONstring(label string) string {
 	return sampleString
 }
 
-// GetSampleLabel is used by JS to collect a sample label from the runtime slice of sample labels
+// GetSampleLabel is used by JS to collect a sample label from the runtime slice of sample data
 // NOTE: this assumes the caller has already run GetSampleCount (or similar) to find the iterator range
 // TODO: add error on return too (will require re-write of JS function)
 func (herald *Herald) GetSampleLabel(iterator int) string {
 	herald.Lock()
 	defer herald.Unlock()
-	return herald.sampleLabels[iterator]
+	return herald.sampleDetails[0][iterator]
+}
+
+// GetSampleCreation is used by JS to collect a sample created timestamp from the runtime slice of sample data
+// NOTE: this assumes the caller has already run GetSampleCount (or similar) to find the iterator range
+// TODO: add error on return too (will require re-write of JS function)
+func (herald *Herald) GetSampleCreation(iterator int) string {
+	herald.Lock()
+	defer herald.Unlock()
+	return herald.sampleDetails[1][iterator]
+}
+
+// GetSampleExperiment is used by JS to collect a sample experiment name from the runtime slice of sample data
+// NOTE: this assumes the caller has already run GetSampleCount (or similar) to find the iterator range
+// TODO: add error on return too (will require re-write of JS function)
+func (herald *Herald) GetSampleExperiment(iterator int) string {
+	herald.Lock()
+	defer herald.Unlock()
+	return herald.sampleDetails[2][iterator]
 }
 
 // GetExperimentName is used by JS to collect an experiment name from the runtime slice of experiment names

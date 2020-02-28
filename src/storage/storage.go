@@ -1,4 +1,4 @@
-// Package storage wraps a bit cask as the disk-backed key-value store for sample information
+// Package storage wraps two bit casks as the disk-backed key-value store for sample information and experiment information
 package storage
 
 import (
@@ -9,79 +9,108 @@ import (
 	"github.com/golang/protobuf/proto"
 	"github.com/prologic/bitcask"
 
-	"github.com/will-rowe/herald/src/sample"
+	"github.com/will-rowe/herald/src/data"
 )
 
-// dbMaxEntries is used to cap the number of samples that can be added
-const dbMaxEntries = 10
+// dbMaxEntries is used to cap the number of db elements that can be added
+const dbMaxEntries = 10000
 
 // useSync will run sync on every bit cask transaction, improving stability at the expense of time
 const useSync = true
 
 // Storage holds a bitcask db and some extra stuff
 type Storage struct {
-	db         *bitcask.Bitcask // the key-value store
-	dbLocation string           // where the store is stored
+	sampleDB     *bitcask.Bitcask // the key-value store for samples
+	experimentDB *bitcask.Bitcask // the key-value store for experiments
+	dbLocation   string           // where the store is stored
 }
 
-// OpenStorage will open up the database and return a storage struct and any error
+// OpenStorage will create/open up the databases and return a storage struct or an error
 func OpenStorage(dbLocation string) (*Storage, error) {
 
-	// open the database
-	db, err := bitcask.Open(dbLocation, bitcask.WithSync(useSync))
+	// get the names for both databases
+	sampleDBname := fmt.Sprintf("%s/sampleCask", dbLocation)
+	experimentDBname := fmt.Sprintf("%s/experimentCask", dbLocation)
+
+	// open the databases
+	sdb, err := bitcask.Open(sampleDBname, bitcask.WithSync(useSync))
+	if err != nil {
+		return nil, err
+	}
+	edb, err := bitcask.Open(experimentDBname, bitcask.WithSync(useSync))
 	if err != nil {
 		return nil, err
 	}
 
 	// create the storage struct
 	store := &Storage{
-		db:         db,
-		dbLocation: dbLocation,
+		sampleDB:     sdb,
+		experimentDB: edb,
+		dbLocation:   dbLocation,
 	}
 	return store, nil
 }
 
-// CloseStorage will flush and close the storage database
+// CloseStorage will flush and close the storage databases
 func (storage *Storage) CloseStorage() error {
-	if err := storage.db.Sync(); err != nil {
+	if err := storage.sampleDB.Sync(); err != nil {
 		return err
 	}
-	if err := storage.db.Close(); err != nil {
+	if err := storage.sampleDB.Close(); err != nil {
+		return err
+	}
+	if err := storage.experimentDB.Sync(); err != nil {
+		return err
+	}
+	if err := storage.experimentDB.Close(); err != nil {
 		return err
 	}
 	return nil
 }
 
-// Wipe clears all entries from the bit cask
+// Wipe clears all entries from the samples and experiments databases
 func (storage *Storage) Wipe() error {
-	return storage.db.DeleteAll()
+	if err := storage.experimentDB.DeleteAll(); err != nil {
+		return err
+	}
+	return storage.sampleDB.DeleteAll()
 }
 
-// GetNumEntries returns the current number of entries in the bit cask
-func (storage *Storage) GetNumEntries() int {
-	return storage.db.Len()
+// GetNumSamples returns the current number of samples in storage
+func (storage *Storage) GetNumSamples() int {
+	return storage.sampleDB.Len()
 }
 
-// GetLabels returns a channel of sample labels (keys) held in storage
-func (storage *Storage) GetLabels() chan []byte {
-	return storage.db.Keys()
+// GetNumExperiments returns the current number of experiments in storage
+func (storage *Storage) GetNumExperiments() int {
+	return storage.experimentDB.Len()
 }
 
-// DeleteSample is a method to remove a protobuf encoded sample from the bit cask
+// GetSampleLabels returns a channel of sample labels (keys) held in storage
+func (storage *Storage) GetSampleLabels() chan []byte {
+	return storage.sampleDB.Keys()
+}
+
+// DeleteSample is a method to remove a sample from storage
 func (storage *Storage) DeleteSample(sampleLabel string) error {
-	return storage.db.Delete([]byte(sampleLabel))
+	return storage.sampleDB.Delete([]byte(sampleLabel))
 }
 
-// AddSample is a method to marshal a sample and add it to the bit cask
-func (storage *Storage) AddSample(sample *sample.Sample) error {
+// DeleteExperiment is a method to remove an experiment from storage
+func (storage *Storage) DeleteExperiment(experimentName string) error {
+	return storage.experimentDB.Delete([]byte(experimentName))
+}
+
+// AddSample is a method to marshal a sample and store it
+func (storage *Storage) AddSample(sample *data.Sample) error {
 
 	// check the DB limit hasn't been reached
-	if storage.db.Len() == dbMaxEntries {
+	if storage.sampleDB.Len() == dbMaxEntries {
 		return fmt.Errorf("database entry limit reached (%d)", dbMaxEntries)
 	}
 
 	// check the sample is not in the database already
-	if storage.db.Has([]byte(sample.Label)) {
+	if storage.sampleDB.Has([]byte(sample.Label)) {
 		return fmt.Errorf("duplicate label can't be added to the database (%s)", sample.Label)
 	}
 
@@ -92,59 +121,85 @@ func (storage *Storage) AddSample(sample *sample.Sample) error {
 	}
 
 	// add the sample
-	if err := storage.db.Put([]byte(sample.Label), data); err != nil {
+	if err := storage.sampleDB.Put([]byte(sample.Label), data); err != nil {
 		return err
 	}
 	return nil
 }
 
-// GetSample is a method to retrieve a sample from the bit cask and unmarshal it to a struct
-func (storage *Storage) GetSample(sampleLabel string) (*sample.Sample, error) {
+// AddExperiment is a method to marshal an experiment and store it
+func (storage *Storage) AddExperiment(experiment *data.Experiment) error {
+
+	// check the DB limit hasn't been reached
+	if storage.experimentDB.Len() == dbMaxEntries {
+		return fmt.Errorf("database entry limit reached (%d)", dbMaxEntries)
+	}
+
+	// check the sample is not in the database already
+	if storage.experimentDB.Has([]byte(experiment.Name)) {
+		return fmt.Errorf("duplicate experiment name can't be added to the database (%s)", experiment.Name)
+	}
+
+	// marshal the sample
+	data, err := proto.Marshal(experiment)
+	if err != nil {
+		return err
+	}
+
+	// add the sample
+	if err := storage.experimentDB.Put([]byte(experiment.Name), data); err != nil {
+		return err
+	}
+	return nil
+}
+
+// GetSample is a method to retrieve a sample from storage and unmarshal it to a struct
+func (storage *Storage) GetSample(sampleLabel string) (*data.Sample, error) {
 
 	// get the sample from the bit cask
-	data, err := storage.db.Get([]byte(sampleLabel))
+	dbData, err := storage.sampleDB.Get([]byte(sampleLabel))
 	if err != nil {
 		return nil, err
 	}
 
 	// unmarshal the sample
-	sample := &sample.Sample{}
-	if err := proto.Unmarshal(data, sample); err != nil {
+	sample := &data.Sample{}
+	if err := proto.Unmarshal(dbData, sample); err != nil {
 		return nil, err
 	}
 	return sample, nil
 }
 
-// GetSampleProtoDump is a method to retrieve a sample from the bit cask and return a string dump of the protobuf message
+// GetSampleProtoDump is a method to retrieve a sample from storage and return a string dump of the protobuf message
 func (storage *Storage) GetSampleProtoDump(sampleLabel string) (string, error) {
 
 	// get the sample from the bit cask
-	data, err := storage.db.Get([]byte(sampleLabel))
+	dbData, err := storage.sampleDB.Get([]byte(sampleLabel))
 	if err != nil {
 		return "", err
 	}
 
 	// unmarshal the sample
-	sample := &sample.Sample{}
-	if err := proto.Unmarshal(data, sample); err != nil {
+	sample := &data.Sample{}
+	if err := proto.Unmarshal(dbData, sample); err != nil {
 		return "", err
 	}
 
 	return proto.MarshalTextString(sample), nil
 }
 
-// GetSampleJSONDump is a method to retrieve a sample from the bit cask and return a string dump of the protobuf message in JSON
+// GetSampleJSONDump is a method to retrieve a sample from storage and return a string dump of the protobuf message in JSON
 func (storage *Storage) GetSampleJSONDump(sampleLabel string) (string, error) {
 
 	// get the sample from the bit cask
-	data, err := storage.db.Get([]byte(sampleLabel))
+	dbData, err := storage.sampleDB.Get([]byte(sampleLabel))
 	if err != nil {
 		return "", err
 	}
 
 	// unmarshal the sample
-	sample := &sample.Sample{}
-	if err := proto.Unmarshal(data, sample); err != nil {
+	sample := &data.Sample{}
+	if err := proto.Unmarshal(dbData, sample); err != nil {
 		return "", err
 	}
 

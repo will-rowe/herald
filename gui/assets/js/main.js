@@ -139,7 +139,7 @@ createExperimentForm.addEventListener('submit', async() => {
     var elements = createExperimentForm.elements
 
     // check for data directories if the user is creating an experiment with existing data
-    if (elements['formLabel_sequencedTrue'].value == 'true') {
+    if (elements['formLabel_sequenced'].value == 'true') {
         // TODO: check this properly, at the moment just looking for experiment name dir and fast5 sub dir
         var dirName =
             elements['formLabel_outputLocation'].value +

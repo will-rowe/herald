@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"sync"
 
-	"github.com/will-rowe/herald/src/sample"
+	sample "github.com/will-rowe/herald/src/data"
 	"github.com/will-rowe/herald/src/server"
 	"github.com/will-rowe/herald/src/storage"
 )
@@ -18,6 +18,7 @@ type Herald struct {
 
 	// runtime info for JS:
 	storeLocation        string   // where the store is located on disk
+	experimentCount      int      // the number of experiments currently in the store
 	sampleCount          int      // the number of samples currently in the store
 	untaggedSampleCount  int      // the number of samples in the store that are untagged
 	taggedSampleCount    int      // the number of samples in the store that are tagged with at least one process
@@ -42,29 +43,31 @@ func InitHerald(storeLocation string) (*Herald, error) {
 	}, nil
 }
 
-// CheckAllSamples makes a pass of the sample store and populates the Herald instance with data:
+// GetRuntimeInfo makes a pass of the experiment and sample stores before populating the Herald instance with data:
 // - how many samples are in the storage
 // - notes any samples with tags
 // - loads all sample labels into a slice (for JS to access)
-func (herald *Herald) CheckAllSamples() error {
+func (herald *Herald) GetRuntimeInfo() error {
 	herald.Lock()
 	defer herald.Unlock()
 
 	// reset the runtime data
+	herald.experimentCount = 0
 	herald.sampleCount = 0
 	herald.untaggedSampleCount = 0
 	herald.taggedSampleCount = 0
 	herald.announcedSampleCount = 0
 
-	// get the sample count from the store
-	herald.sampleCount = herald.store.GetNumEntries()
+	// get the experiment and sample counts from the store
+	herald.experimentCount = herald.store.GetNumExperiments()
+	herald.sampleCount = herald.store.GetNumSamples()
 
 	// create the holders
 	herald.sampleLabels = make([]string, herald.sampleCount)
 
 	// range over the store key channel (sample labels)
 	i := 0
-	for label := range herald.store.GetLabels() {
+	for label := range herald.store.GetSampleLabels() {
 
 		// add the sample label to the holder
 		herald.sampleLabels[i] = string(label)
@@ -101,7 +104,7 @@ func (herald *Herald) Destroy() error {
 	return herald.store.CloseStorage()
 }
 
-// WipeStorage will clear all samples from storage
+// WipeStorage will clear all samples and experiments from storage
 func (herald *Herald) WipeStorage() error {
 	herald.Lock()
 	defer herald.Unlock()
@@ -109,6 +112,7 @@ func (herald *Herald) WipeStorage() error {
 		return err
 	}
 	herald.sampleCount = 0
+	herald.experimentCount = 0
 	return nil
 }
 
@@ -117,6 +121,13 @@ func (herald *Herald) GetDbPath() string {
 	herald.Lock()
 	defer herald.Unlock()
 	return herald.storeLocation
+}
+
+// GetExperimentCount returns the current number of experiments in storage
+func (herald *Herald) GetExperimentCount() int {
+	herald.Lock()
+	defer herald.Unlock()
+	return herald.experimentCount
 }
 
 // GetSampleCount returns the current number of samples in storage
@@ -145,6 +156,23 @@ func (herald *Herald) GetAnnouncedSampleCount() int {
 	herald.Lock()
 	defer herald.Unlock()
 	return herald.announcedSampleCount
+}
+
+// CreateExperiment creates an experiment record, updates the runtime info and adds the record to storage
+// TODO: this might be bypassed later and instead get JS to encode the form to protobuf directly
+func (herald *Herald) CreateExperiment(name string, outDir string) error {
+	herald.Lock()
+	defer herald.Unlock()
+
+	// create the experiment
+	exp := sample.InitExperiment(name, outDir)
+
+	// add the experiment to the store
+	if err := herald.store.AddExperiment(exp); err != nil {
+		return err
+	}
+	herald.experimentCount++
+	return nil
 }
 
 // CreateSample creates a sample record, updates the runtime info and adds the record to storage

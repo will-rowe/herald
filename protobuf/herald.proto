@@ -1,0 +1,54 @@
+syntax = "proto3";
+package sample;
+
+import "google/protobuf/timestamp.proto";
+
+/*
+    Comments are used by Herald to record a message history
+*/
+message Comment {
+    google.protobuf.Timestamp timestamp = 1;
+    string text = 2;
+}
+
+/*
+    Experiment is used to describe a Nanopore sequencing run
+*/
+message Experiment {
+    google.protobuf.Timestamp created = 1;
+    string name = 2;
+    repeated Comment history = 3;
+    string output_directory = 4;
+}
+
+/*
+    Sample is used to describe a biological sample which is being sequenced
+*/
+message Sample {
+    google.protobuf.Timestamp created = 1;
+    string label = 2;
+    repeated Comment history = 3;
+    Status status = 4;
+    int32 barcode = 5;
+    Tags tags = 6;
+
+    /*
+        Tags are used to indicate what processes to run on a sample
+    */
+    message Tags {
+        bool sequence = 1;
+        bool rampart = 2;
+        bool artic_pipeline = 3;
+    }
+
+    /*
+        Status is used to determine if the sample is untagged, tagged or in the announcment queue
+    */
+    enum Status {
+        UN_INITIALIZED = 0;
+        untagged = 1;
+        tagged = 2;
+        announced = 3;
+    }
+
+}

@@ -1,4 +1,19 @@
 ////////////////////////////////////////////////////////////////////
+// HELPERS
+// removeOptions will clear a select box
+function removeOptions(selectbox) {
+    var i
+    for (i = selectbox.options.length - 1; i >= 0; i--) {
+        selectbox.remove(i)
+    }
+}
+
+// handleForm will prevent default form action
+function handleForm(event) {
+    event.preventDefault()
+}
+
+////////////////////////////////////////////////////////////////////
 // MESSAGES
 // printErrorMsg
 function printErrorMsg(msg) {
@@ -114,11 +129,6 @@ const getSampleJSONdump = async function(sampleLabel) {
 // CREATE EXPERIMENT FORM
 // get the form
 const createExperimentForm = document.getElementById('createExperimentForm')
-
-// prevent default form action on the addSampleForm
-function handleForm(event) {
-    event.preventDefault()
-}
 createExperimentForm.addEventListener('submit', handleForm)
 
 // add listener to the output location text box so we can validate it
@@ -182,9 +192,30 @@ createExperimentForm.addEventListener('submit', async() => {
 // SAMPLE SUBMISSION FORM
 // get the form
 const addSampleForm = document.getElementById('addSampleForm')
-
-// prevent default form action on the addSampleForm
 addSampleForm.addEventListener('submit', handleForm)
+
+// updateExperimentDropDown is a function to update the experiments in the sample submission form
+const expDropDown = document.getElementById('formLabel_sampleExperiment')
+const updateExperimentDropDown = async() => {
+    // get the current experiment count so that we can iterate over the experiments
+    var expCount = `${await window.getExperimentCount()}`
+
+    // if there are no experiments, leave the default blank option
+    if (expCount === '0') {
+        return
+    }
+
+    // wipe the current options
+    removeOptions(expDropDown)
+
+    // add each name to the drop down
+    for (var i = 0; i < expCount; i++) {
+        var expName = `${await window.getExperimentName(i)}`
+        var newOpt = document.createElement('option')
+        newOpt.text = expName
+        expDropDown.options.add(newOpt)
+    }
+}
 
 // add listener to the form tags so that more form appears
 document
@@ -218,6 +249,7 @@ addSampleForm.addEventListener('submit', async() => {
         // TODO: try reading form straight into protobuf and then send a serialised stream to Go
         await createSample(
             elements['formLabel_sampleLabel'].value,
+            elements['formLabel_sampleExperiment'].value,
             parseInt(elements['formLabel_sampleBarcode'].value, 10),
             elements['formLabel_sampleComment'].value,
             tags
@@ -384,6 +416,9 @@ const pageRefresh = async() => {
         return
     }
 
+    // update the experiment drop down
+    await updateExperimentDropDown()
+
     // update the pie chart
     await updatePieChart()
 
@@ -392,6 +427,7 @@ const pageRefresh = async() => {
 }
 
 // fullPageRender will insert various bits of runtime info from JS and Go into the app
+// TODO: this is virtually the same as pageRefresh - so just combine and add flag?
 const fullPageRender = async() => {
     console.log('starting Go Herald instance and rendering the page')
 
@@ -402,6 +438,9 @@ const fullPageRender = async() => {
         printErrorMsg(e)
         return
     }
+
+    // update the experiment drop down
+    await updateExperimentDropDown()
 
     // print the pie chart
     await updatePieChart()

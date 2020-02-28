@@ -91,6 +91,11 @@ func (storage *Storage) GetSampleLabels() chan []byte {
 	return storage.sampleDB.Keys()
 }
 
+// GetExperimentNames returns a channel of experiment names (keys) held in storage
+func (storage *Storage) GetExperimentNames() chan []byte {
+	return storage.experimentDB.Keys()
+}
+
 // DeleteSample is a method to remove a sample from storage
 func (storage *Storage) DeleteSample(sampleLabel string) error {
 	return storage.sampleDB.Delete([]byte(sampleLabel))
@@ -168,6 +173,23 @@ func (storage *Storage) GetSample(sampleLabel string) (*data.Sample, error) {
 		return nil, err
 	}
 	return sample, nil
+}
+
+// GetExperiment is a method to retrieve an experiment from storage and unmarshal it to a struct
+func (storage *Storage) GetExperiment(experimentName string) (*data.Experiment, error) {
+
+	// get the experiment from the bit cask
+	dbData, err := storage.experimentDB.Get([]byte(experimentName))
+	if err != nil {
+		return nil, err
+	}
+
+	// unmarshal the sample
+	exp := &data.Experiment{}
+	if err := proto.Unmarshal(dbData, exp); err != nil {
+		return nil, err
+	}
+	return exp, nil
 }
 
 // GetSampleProtoDump is a method to retrieve a sample from storage and return a string dump of the protobuf message

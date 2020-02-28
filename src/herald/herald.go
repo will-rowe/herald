@@ -23,7 +23,8 @@ type Herald struct {
 	untaggedSampleCount  int      // the number of samples in the store that are untagged
 	taggedSampleCount    int      // the number of samples in the store that are tagged with at least one process
 	announcedSampleCount int      // the number of samples in the store that are currently being announced
-	sampleLabels         []string // used to store all the label names in memory (for JS to access)
+	sampleLabels         []string // used to store all the sample labels in memory (for JS to access)
+	experimentNames      []string // used to store all the experiment names in memory (for JS to access)
 }
 
 // InitHerald will initiate the Herald instance
@@ -63,9 +64,10 @@ func (herald *Herald) GetRuntimeInfo() error {
 	herald.sampleCount = herald.store.GetNumSamples()
 
 	// create the holders
+	herald.experimentNames = make([]string, herald.experimentCount)
 	herald.sampleLabels = make([]string, herald.sampleCount)
 
-	// range over the store key channel (sample labels)
+	// range over the sample labels via the key channel from the bit cask
 	i := 0
 	for label := range herald.store.GetSampleLabels() {
 
@@ -92,6 +94,13 @@ func (herald *Herald) GetRuntimeInfo() error {
 			return fmt.Errorf("encountered sample with unknown status (%v)", status)
 		}
 
+		i++
+	}
+
+	// range over the experiment names via the key channel from the bit cask
+	i = 0
+	for name := range herald.store.GetExperimentNames() {
+		herald.experimentNames[i] = string(name)
 		i++
 	}
 	return nil
@@ -171,18 +180,27 @@ func (herald *Herald) CreateExperiment(name string, outDir string) error {
 	if err := herald.store.AddExperiment(exp); err != nil {
 		return err
 	}
+
+	// update the runtime info (grow the label slice, tag slice etc.)
+	herald.experimentNames = append(herald.experimentNames, name)
 	herald.experimentCount++
 	return nil
 }
 
 // CreateSample creates a sample record, updates the runtime info and adds the record to storage
 // TODO: this might be bypassed later and instead get JS to encode the form to protobuf directly
-func (herald *Herald) CreateSample(label string, barcode int32, comment string, tags []string) error {
+func (herald *Herald) CreateSample(label string, experimentName string, barcode int32, comment string, tags []string) error {
 	herald.Lock()
 	defer herald.Unlock()
 
+	// get the experiment from storage
+	exp, err := herald.store.GetExperiment(experimentName)
+	if err != nil {
+		return err
+	}
+
 	// create the sample
-	sample := sample.InitSample(label, barcode, comment)
+	sample := sample.InitSample(label, exp, barcode, comment)
 
 	// tag the sample
 	if len(tags) != 0 {
@@ -270,4 +288,13 @@ func (herald *Herald) GetSampleLabel(iterator int) string {
 	herald.Lock()
 	defer herald.Unlock()
 	return herald.sampleLabels[iterator]
+}
+
+// GetExperimentName is used by JS to collect an experiment name from the runtime slice of experiment names
+// NOTE: this assumes the caller has already run GetExperimentCount (or similar) to find the iterator range
+// TODO: add error on return too (will require re-write of JS function)
+func (herald *Herald) GetExperimentName(iterator int) string {
+	herald.Lock()
+	defer herald.Unlock()
+	return herald.experimentNames[iterator]
 }

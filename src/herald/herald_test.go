@@ -3,6 +3,8 @@ package herald
 import (
 	"os"
 	"testing"
+
+	"github.com/will-rowe/herald/src/data"
 )
 
 // TestHeraldInit
@@ -29,9 +31,18 @@ func TestHeraldCreateSample(t *testing.T) {
 		t.Fatal(err)
 	}
 
+	// create an experiment
+	testExpName := "test experiment"
+	testExp := &data.Experiment{
+		Name: testExpName,
+	}
+	if err := tmp.store.AddExperiment(testExp); err != nil {
+		t.Fatal(err)
+	}
+
 	// create and add a sample
 	testLabel := "testLabel"
-	if err := tmp.CreateSample(testLabel, 1, "test comment", []string{"sequence"}); err != nil {
+	if err := tmp.CreateSample(testLabel, testExpName, 1, "test comment", []string{"sequence"}); err != nil {
 		t.Fatal(err)
 	}
 

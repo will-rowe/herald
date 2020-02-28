@@ -8,7 +8,7 @@ import (
 )
 
 // InitSample will init a sample struct with the minimum required values
-func InitSample(label string, barcode int32, comment string) *Sample {
+func InitSample(label string, experiment *Experiment, barcode int32, comment string) *Sample {
 
 	// create the tags and set all to false
 	tags := &Sample_Tags{
@@ -17,12 +17,13 @@ func InitSample(label string, barcode int32, comment string) *Sample {
 
 	// create the sample
 	sample := &Sample{
-		Created: ptypes.TimestampNow(),
-		Label:   label,
-		Status:  1,
-		Barcode: barcode,
-		History: []*Comment{},
-		Tags:    tags,
+		Created:    ptypes.TimestampNow(),
+		Label:      label,
+		Experiment: experiment,
+		Status:     1,
+		Barcode:    barcode,
+		History:    []*Comment{},
+		Tags:       tags,
 	}
 
 	// create the history and pin any comment

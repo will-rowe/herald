@@ -53,6 +53,8 @@ func main() {
 	ui.Bind("getSampleLabel", heraldObj.GetSampleLabel)
 	ui.Bind("printSampleToJSONstring", heraldObj.PrintSampleToJSONstring)
 	ui.Bind("createExperiment", heraldObj.CreateExperiment)
+	ui.Bind("getExperimentCount", heraldObj.GetExperimentCount)
+	ui.Bind("getExperimentName", heraldObj.GetExperimentName)
 
 	// Bind helper functions to the UI
 	ui.Bind("checkDir", helpers.CheckDir)

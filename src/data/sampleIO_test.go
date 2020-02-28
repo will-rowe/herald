@@ -10,7 +10,7 @@ import (
 func TestProtobuf(t *testing.T) {
 
 	// set up a basic sample
-	test := InitSample("test", 1, "comment line")
+	test := InitSample("test", &Experiment{}, 1, "comment line")
 
 	// marshal it
 	data, err := proto.Marshal(test)
@@ -35,7 +35,7 @@ func TestProtobuf(t *testing.T) {
 func TestTagging(t *testing.T) {
 
 	// set up a basic sample
-	test := InitSample("test", 1, "comment line")
+	test := InitSample("test", &Experiment{}, 1, "comment line")
 
 	// check that tags are required to method call
 	if err := test.AddTags(nil); err == nil {
@@ -57,7 +57,7 @@ func TestTagging(t *testing.T) {
 func TestStatus(t *testing.T) {
 
 	// set up a basic sample
-	test := InitSample("test", 1, "comment line")
+	test := InitSample("test", &Experiment{}, 1, "comment line")
 
 	// check the status is untagged
 	if test.GetStatus().String() != "untagged" {

@@ -28,9 +28,10 @@ message Sample {
     google.protobuf.Timestamp created = 1;
     string label = 2;
     repeated Comment history = 3;
-    Status status = 4;
-    int32 barcode = 5;
-    Tags tags = 6;
+    Experiment experiment = 4;
+    Status status = 5;
+    int32 barcode = 6;
+    Tags tags = 7;
 
     /*
         Tags are used to indicate what processes to run on a sample

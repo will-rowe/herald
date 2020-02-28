@@ -302,12 +302,15 @@
                                     </label>
                                     <input type="text" placeholder="sample xxx" id="formLabel_sampleLabel" required>
                                     <!--experiment-->
-                                    <label for="formLabel_sampleExperiment">Experiment</label>
+                                    <label class="formLabel" for="formLabel_sampleExperiment">Experiment
+                                        <i class="far fa-question-circle"><span class="tooltiptext">the
+                                                experiment this sample belongs to</span></i>
+                                    </label>
                                     <select id="formLabel_sampleExperiment" required>
-                                        <option value="placeholder">placeholder</option>
+                                        <option value="" disabled selected>create an experiment first!</option>
                                     </select>
                                     <!--barcode-->
-                                    <label for="formLabel_sampleBarcode">Barcode</label>
+                                    <label class="formLabel" for="formLabel_sampleBarcode">Barcode</label>
                                     <select id="formLabel_sampleBarcode" required>
                                         <option value="0">0</option>
                                         <option value="1">1</option>
@@ -321,7 +324,7 @@
                                     </label>
                                     <input type="file" id="formLabel_refGenome">
                                     <!--comment box-->
-                                    <label for="formLabel_sampleComment">Comment</label>
+                                    <label class="formLabel" for="formLabel_sampleComment">Comment</label>
                                     <textarea placeholder="insert any additional information" id="formLabel_sampleComment"></textarea>
                                     <div class="clearfix"></div>
                                     <!--tags-->

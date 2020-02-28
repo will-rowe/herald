@@ -95,8 +95,8 @@ wipeDatabase.addEventListener('click', async() => {
 })
 
 ////////////////////////////////////////////////////////////////////
-// FORMS
-// get the forms
+// SAMPLE SUBMISSION FORM
+// get the form
 const addSampleForm = document.getElementById('addSampleForm')
 
 // prevent default form action on the addSampleForm
@@ -105,7 +105,19 @@ function handleForm(event) {
 }
 addSampleForm.addEventListener('submit', handleForm)
 
-// add an event listener to the addSampleForm
+// add listener to the form tags so that more form appears
+document
+    .getElementById('formLabel_rampartTag')
+    .addEventListener('change', async() => {
+        var options = document.getElementById('addSampleForm_rampartOptions')
+        if (options.style.display === 'block') {
+            options.style.display = 'none'
+        } else {
+            options.style.display = 'block'
+        }
+    })
+
+// add an event listener to the addSampleForm submit button
 addSampleForm.addEventListener('submit', async() => {
     console.log('adding sample to database')
 

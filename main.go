@@ -51,7 +51,12 @@ func main() {
 	ui.Bind("createSample", heraldObj.CreateSample)
 	ui.Bind("deleteSample", heraldObj.DeleteSample)
 	ui.Bind("getSampleLabel", heraldObj.GetSampleLabel)
+	ui.Bind("getSampleCreation", heraldObj.GetSampleCreation)
+	ui.Bind("getSampleExperiment", heraldObj.GetSampleExperiment)
 	ui.Bind("printSampleToJSONstring", heraldObj.PrintSampleToJSONstring)
+	ui.Bind("createExperiment", heraldObj.CreateExperiment)
+	ui.Bind("getExperimentCount", heraldObj.GetExperimentCount)
+	ui.Bind("getExperimentName", heraldObj.GetExperimentName)
 
 	// Bind helper functions to the UI
 	ui.Bind("checkDir", helpers.CheckDir)
@@ -60,18 +65,15 @@ func main() {
 	ui.Bind("loadRuntimeInfo", func() error {
 
 		// load all samples from the storage and populate runtime info
-		if err := heraldObj.CheckAllSamples(); err != nil {
+		if err := heraldObj.GetRuntimeInfo(); err != nil {
 			return err
 		}
 
-		// get the current counts
-		totalCount, utCount, tCount, aCount := heraldObj.GetSampleCount(), heraldObj.GetUntaggedSampleCount(), heraldObj.GetTaggedSampleCount(), heraldObj.GetAnnouncedSampleCount()
-		_, _ = utCount, aCount
-
-		// get the db location and number of samples in storage
+		// get the db location and number of experiments and samples in storage
+		ui.Eval(fmt.Sprintf(`document.getElementById('staging_experimentCount').innerText = '%d'`, heraldObj.GetExperimentCount()))
 		ui.Eval(fmt.Sprintf(`document.getElementById('staging_dbLocation').innerHTML = 'filepath: %v'`, heraldObj.GetDbPath()))
-		ui.Eval(fmt.Sprintf(`document.getElementById('staging_sampleCount').innerText = '%d'`, totalCount))
-		ui.Eval(fmt.Sprintf(`document.getElementById('staging_taggedCount').innerText = '%d'`, tCount))
+		ui.Eval(fmt.Sprintf(`document.getElementById('staging_sampleCount').innerText = '%d'`, heraldObj.GetSampleCount()))
+		ui.Eval(fmt.Sprintf(`document.getElementById('staging_taggedCount').innerText = '%d'`, heraldObj.GetTaggedSampleCount()))
 
 		// check the network connection
 		if server.NetworkActive() {

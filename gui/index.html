@@ -34,11 +34,55 @@
 
 <body onload=start()>
 
-    <!--SAMPLE MODAL-->
+    <!--CREATE EXPERIMENT MODAL-->
+    <div id="createExperimentModal" class="modal">
+        <div class="modal-content">
+            <span id="createExperimentModalClose" class="modal-close">&times;</span>
+            <h1>Create an experiment</h1>
+            <div class="clearfix"></div>
+            <hr class="m-0 mb-2" />
+            <form id="createExperimentForm">
+                <fieldset>
+                    <!--label-->
+                    <label class="formLabel" for="formLabel_experimentName">Experiment name
+                        <i class="far fa-question-circle"><span class="tooltiptext">the name for the
+                                experiment</span></i>
+                    </label>
+                    <input type="text" placeholder="my unique experiment name" id="formLabel_experimentName" required>
+                    <!--output location-->
+                    <label class="formLabel" for="formLabel_outputLocation">Output location
+                        <i class="far fa-question-circle"><span class="tooltiptext">directory where experiment will be
+                                stored <br />note: reads will be placed in a sub directory</span></i>
+                    </label>
+                    <input type="text" placeholder="/Users/me/data" id="formLabel_outputLocation" required>
+                    <!--has been sequenced-->
+                    <label class="formLabel" for="formLabel_sequenced">Has it been sequenced yet?
+                        <i class="far fa-question-circle"><span class="tooltiptext">select yes if this experiment
+                                has been run already
+                                <br /> note: herald will check the sequence data is
+                                available</span></i>
+                    </label>
+                    <input type="radio" id="formLabel_sequencedTrue" name="formLabel_sequenced" value="true">
+                    <label class="label-inline" for="formLabel_sequencedTrue">Yes</label><br />
+                    <input type="radio" id="formLabel_sequencedFalse" name="formLabel_sequenced" value="false" checked>
+                    <label class="label-inline" for="formLabel_sequencedFalse">No</label>
+
+                    <!--submit button-->
+                    <div class="clearfix"></div>
+                    <hr class="m-0 mb-2" />
+                    <input class="button-primary" type="submit" value="Create experiment">
+                </fieldset>
+            </form>
+        </div>
+    </div>
+
+    <!--SAMPLE DETAILS MODAL-->
     <div id="sampleModal" class="modal">
         <div class="modal-content">
-            <span class="modal-close">&times;</span>
+            <span id="sampleModalClose" class="modal-close">&times;</span>
             <h1 id="sampleModal_samplename"></h1>
+            <div class="clearfix"></div>
+            <hr class="m-0 mb-2" />
             <p class="text-large">Details:</p>
             <pre id=sampleModal_content></pre>
             <div class="clearfix"></div>
@@ -102,9 +146,9 @@
             <div class="row grid-responsive">
                 <div class="column page-heading">
                     <div class="large-card">
-                        <h1>Hey there!</h1>
-                        <p class="text-large">Welcome to Herald or some other blurb</p>
-                        <p>Announce your samples</p>
+                        <h1>Welcome to Herald</h1>
+                        <p class="text-large">Get started by creating an experiment and adding some samples.</p>
+                        <button class="button" id="createExperimentModalOpen">create experiment</button>
                     </div>
                 </div>
             </div>
@@ -121,7 +165,18 @@
                             <h2>Staging</h2>
                         </div>
                         <div class="card-block">
-                            <!--db count and db location-->
+                            <!--experiment count-->
+                            <div class="mt-1">
+                                <div class="badge background-primary float-left" id="staging_experimentCount">0</div>
+                                <div class="float-left ml-1">
+                                    <p class="m-0"><strong>Experiments</strong> <span class="text-muted">on
+                                            record</span></p>
+                                    <p class="text-small text-muted">unused text field</p>
+                                </div>
+                                <div class="clearfix"></div>
+                                <hr class="m-0 mb-2" />
+                            </div>
+                            <!--sample db count and db location-->
                             <div class="mt-1">
                                 <div class="badge background-primary float-left" id="staging_sampleCount">0</div>
                                 <div class="float-left ml-1">
@@ -240,27 +295,64 @@
                         <div class="card-block">
                             <form id="addSampleForm">
                                 <fieldset>
-                                    <label for="nameField">Label</label>
+                                    <!--label-->
+                                    <label class="formLabel" for="formLabel_sampleLabel">Label
+                                        <i class="far fa-question-circle"><span class="tooltiptext">the name for the
+                                                sample</span></i>
+                                    </label>
                                     <input type="text" placeholder="sample xxx" id="formLabel_sampleLabel" required>
-                                    <label for="ageRangeField">Barcode</label>
+                                    <!--experiment-->
+                                    <label class="formLabel" for="formLabel_sampleExperiment">Experiment
+                                        <i class="far fa-question-circle"><span class="tooltiptext">the
+                                                experiment this sample belongs to</span></i>
+                                    </label>
+                                    <select id="formLabel_sampleExperiment" required>
+                                        <option value="" disabled selected>create an experiment first!</option>
+                                    </select>
+                                    <!--barcode-->
+                                    <label class="formLabel" for="formLabel_sampleBarcode">Barcode</label>
                                     <select id="formLabel_sampleBarcode" required>
                                         <option value="0">0</option>
                                         <option value="1">1</option>
                                         <option value="2">2</option>
                                         <option value="3">3</option>
                                     </select>
-                                    <label for="nameField">Tags</label>
+                                    <!--reference genome-->
+                                    <label class="formLabel" for="formLabel_refGenome">Reference genome
+                                        <i class="far fa-question-circle"><span class="tooltiptext">a reference
+                                                genome</span></i>
+                                    </label>
+                                    <input type="file" id="formLabel_refGenome">
+                                    <!--comment box-->
+                                    <label class="formLabel" for="formLabel_sampleComment">Comment</label>
+                                    <textarea placeholder="insert any additional information" id="formLabel_sampleComment"></textarea>
+                                    <div class="clearfix"></div>
+                                    <!--tags-->
+                                    <label>Tags</label>
+                                    <!--tags_sequence-->
                                     <input type="checkbox" id="formLabel_sequenceTag" value="sequence">
                                     <label class="label-inline" for="formLabel_sequenceTag">Sequence sample</label>
-                                    <label for="commentField">Comment</label>
-                                    <textarea placeholder="insert any additional information" id="formLabel_sampleComment"></textarea>
-                                    <!--
-                                    <div class="float-right">
-                                        <input type="checkbox" id="confirmField">
-                                        <label class="label-inline" for="confirmField">Send a copy to yourself</label>
+                                    <div class="clearfix"></div>
+                                    <!--tags_rampart-->
+                                    <input type="checkbox" id="formLabel_rampartTag" value="rampart">
+                                    <label class="label-inline" for="formLabel_rampartTag">RAMPART</label>
+                                    <div class="clearfix"></div>
+                                    <div style="display:none; padding-left:2%;" id="addSampleForm_rampartOptions">
+                                        <label for="formLabel_rampartFieldA">rampart option a:</label>
+                                        <select class="form-control" id="formLabel_rampartFieldA">
+                                            <option value="no">no</option>
+                                            <option value="yes">yes</option>
+                                        </select>
                                     </div>
-                                    -->
-                                    <input class="button-primary" type="submit" value="Add">
+                                    <!--tags_pipeline-->
+                                    <input type="checkbox" id="formLabel_pipelineTag" value="pipeline">
+                                    <label class="label-inline" for="formLabel_pipelineTag">Field bioinformatics
+                                        pipeline</label>
+
+                                    <!--submit button-->
+                                    <div class="clearfix"></div>
+                                    <hr class="m-0 mb-2" />
+                                    <input class="button-primary" type="submit" value="Add sample">
                                 </fieldset>
                             </form>
                         </div>
@@ -282,6 +374,7 @@
                                 <thead>
                                     <tr>
                                         <th>Sample Label</th>
+                                        <th>Experiment Name</th>
                                         <th></th>
                                     </tr>
                                 </thead>
@@ -310,7 +403,7 @@
             </div>
 
             <!-- end of main section -->
-            <p class="credit">&copy <a href="https://www.willrowe.net">Will Rowe</a> 2020</p>
+            <p class="credit">Built by <a href="https://www.willrowe.net">Will Rowe</a> as part of the <a href="https://artic.network/">ARTIC Network</a> project<br \> &copy 2020</p>
         </section>
     </div>
 

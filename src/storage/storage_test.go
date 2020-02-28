@@ -5,7 +5,7 @@ import (
 	"os"
 	"testing"
 
-	"github.com/will-rowe/herald/src/sample"
+	"github.com/will-rowe/herald/src/data"
 )
 
 // TestStorage open and close
@@ -33,14 +33,14 @@ func TestStorageAdd(t *testing.T) {
 	}
 
 	// check the current number of samples
-	if sampleStore.GetNumEntries() != 0 {
-		t.Fatalf("database not empty: %d", sampleStore.GetNumEntries())
+	if sampleStore.GetNumSamples() != 0 {
+		t.Fatalf("database not empty: %d", sampleStore.GetNumSamples())
 	}
 
 	// add samples
 	var i int32
 	for i = 0; i < 9; i++ {
-		sample := &sample.Sample{
+		sample := &data.Sample{
 			Label:   fmt.Sprintf("sample %d", i),
 			Barcode: i,
 		}
@@ -50,20 +50,20 @@ func TestStorageAdd(t *testing.T) {
 	}
 
 	// check db now has correct number of samples
-	if sampleStore.GetNumEntries() != 9 {
-		t.Fatalf("incorrect number of samples added to db: %d", sampleStore.GetNumEntries())
+	if sampleStore.GetNumSamples() != 9 {
+		t.Fatalf("incorrect number of samples added to db: %d", sampleStore.GetNumSamples())
 	}
 
 	// check you can't add a duplicate label
-	sample := &sample.Sample{
+	sample := &data.Sample{
 		Label:   "sample 1",
 		Barcode: 666,
 	}
 	if err := sampleStore.AddSample(sample); err == nil {
 		t.Fatal(err)
 	}
-	if sampleStore.GetNumEntries() != 9 {
-		t.Fatalf("incorrect number of samples added to db: %d", sampleStore.GetNumEntries())
+	if sampleStore.GetNumSamples() != 9 {
+		t.Fatalf("incorrect number of samples added to db: %d", sampleStore.GetNumSamples())
 	}
 
 	// check you can retrieve a sample
@@ -86,7 +86,7 @@ func TestStorageAdd(t *testing.T) {
 	if err := sampleStore.DeleteSample(sample.Label); err != nil {
 		t.Fatal(err)
 	}
-	if sampleStore.GetNumEntries() != 8 {
+	if sampleStore.GetNumSamples() != 8 {
 		t.Fatal("num entries does not updated after sample is deleted")
 	}
 
@@ -94,8 +94,8 @@ func TestStorageAdd(t *testing.T) {
 	if err := sampleStore.Wipe(); err != nil {
 		t.Fatal(err)
 	}
-	if sampleStore.GetNumEntries() != 0 {
-		t.Fatalf("db was not wiped (%d keys left)", sampleStore.GetNumEntries())
+	if sampleStore.GetNumSamples() != 0 {
+		t.Fatalf("db was not wiped (%d keys left)", sampleStore.GetNumSamples())
 	}
 
 	// close the storage

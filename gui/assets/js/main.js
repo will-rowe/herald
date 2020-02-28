@@ -5,7 +5,7 @@ function printErrorMsg(msg) {
     console.log('error: ', msg)
     $('body').overhang({
         type: 'error',
-        message: 'error: ' + msg,
+        message: msg,
         overlay: true,
         closeConfirm: true
     })
@@ -37,30 +37,6 @@ window.addEventListener(
 )
 
 ////////////////////////////////////////////////////////////////////
-// SAMPLE MODAL
-// Get the required elements
-const sampleModalClose = document.getElementsByClassName('modal-close')[0]
-const sampleModal = document.getElementById('sampleModal')
-
-// When the user clicks on <span> (x), close the modal
-sampleModalClose.addEventListener('click', async() => {
-    sampleModal.style.display = 'none'
-})
-
-// When the user clicks anywhere outside of the modal, close it
-window.onclick = function(event) {
-    if (event.target == sampleModal) {
-        sampleModal.style.display = 'none'
-    }
-}
-
-// getSampleJSONdump returns a stringified protobuf dump of a sample from the database
-const getSampleJSONdump = async function(sampleLabel) {
-    var sampleJSONdump = `${await window.printSampleToJSONstring(sampleLabel)}`
-    return sampleJSONdump
-}
-
-////////////////////////////////////////////////////////////////////
 // BUTTONS
 // get the buttons that control the app
 const refreshPage = document.getElementById('refreshPage')
@@ -76,7 +52,7 @@ refreshPage.addEventListener('click', async() => {
 
 // add an event listener to wipeDatabase button
 wipeDatabase.addEventListener('click', async() => {
-    console.log('wiping database')
+    console.log('wiping storage')
 
     // TODO: add a confirm prompt
 
@@ -91,7 +67,115 @@ wipeDatabase.addEventListener('click', async() => {
 
     // reset the page and report success
     fullPageRender()
-    printSuccessMsg('database wiped')
+    printSuccessMsg('storage wiped')
+})
+
+////////////////////////////////////////////////////////////////////
+// MODALS
+// createExperimentModal
+const createExperimentModalOpen = document.getElementById(
+    'createExperimentModalOpen'
+)
+const createExperimentModalClose = document.getElementById(
+    'createExperimentModalClose'
+)
+const createExperimentModal = document.getElementById('createExperimentModal')
+createExperimentModalOpen.addEventListener('click', async() => {
+    createExperimentModal.style.display = 'block'
+})
+createExperimentModalClose.addEventListener('click', async() => {
+    createExperimentModal.style.display = 'none'
+})
+
+// sampleModal
+const sampleModalClose = document.getElementById('sampleModalClose')
+const sampleModal = document.getElementById('sampleModal')
+sampleModalClose.addEventListener('click', async() => {
+    sampleModal.style.display = 'none'
+})
+
+// when the user clicks anywhere outside of any modal, close it
+window.onclick = function(event) {
+    if (event.target == sampleModal) {
+        sampleModal.style.display = 'none'
+    }
+    if (event.target == createExperimentModal) {
+        createExperimentModal.style.display = 'none'
+    }
+}
+
+// getSampleJSONdump returns a stringified protobuf dump of a sample from the storage
+const getSampleJSONdump = async function(sampleLabel) {
+    var sampleJSONdump = `${await window.printSampleToJSONstring(sampleLabel)}`
+    return sampleJSONdump
+}
+
+////////////////////////////////////////////////////////////////////
+// CREATE EXPERIMENT FORM
+// get the form
+const createExperimentForm = document.getElementById('createExperimentForm')
+
+// prevent default form action on the addSampleForm
+function handleForm(event) {
+    event.preventDefault()
+}
+createExperimentForm.addEventListener('submit', handleForm)
+
+// add listener to the output location text box so we can validate it
+var outputLocation = document.getElementById('formLabel_outputLocation')
+outputLocation.addEventListener('change', async() => {
+    try {
+        await checkDir(outputLocation.value)
+    } catch (e) {
+        printErrorMsg(e)
+        return
+    }
+})
+
+// add an event listener to the createExperimentForm submit button
+createExperimentForm.addEventListener('submit', async() => {
+    console.log('creating experiment')
+
+    var elements = createExperimentForm.elements
+
+    // check for data directories if the user is creating an experiment with existing data
+    if (elements['formLabel_sequencedTrue'].value == 'true') {
+        // TODO: check this properly, at the moment just looking for experiment name dir and fast5 sub dir
+        var dirName =
+            elements['formLabel_outputLocation'].value +
+            '/' +
+            elements['formLabel_experimentName'].value
+        var fast5_dirName = dirName + '/fast5_pass'
+        try {
+            await checkDir(dirName)
+        } catch (e) {
+            printErrorMsg(e)
+            return
+        }
+        try {
+            await checkDir(fast5_dirName)
+        } catch (e) {
+            printErrorMsg(e)
+            return
+        }
+    }
+
+    // create an experiment and add it to the store
+    try {
+        await createExperiment(
+            elements['formLabel_experimentName'].value,
+            elements['formLabel_outputLocation'].value
+        )
+    } catch (e) {
+        printErrorMsg(e)
+        return
+    }
+
+    // reset the form, refresh the page, close the modal and report success
+    createExperimentForm.reset()
+    pageRefresh()
+    createExperimentModal.style.display = 'none'
+    printSuccessMsg('experiment created')
 })
 
 ////////////////////////////////////////////////////////////////////
@@ -100,9 +184,6 @@ wipeDatabase.addEventListener('click', async() => {
 const addSampleForm = document.getElementById('addSampleForm')
 
 // prevent default form action on the addSampleForm
-function handleForm(event) {
-    event.preventDefault()
-}
 addSampleForm.addEventListener('submit', handleForm)
 
 // add listener to the form tags so that more form appears
@@ -119,7 +200,7 @@ document
 
 // add an event listener to the addSampleForm submit button
 addSampleForm.addEventListener('submit', async() => {
-    console.log('adding sample to database')
+    console.log('adding sample to storage')
 
     var elements = addSampleForm.elements
 
@@ -132,7 +213,7 @@ addSampleForm.addEventListener('submit', async() => {
         }
     }
 
-    // create a sample and add it to the database
+    // create a sample and add it to the storage
     try {
         // TODO: try reading form straight into protobuf and then send a serialised stream to Go
         await createSample(
@@ -213,7 +294,7 @@ $('#sampleTable tbody').on('click', 'button', function() {
 
 // buildTable will get the database keys via Go and then populate the table
 const buildTable = async() => {
-    console.log('building table from the database')
+    console.log('building table from sample labels in storage')
 
     // wipe any existing table
     table.clear().draw(true)

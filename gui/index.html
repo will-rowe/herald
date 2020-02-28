@@ -34,11 +34,55 @@
 
 <body onload=start()>
 
-    <!--SAMPLE MODAL-->
+    <!--CREATE EXPERIMENT MODAL-->
+    <div id="createExperimentModal" class="modal">
+        <div class="modal-content">
+            <span id="createExperimentModalClose" class="modal-close">&times;</span>
+            <h1>Create an experiment</h1>
+            <div class="clearfix"></div>
+            <hr class="m-0 mb-2" />
+            <form id="createExperimentForm">
+                <fieldset>
+                    <!--label-->
+                    <label class="formLabel" for="formLabel_experimentName">Experiment name
+                        <i class="far fa-question-circle"><span class="tooltiptext">the name for the
+                                experiment</span></i>
+                    </label>
+                    <input type="text" placeholder="my unique experiment name" id="formLabel_experimentName" required>
+                    <!--output location-->
+                    <label class="formLabel" for="formLabel_outputLocation">Output location
+                        <i class="far fa-question-circle"><span class="tooltiptext">directory where experiment will be
+                                stored <br />note: reads will be placed in a sub directory</span></i>
+                    </label>
+                    <input type="text" placeholder="/Users/me/data" id="formLabel_outputLocation" required>
+                    <!--has been sequenced-->
+                    <label class="formLabel" for="formLabel_sequenced">Has it been sequenced yet?
+                        <i class="far fa-question-circle"><span class="tooltiptext">select yes if this experiment
+                                has been run already
+                                <br /> note: herald will check the sequence data is
+                                available</span></i>
+                    </label>
+                    <input type="radio" id="formLabel_sequencedTrue" name="formLabel_sequenced" value="true">
+                    <label class="label-inline" for="formLabel_sequencedTrue">Yes</label><br />
+                    <input type="radio" id="formLabel_sequencedFalse" name="formLabel_sequenced" value="false" checked>
+                    <label class="label-inline" for="formLabel_sequencedFalse">No</label>
+
+                    <!--submit button-->
+                    <div class="clearfix"></div>
+                    <hr class="m-0 mb-2" />
+                    <input class="button-primary" type="submit" value="Create experiment">
+                </fieldset>
+            </form>
+        </div>
+    </div>
+
+    <!--SAMPLE DETAILS MODAL-->
     <div id="sampleModal" class="modal">
         <div class="modal-content">
-            <span class="modal-close">&times;</span>
+            <span id="sampleModalClose" class="modal-close">&times;</span>
             <h1 id="sampleModal_samplename"></h1>
+            <div class="clearfix"></div>
+            <hr class="m-0 mb-2" />
             <p class="text-large">Details:</p>
             <pre id=sampleModal_content></pre>
             <div class="clearfix"></div>
@@ -104,7 +148,7 @@
                     <div class="large-card">
                         <h1>Welcome to Herald</h1>
                         <p class="text-large">Get started by creating an experiment and adding some samples.</p>
-                        <button class="button" id="experiment_create">create experiment</button>
+                        <button class="button" id="createExperimentModalOpen">create experiment</button>
                     </div>
                 </div>
             </div>
@@ -258,8 +302,8 @@
                                     </label>
                                     <input type="text" placeholder="sample xxx" id="formLabel_sampleLabel" required>
                                     <!--experiment-->
-                                    <label for="formLabel_sampleExperiemtn">Experiment</label>
-                                    <select id="formLabel_sampleBarcode" required>
+                                    <label for="formLabel_sampleExperiment">Experiment</label>
+                                    <select id="formLabel_sampleExperiment" required>
                                         <option value="placeholder">placeholder</option>
                                     </select>
                                     <!--barcode-->
@@ -305,7 +349,7 @@
                                     <!--submit button-->
                                     <div class="clearfix"></div>
                                     <hr class="m-0 mb-2" />
-                                    <input class="button-primary" type="submit" value="Add">
+                                    <input class="button-primary" type="submit" value="Add sample">
                                 </fieldset>
                             </form>
                         </div>

@@ -6,23 +6,43 @@
  * paul@paulkr.com
  */
 
-@import url(https://fonts.googleapis.com/css?family=Roboto);
+@font-face {
+    font-family: 'Lato';
+    src: url('../webfonts/Lato/Lato-Regular.ttf') format('truetype');
+    font-weight: 400;
+    font-style: normal;
+}
+
+@font-face {
+    font-family: 'Lato';
+    src: url('../webfonts/Lato/Lato-Italic.ttf') format('truetype');
+    font-weight: 400;
+    font-style: italic;
+}
+
+@font-face {
+    font-family: 'Lato';
+    src: url('../webfonts/Lato/Lato-Bold.ttf') format('truetype');
+    font-weight: 700;
+    font-style: normal;
+}
+
 .overhang,
 .overhang-overlay {
     position: fixed;
     top: 0;
     left: 0;
-    right: 0
+    right: 0;
 }
 
 .overhang,
 .overhang-prompt-field {
-    font-family: Roboto, sans-serif
+    font-family: Lato, sans-serif;
 }
 
 .overhang-close,
 .overhang-message strong {
-    font-weight: 700
+    font-weight: 700;
 }
 
 .overhang {
@@ -31,28 +51,28 @@
     z-index: 9999;
     padding: 15px 2px;
     text-align: center;
-    box-sizing: border-box
+    box-sizing: border-box;
 }
 
 .overhang-message {
-    color: #FFF;
-    font-size: 20px
+    color: #fff;
+    font-size: 20px;
 }
 
 .overhang-message a {
-    color: inherit
+    color: inherit;
 }
 
 .overhang-message a:hover {
-    text-decoration: none
+    text-decoration: none;
 }
 
 .overhang-overlay {
     display: block;
     background-color: #000;
-    opacity: .6;
+    opacity: 0.6;
     bottom: 0;
-    z-index: 9998
+    z-index: 9998;
 }
 
 .overhang-prompt-field {
@@ -69,7 +89,7 @@
     padding-left: 3px;
     padding-right: 3px;
     outline: 0;
-    font-size: 15px
+    font-size: 15px;
 }
 
 .overhang-no-option,
@@ -80,13 +100,13 @@
     outline: 0;
     border-radius: 4px;
     font-size: 20px;
-    color: #FFF;
+    color: #fff;
     cursor: pointer;
-    margin: 0 6px
+    margin: 0 6px;
 }
 
 .overhang-yes-option {
-    margin-left: 15px
+    margin-left: 15px;
 }
 
 .overhang-close {
@@ -96,19 +116,19 @@
     padding-left: 13px;
     font-size: 2.5em;
     display: inline-block;
-    line-height: 20px
+    line-height: 20px;
 }
 
 .overhang-close:after {
-    content: "\00d7"
+    content: '\00d7';
 }
 
-@media (max-width:720px) {
+@media (max-width: 720px) {
     .overhang-close {
         font-size: 2em;
-        line-height: 14px
+        line-height: 14px;
     }
     .overhang-message {
-        font-size: 15px
+        font-size: 15px;
     }
 }

@@ -5,7 +5,7 @@ function printErrorMsg(msg) {
     console.log('error: ', msg)
     $('body').overhang({
         type: 'error',
-        message: msg,
+        message: 'error: ' + msg,
         overlay: true,
         closeConfirm: true
     })
@@ -21,6 +21,20 @@ function printSuccessMsg(msg) {
         message: msg
     })
 }
+
+// update network status
+window.addEventListener(
+    'online',
+    () =>
+    (document.getElementById('status_network').innerHTML =
+        '<i class="far fa-check-circle" style="color: #35cebe;"></i>')
+)
+window.addEventListener(
+    'offline',
+    () =>
+    (document.getElementById('status_network').innerHTML =
+        '<i class="far fa-times-circle" style="color: red;"></i>')
+)
 
 ////////////////////////////////////////////////////////////////////
 // SAMPLE MODAL

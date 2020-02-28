@@ -5,7 +5,7 @@ function printErrorMsg(msg) {
     console.log('error: ', msg)
     $('body').overhang({
         type: 'error',
-        message: 'error: ' + msg,
+        message: msg,
         overlay: true,
         closeConfirm: true
     })
@@ -270,9 +270,11 @@ const pageRefresh = async() => {
     console.log('refreshing runtime info and re-rendering the page')
 
     // reload the Go Herald instance and repopulate the page data
-    var retVal = `${await window.loadRuntimeInfo()}`
-    if (retVal !== '') {
-        printErrorMsg(retVal)
+    try {
+        await loadRuntimeInfo()
+    } catch (e) {
+        printErrorMsg(e)
+        return
     }
 
     // update the pie chart
@@ -287,9 +289,11 @@ const fullPageRender = async() => {
     console.log('starting Go Herald instance and rendering the page')
 
     // load the Go Herald instance and populate the page data
-    var retVal = `${await window.loadRuntimeInfo()}`
-    if (retVal !== '') {
-        printErrorMsg(retVal)
+    try {
+        await loadRuntimeInfo()
+    } catch (e) {
+        printErrorMsg(e)
+        return
     }
 
     // print the pie chart

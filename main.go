@@ -13,6 +13,7 @@ import (
 
 	"github.com/zserge/lorca"
 
+	"github.com/will-rowe/herald/src/helpers"
 	"github.com/will-rowe/herald/src/herald"
 	"github.com/will-rowe/herald/src/server"
 )
@@ -66,12 +67,15 @@ func main() {
 	ui.Bind("getSampleLabel", heraldObj.GetSampleLabel)
 	ui.Bind("printSampleToJSONstring", heraldObj.PrintSampleToJSONstring)
 
+	// Bind helper functions to the UI
+	ui.Bind("checkDir", helpers.CheckDir)
+
 	// Setup a JS function to init the HERALD and populate all storage data fields in the app
-	ui.Bind("loadRuntimeInfo", func() string {
+	ui.Bind("loadRuntimeInfo", func() error {
 
 		// load all samples from the storage and populate runtime info
 		if err := heraldObj.CheckAllSamples(); err != nil {
-			return fmt.Sprintf("%s", err)
+			return err
 		}
 
 		// get the current counts
@@ -91,7 +95,7 @@ func main() {
 		}
 
 		// print a message
-		return ""
+		return nil
 	})
 
 	// Wait until the interrupt signal arrives or browser window is closed

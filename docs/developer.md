@@ -16,7 +16,7 @@ The protocol buffer definitions are stored under `protobuf/*.proto`.
 If editing the `*.proto` files, the Go bindings will need to be re-compiled. For example, the bindings for the sample message:
 
 ```
-protoc --go_out=plugins=grpc:src/sample -I=protobuf protobuf/herald.proto
+protoc --go_out=plugins=grpc:src/data -I=protobuf protobuf/herald.proto
 go generate
 sh build-osx.sh
 ```

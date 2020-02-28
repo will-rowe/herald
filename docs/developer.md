@@ -21,6 +21,12 @@ go generate
 sh build-osx.sh
 ```
 
+To update the MinKNOW api:
+
+```
+protoc --go_out=plugins=grpc:src/ont_rpc -I protobuf/minknow/rpc protobuf/minknow/rpc/rpc_options.proto
+```
+
 ## Database
 
 Sample records are stored via [bitcask db](https://pkg.go.dev/github.com/prologic/bitcask), which is currently hardcoded to live in `/tmp/db`.

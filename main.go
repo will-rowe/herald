@@ -15,6 +15,7 @@ import (
 
 	"github.com/will-rowe/herald/src/helpers"
 	"github.com/will-rowe/herald/src/herald"
+	"github.com/will-rowe/herald/src/minknow"
 	"github.com/will-rowe/herald/src/server"
 )
 
@@ -60,6 +61,7 @@ func main() {
 
 	// Bind helper functions to the UI
 	ui.Bind("checkDir", helpers.CheckDir)
+	ui.Bind("checkAPIstatus", minknow.CheckAPIstatus)
 
 	// Setup a JS function to init the HERALD and populate all storage data fields in the app
 	ui.Bind("loadRuntimeInfo", func() error {

@@ -37,18 +37,31 @@ function printSuccessMsg(msg) {
     })
 }
 
+// updatStatus will print status and time
+function updateStatus(id, active) {
+    var today = new Date()
+    var time =
+        today.getHours() +
+        ':' +
+        (today.getMinutes() < 10 ? '0' : '') +
+        today.getMinutes()
+    if (active === 'true') {
+        document.getElementById(id).innerHTML =
+            '<i class="far fa-check-circle" style="color: #35cebe;"></i>'
+        document.getElementById(id + '_timestamp').innerText =
+            'online since: ' + time
+    } else {
+        document.getElementById(id).innerHTML =
+            '<i class="far fa-times-circle" style="color: red;"></i>'
+        document.getElementById(id + '_timestamp').innerText =
+            'offline since: ' + time
+    }
+}
+
 // update network status
-window.addEventListener(
-    'online',
-    () =>
-    (document.getElementById('status_network').innerHTML =
-        '<i class="far fa-check-circle" style="color: #35cebe;"></i>')
-)
-window.addEventListener(
-    'offline',
-    () =>
-    (document.getElementById('status_network').innerHTML =
-        '<i class="far fa-times-circle" style="color: red;"></i>')
+window.addEventListener('online', () => updateStatus('status_network', 'true'))
+window.addEventListener('offline', () =>
+    updateStatus('status_network', 'false')
 )
 
 ////////////////////////////////////////////////////////////////////
@@ -427,6 +440,10 @@ const pageRefresh = async() => {
     // update the pie chart
     await updatePieChart()
 
+    // check the minKNOW status TODO: do this in Go via routine
+    var minknowStatus = `${await checkAPIstatus()}`
+    updateStatus('status_minknow', minknowStatus)
+
     // print a new timestamp
     printTimeStamps()
 }
@@ -449,6 +466,10 @@ const fullPageRender = async() => {
 
     // print the pie chart
     await updatePieChart()
+
+    // check the minKNOW status TODO: do this in Go via routine
+    var minknowStatus = `${await checkAPIstatus()}`
+    updateStatus('status_minknow', minknowStatus)
 
     // print the table
     await buildTable()

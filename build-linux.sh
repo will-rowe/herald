@@ -1,7 +1,7 @@
 #!/bin/sh
 
 MAINTAINER="willrowe"
-APP_NAME=Herald
+APP_NAME=herald
 APP_VERSION=1.0.0
 APPDIR=${APP}_${APP_VERSION}
 
@@ -11,7 +11,7 @@ mkdir -p $APPDIR/usr/share/icons/hicolor/1024x1024/apps
 mkdir -p $APPDIR/usr/share/icons/hicolor/256x256/apps
 mkdir -p $APPDIR/DEBIAN
 
-go build -o $APPDIR/usr/bin/$APP_NAME
+go build -o $APPDIR/usr/bin/$APP_NAME  -ldflags "-X main.dbLocation=${HOME}/.${APP_NAME}"
 
 cp gui/assets/icons/icon.png $APPDIR/usr/share/icons/hicolor/1024x1024/apps/${APP}.png
 cp gui/assets/icons/icon.png $APPDIR/usr/share/icons/hicolor/256x256/apps/${APP}.png

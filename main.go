@@ -19,8 +19,8 @@ import (
 	"github.com/will-rowe/herald/src/server"
 )
 
-// dbLocation is where the db is stored TODO: allow user to change this
-const dbLocation = "/tmp/herald/db"
+// dbLocation is where the db is stored - it is set at compile time to be platform specific
+var dbLocation string
 
 // main is the app entrypoint
 func main() {

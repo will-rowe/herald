@@ -34,10 +34,25 @@
 
 <body onload=start()>
 
+    <!--SAMPLE DETAILS MODAL-->
+    <div id="sampleDetailsModal" class="modal">
+        <div class="modal-content">
+            <span class="modal-close">&times;</span>
+            <h1 id="sampleModal_samplename"></h1>
+            <div class="clearfix"></div>
+            <hr class="m-0 mb-2" />
+            <p class="text-large">Details:</p>
+            <pre id=sampleModal_content></pre>
+            <div class="clearfix"></div>
+            <hr class="m-0 mb-2" />
+            <button class="button" id=sampleModal_delete>delete</button>
+        </div>
+    </div>
+
     <!--CREATE EXPERIMENT MODAL-->
     <div id="createExperimentModal" class="modal">
         <div class="modal-content">
-            <span id="createExperimentModalClose" class="modal-close">&times;</span>
+            <span class="modal-close">&times;</span>
             <h1>Create an experiment</h1>
             <div class="clearfix"></div>
             <hr class="m-0 mb-2" />
@@ -76,18 +91,17 @@
         </div>
     </div>
 
-    <!--SAMPLE DETAILS MODAL-->
-    <div id="sampleModal" class="modal">
+    <!--ADD SAMPLE MODAL-->
+    <div id="addSampleModal" class="modal">
         <div class="modal-content">
-            <span id="sampleModalClose" class="modal-close">&times;</span>
-            <h1 id="sampleModal_samplename"></h1>
+            <span class="modal-close">&times;</span>
+            <h1>Add a sample</h1>
             <div class="clearfix"></div>
             <hr class="m-0 mb-2" />
-            <p class="text-large">Details:</p>
-            <pre id=sampleModal_content></pre>
-            <div class="clearfix"></div>
-            <hr class="m-0 mb-2" />
-            <button class="button" id=sampleModal_delete>delete</button>
+
+            <!---ADD SAMPLE FORM HERE-->
+            <p>sample form here</p>
+
         </div>
     </div>
 
@@ -149,6 +163,7 @@
                         <h1>Welcome to Herald</h1>
                         <p class="text-large">Get started by creating an experiment and adding some samples.</p>
                         <button class="button" id="createExperimentModalOpen">create experiment</button>
+                        <button class="button" id="addSampleModalOpen" disabled>add sample</button>
                     </div>
                 </div>
             </div>

@@ -71,11 +71,18 @@ func main() {
 			return err
 		}
 
-		// get the db location and number of experiments and samples in storage
+		// print the db location and number of experiments and samples in storage
 		ui.Eval(fmt.Sprintf(`document.getElementById('staging_experimentCount').innerText = '%d'`, heraldObj.GetExperimentCount()))
 		ui.Eval(fmt.Sprintf(`document.getElementById('staging_dbLocation').innerHTML = 'filepath: %v'`, heraldObj.GetDbPath()))
 		ui.Eval(fmt.Sprintf(`document.getElementById('staging_sampleCount').innerText = '%d'`, heraldObj.GetSampleCount()))
 		ui.Eval(fmt.Sprintf(`document.getElementById('staging_taggedCount').innerText = '%d'`, heraldObj.GetTaggedSampleCount()))
+
+		// enable the add sample button if there are experiments to use
+		if heraldObj.GetExperimentCount() == 0 {
+			ui.Eval(fmt.Sprintf(`document.getElementById('addSampleModalOpen').disabled = true`))
+		} else {
+			ui.Eval(fmt.Sprintf(`document.getElementById('addSampleModalOpen').disabled = false`))
+		}
 
 		// check the network connection
 		if server.NetworkActive() {

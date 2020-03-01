@@ -100,37 +100,39 @@ wipeDatabase.addEventListener('click', async() => {
 
 ////////////////////////////////////////////////////////////////////
 // MODALS
+// modal closing
+var modalClosers = document.getElementsByClassName('modal-close')
+for (let i = 0; i < modalClosers.length; i++) {
+    modalClosers[i].addEventListener('click', function() {
+        modalClosers[i].closest('.modal').style.display = 'none'
+    })
+}
+window.onclick = function(event) {
+    if (event.target.className == 'modal') {
+        event.target.style.display = 'none'
+    }
+}
+
 // createExperimentModal
+// open on button click
+const createExperimentModal = document.getElementById('createExperimentModal')
 const createExperimentModalOpen = document.getElementById(
     'createExperimentModalOpen'
 )
-const createExperimentModalClose = document.getElementById(
-    'createExperimentModalClose'
-)
-const createExperimentModal = document.getElementById('createExperimentModal')
-createExperimentModalOpen.addEventListener('click', async() => {
+createExperimentModalOpen.addEventListener('click', function() {
     createExperimentModal.style.display = 'block'
 })
-createExperimentModalClose.addEventListener('click', async() => {
-    createExperimentModal.style.display = 'none'
+
+// addSampleModal
+// open on button click (Go handles the disabled flag)
+const addSampleModal = document.getElementById('addSampleModal')
+const addSampleModalOpen = document.getElementById('addSampleModalOpen')
+addSampleModalOpen.addEventListener('click', function() {
+    addSampleModal.style.display = 'block'
 })
 
-// sampleModal
-const sampleModalClose = document.getElementById('sampleModalClose')
-const sampleModal = document.getElementById('sampleModal')
-sampleModalClose.addEventListener('click', async() => {
-    sampleModal.style.display = 'none'
-})
-
-// when the user clicks anywhere outside of any modal, close it
-window.onclick = function(event) {
-    if (event.target == sampleModal) {
-        sampleModal.style.display = 'none'
-    }
-    if (event.target == createExperimentModal) {
-        createExperimentModal.style.display = 'none'
-    }
-}
+// sampleDetailsModal
+const sampleDetailsModal = document.getElementById('sampleDetailsModal')
 
 // getSampleJSONdump returns a stringified protobuf dump of a sample from the storage
 const getSampleJSONdump = async function(sampleLabel) {
@@ -312,7 +314,7 @@ $('#sampleTable tbody').on('click', 'button', function() {
             '<pre>' + sampleProtobufDump + '</pre>'
 
         // display modal
-        document.getElementById('sampleModal').style.display = 'block'
+        document.getElementById('sampleDetailsModal').style.display = 'block'
 
         // set up delete button
         document
@@ -334,7 +336,7 @@ $('#sampleTable tbody').on('click', 'button', function() {
 
                 // reset the runtime info and report success
                 await pageRefresh()
-                document.getElementById('sampleModal').style.display = 'none'
+                document.getElementById('sampleDetailsModal').style.display = 'none'
                 printSuccessMsg('sample deleted')
             })
     })

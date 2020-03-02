@@ -11,7 +11,7 @@ import (
 func InitSample(label string, experiment *Experiment, barcode int32, comment string) *Sample {
 
 	// create the tags and set all to false
-	tags := &Sample_Tags{
+	tags := &Tags{
 		Sequence: false,
 	}
 

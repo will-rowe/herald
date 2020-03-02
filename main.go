@@ -19,8 +19,8 @@ import (
 	"github.com/will-rowe/herald/src/server"
 )
 
-// dbLocation is where the db is stored TODO: allow user to change this
-const dbLocation = "/tmp/herald/db"
+// dbLocation is where the db is stored - it is set at compile time to be platform specific
+var dbLocation string
 
 // main is the app entrypoint
 func main() {
@@ -60,7 +60,7 @@ func main() {
 	ui.Bind("getExperimentName", heraldObj.GetExperimentName)
 
 	// Bind helper functions to the UI
-	ui.Bind("checkDir", helpers.CheckDir)
+	ui.Bind("checkDirExists", helpers.CheckDirExists)
 	ui.Bind("checkAPIstatus", minknow.CheckAPIstatus)
 
 	// Setup a JS function to init the HERALD and populate all storage data fields in the app
@@ -71,11 +71,18 @@ func main() {
 			return err
 		}
 
-		// get the db location and number of experiments and samples in storage
+		// print the db location and number of experiments and samples in storage
 		ui.Eval(fmt.Sprintf(`document.getElementById('staging_experimentCount').innerText = '%d'`, heraldObj.GetExperimentCount()))
 		ui.Eval(fmt.Sprintf(`document.getElementById('staging_dbLocation').innerHTML = 'filepath: %v'`, heraldObj.GetDbPath()))
 		ui.Eval(fmt.Sprintf(`document.getElementById('staging_sampleCount').innerText = '%d'`, heraldObj.GetSampleCount()))
 		ui.Eval(fmt.Sprintf(`document.getElementById('staging_taggedCount').innerText = '%d'`, heraldObj.GetTaggedSampleCount()))
+
+		// enable the add sample button if there are experiments to use
+		if heraldObj.GetExperimentCount() == 0 {
+			ui.Eval(fmt.Sprintf(`document.getElementById('addSampleModalOpen').disabled = true`))
+		} else {
+			ui.Eval(fmt.Sprintf(`document.getElementById('addSampleModalOpen').disabled = false`))
+		}
 
 		// check the network connection
 		if server.NetworkActive() {

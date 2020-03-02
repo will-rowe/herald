@@ -37,7 +37,7 @@ function printSuccessMsg(msg) {
     })
 }
 
-// updatStatus will print status and time
+// updatStatus will print status icon and check time
 function updateStatus(id, active) {
     var today = new Date()
     var time =
@@ -58,7 +58,7 @@ function updateStatus(id, active) {
     }
 }
 
-// update network status
+// listen for change in network status
 window.addEventListener('online', () => updateStatus('status_network', 'true'))
 window.addEventListener('offline', () =>
     updateStatus('status_network', 'false')
@@ -95,63 +95,196 @@ wipeDatabase.addEventListener('click', async() => {
 
     // reset the page and report success
     fullPageRender()
-    printSuccessMsg('storage wiped')
+    printSuccessMsg('database wiped')
 })
 
 ////////////////////////////////////////////////////////////////////
 // MODALS
+// modal closing
+var modalClosers = document.getElementsByClassName('modal-close')
+for (let i = 0; i < modalClosers.length; i++) {
+    modalClosers[i].addEventListener('click', function() {
+        modalClosers[i].closest('.modal').style.display = 'none'
+    })
+}
+window.onclick = function(event) {
+    if (event.target.className == 'modal') {
+        event.target.style.display = 'none'
+    }
+}
+
 // createExperimentModal
+// open on button click
+const createExperimentModal = document.getElementById('createExperimentModal')
 const createExperimentModalOpen = document.getElementById(
     'createExperimentModalOpen'
 )
-const createExperimentModalClose = document.getElementById(
-    'createExperimentModalClose'
-)
-const createExperimentModal = document.getElementById('createExperimentModal')
-createExperimentModalOpen.addEventListener('click', async() => {
+createExperimentModalOpen.addEventListener('click', function() {
     createExperimentModal.style.display = 'block'
 })
-createExperimentModalClose.addEventListener('click', async() => {
-    createExperimentModal.style.display = 'none'
+
+// addSampleModal
+// open on button click (Go handles the disabled flag)
+const addSampleModal = document.getElementById('addSampleModal')
+const addSampleModalOpen = document.getElementById('addSampleModalOpen')
+addSampleModalOpen.addEventListener('click', function() {
+    addSampleModal.style.display = 'block'
 })
 
-// sampleModal
-const sampleModalClose = document.getElementById('sampleModalClose')
-const sampleModal = document.getElementById('sampleModal')
-sampleModalClose.addEventListener('click', async() => {
-    sampleModal.style.display = 'none'
-})
-
-// when the user clicks anywhere outside of any modal, close it
-window.onclick = function(event) {
-    if (event.target == sampleModal) {
-        sampleModal.style.display = 'none'
-    }
-    if (event.target == createExperimentModal) {
-        createExperimentModal.style.display = 'none'
-    }
-}
-
-// getSampleJSONdump returns a stringified protobuf dump of a sample from the storage
-const getSampleJSONdump = async function(sampleLabel) {
-    var sampleJSONdump = `${await window.printSampleToJSONstring(sampleLabel)}`
-    return sampleJSONdump
-}
+// sampleDetailsModal
+const sampleDetailsModal = document.getElementById('sampleDetailsModal')
 
 ////////////////////////////////////////////////////////////////////
 // CREATE EXPERIMENT FORM
-// get the form
+// get the form and prevent default action
 const createExperimentForm = document.getElementById('createExperimentForm')
 createExperimentForm.addEventListener('submit', handleForm)
 
-// add listener to the output location text box so we can validate it
-var outputLocation = document.getElementById('formLabel_outputLocation')
-outputLocation.addEventListener('change', async() => {
+// get some fields
+var expName = document.getElementById('formLabel_experimentName')
+var expOutputLocation = document.getElementById('formLabel_outputLocation')
+var fieldset_outputFASTQlocation = document.getElementById(
+    'fieldset_outputFASTQlocation'
+)
+var formLabel_outputFAST5location = document.getElementById(
+    'formLabel_outputFAST5location'
+)
+var formLabel_outputFASTQlocation = document.getElementById(
+    'formLabel_outputFASTQlocation'
+)
+var formLabel_sequence = document.getElementById('formLabel_sequence')
+var formLabel_basecall = document.getElementById('formLabel_basecall')
+var formLabel_basecallLabel = document.getElementById('formLabel_basecallLabel')
+var msgDiv = document.getElementById('createExperimentValidationMessage')
+
+// reset func to clear the form changes
+function createExperimentFormReset() {
+    fieldset_outputFASTQlocation.style.display = 'block'
+    formLabel_outputFAST5location.value = ''
+    formLabel_outputFASTQlocation.value = ''
+    formLabel_sequence.checked = true
+    formLabel_basecall.checked = true
+    formLabel_basecallLabel.style.color = '#d3d3d3'
+    formLabel_basecall.disabled = true
+    msgDiv.innerHTML = ''
+}
+
+// set up the validator
+experimentValidator = {
+    validListenter: function(val) {},
+    registerListener: function(listener) {
+        this.validListenter = listener
+    },
+    expNameInternal: false,
+    set expName(val) {
+        this.expNameInternal = val
+        this.validListenter(val)
+    },
+    get expName() {
+        return this.expNameInternal
+    },
+    expLocInternal: false,
+    set expLoc(val) {
+        this.expLocInternal = val
+        this.validListenter(val)
+    },
+    get expLoc() {
+        return this.expLocInternal
+    }
+}
+
+// the validator listener will adjust form values depending on user input
+experimentValidator.registerListener(async() => {
+    // reset if user hasn't input both expName and expOutputLocation
+    if (
+        experimentValidator.expName === false ||
+        experimentValidator.expLoc === false
+    ) {
+        createExperimentFormReset()
+        return
+    }
+
+    // get expected dir names
+    var dirName = expOutputLocation.value + '/' + expName.value
+    var fast5_dirName = dirName + '/fast5_pass'
+    var fastq_dirName = dirName + '/fastq_pass'
+
+    // update the paths
+    formLabel_outputFAST5location.value = fast5_dirName
+    formLabel_outputFASTQlocation.value = fastq_dirName
+
+    // allow user to change basecalling option
+    formLabel_basecall.disabled = false
+    formLabel_basecallLabel.style.color = ''
+
+    // check for dirs and print an alert
     try {
-        await checkDir(outputLocation.value)
+        await checkDirExists(dirName)
+    } catch (e) {
+        msgDiv.innerHTML =
+            '<div class="alert background-warning"><i class="fas fa-exclamation-circle"></i> - No existing experiment directory found, this experiment will be tagged for sequencing</div>'
+        return
+    }
+    try {
+        await checkDirExists(fast5_dirName)
+    } catch (e) {
+        msgDiv.innerHTML =
+            '<div class="alert background-warning"><i class="fas fa-exclamation-circle"></i> - No <em>fast5_pass</em> directory found, this experiment will be tagged for sequencing</div>'
+        return
+    }
+    formLabel_sequence.checked = false
+
+    try {
+        await checkDirExists(fastq_dirName)
+    } catch (e) {
+        msgDiv.innerHTML =
+            '<div class="alert background-warning"><i class="fas fa-exclamation-circle"></i> - No <em>fastq_pass</em> directory found, this experiment will be tagged for base calling (unless you uncheck the box below)</div>'
+        return
+    }
+    msgDiv.innerHTML =
+        '<div class="alert background-success"><i class="fas fa-flask"></i> - <em>fast5_pass</em> and <em>fastq_pass</em> found for this experiment</div>'
+
+    // make sure the fastq path is shown (could be hidden if user has been toggling)
+    fieldset_outputFASTQlocation.style.display = 'block'
+
+    // disable basecalling if fastq_pass exists
+    formLabel_basecallLabel.style.color = '#d3d3d3'
+    formLabel_basecall.checked = false
+    formLabel_basecall.disabled = true
+})
+
+// add listener to the experimentName text box
+expName.addEventListener('change', async() => {
+    experimentValidator.expName = false
+    if (expName.value.length === 0) {
+        return
+    }
+
+    // currently Go checks the dir - could do it here instead though
+    experimentValidator.expName = true
+})
+
+// add listener to the output location text box so we can check it exists once a user has entered a location
+expOutputLocation.addEventListener('change', async() => {
+    experimentValidator.expLoc = false
+    if (expOutputLocation.value.length === 0) {
+        return
+    }
+    try {
+        await checkDirExists(expOutputLocation.value)
     } catch (e) {
         printErrorMsg(e)
         return
+    }
+    experimentValidator.expLoc = true
+})
+
+// show/hide the fastq_pass path depending on basecall checkbox
+formLabel_basecall.addEventListener('click', async() => {
+    if (formLabel_basecall.checked === true) {
+        fieldset_outputFASTQlocation.style.display = 'block'
+    } else {
+        fieldset_outputFASTQlocation.style.display = 'none'
     }
 })
 
@@ -159,35 +292,29 @@ outputLocation.addEventListener('change', async() => {
 createExperimentForm.addEventListener('submit', async() => {
     console.log('creating experiment')
 
-    var elements = createExperimentForm.elements
+    /*
+    todo: check the tagging logic - sequence has been a bit of an afterthought and might not behave as expected
+    add optional comment box to form as well - it will encourage user to click off the other boxes and trigger the js stuff
+    SOMETHING BROKEN IN THIS FUNC
+*/
 
-    // check for data directories if the user is creating an experiment with existing data
-    if (elements['formLabel_sequenced'].value == 'true') {
-        // TODO: check this properly, at the moment just looking for experiment name dir and fast5 sub dir
-        var dirName =
-            elements['formLabel_outputLocation'].value +
-            '/' +
-            elements['formLabel_experimentName'].value
-        var fast5_dirName = dirName + '/fast5_pass'
-        try {
-            await checkDir(dirName)
-        } catch (e) {
-            printErrorMsg(e)
-            return
-        }
-        try {
-            await checkDir(fast5_dirName)
-        } catch (e) {
-            printErrorMsg(e)
-            return
-        }
+    // create sequence and basecall tags
+    var tags = []
+    if (formLabel_sequence.checked === true) {
+        tags.push('sequence')
+    }
+    if (formLabel_basecall.checked === true) {
+        tags.push('basecall')
     }
 
     // create an experiment and add it to the store
     try {
         await createExperiment(
-            elements['formLabel_experimentName'].value,
-            elements['formLabel_outputLocation'].value
+            expName.value,
+            expOutputLocation.value,
+            formLabel_outputFAST5location.value,
+            formLabel_outputFASTQlocation.value,
+            tags
         )
     } catch (e) {
         printErrorMsg(e)
@@ -196,6 +323,7 @@ createExperimentForm.addEventListener('submit', async() => {
 
     // reset the form, refresh the page, close the modal and report success
     createExperimentForm.reset()
+    createExperimentFormReset()
     pageRefresh()
     createExperimentModal.style.display = 'none'
     printSuccessMsg('experiment created')
@@ -230,7 +358,7 @@ const updateExperimentDropDown = async() => {
     }
 }
 
-// add listener to the form tags so that more form appears
+// add listeners to the form tags so that more form appears when tags are selected
 document
     .getElementById('formLabel_rampartTag')
     .addEventListener('change', async() => {
@@ -284,6 +412,7 @@ addSampleForm.addEventListener('submit', async() => {
     // reset the form, refresh the page and report success
     addSampleForm.reset()
     pageRefresh()
+    addSampleModal.style.display = 'none'
     printSuccessMsg('sample added')
 })
 
@@ -300,6 +429,12 @@ var table = $('#sampleTable').DataTable({
     }]
 })
 
+// getSampleJSONdump returns a stringified protobuf dump of a sample from the storage
+const getSampleJSONdump = async function(sampleLabel) {
+    var sampleJSONdump = `${await window.printSampleToJSONstring(sampleLabel)}`
+    return sampleJSONdump
+}
+
 // set up the manage button
 $('#sampleTable tbody').on('click', 'button', function() {
     var row = table.row($(this).parents('tr'))
@@ -312,7 +447,7 @@ $('#sampleTable tbody').on('click', 'button', function() {
             '<pre>' + sampleProtobufDump + '</pre>'
 
         // display modal
-        document.getElementById('sampleModal').style.display = 'block'
+        document.getElementById('sampleDetailsModal').style.display = 'block'
 
         // set up delete button
         document
@@ -334,7 +469,7 @@ $('#sampleTable tbody').on('click', 'button', function() {
 
                 // reset the runtime info and report success
                 await pageRefresh()
-                document.getElementById('sampleModal').style.display = 'none'
+                document.getElementById('sampleDetailsModal').style.display = 'none'
                 printSuccessMsg('sample deleted')
             })
     })

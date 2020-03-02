@@ -444,6 +444,11 @@ select:focus {
   position: absolute;
   visibility: visible; }
 
+.inactivated {
+  padding: 4%;
+  background: #d3d3d3;
+  color: #808080; }
+
 #sidebar {
   position: fixed;
   z-index: 0;

@@ -175,12 +175,19 @@ func (herald *Herald) GetAnnouncedSampleCount() int {
 
 // CreateExperiment creates an experiment record, updates the runtime info and adds the record to storage
 // TODO: this might be bypassed later and instead get JS to encode the form to protobuf directly
-func (herald *Herald) CreateExperiment(name string, outDir string) error {
+func (herald *Herald) CreateExperiment(name, outDir, fast5Dir, fastqDir string, tags []string) error {
 	herald.Lock()
 	defer herald.Unlock()
 
 	// create the experiment
-	exp := sample.InitExperiment(name, outDir)
+	exp := sample.InitExperiment(name, outDir, fast5Dir, fastqDir)
+
+	// tag the experiment and update it's status
+	if len(tags) != 0 {
+		if err := exp.AddTags(tags); err != nil {
+			return err
+		}
+	}
 
 	// add the experiment to the store
 	if err := herald.store.AddExperiment(exp); err != nil {
@@ -208,7 +215,7 @@ func (herald *Herald) CreateSample(label string, experimentName string, barcode 
 	// create the sample
 	sample := sample.InitSample(label, exp, barcode, comment)
 
-	// tag the sample
+	// tag the sample and update status
 	if len(tags) != 0 {
 		if err := sample.AddTags(tags); err != nil {
 			return err

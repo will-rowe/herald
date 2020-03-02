@@ -1,12 +1,12 @@
 #!/usr/bin/env sh
 
 MAINTAINER=willrowe
-APP_NAME=Herald
+APP_NAME=herald
 APP_VERSION=1.0.0
 APPDIR=${APP_NAME}.app
 
 mkdir -p $APPDIR/Contents/{MacOS,Resources}
-go build -o $APPDIR/Contents/MacOS/$APP_NAME
+go build -o $APPDIR/Contents/MacOS/$APP_NAME -ldflags "-X main.dbLocation=${HOME}/.${APP_NAME}"
 cat > $APPDIR/Contents/Info.plist << EOF
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">

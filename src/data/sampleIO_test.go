@@ -48,8 +48,8 @@ func TestTagging(t *testing.T) {
 	}
 
 	// tag it with a recognised tag
-	if err := test.AddTags([]string{"sequence"}); err != nil {
-		t.Fatal("AddTags method returned error when called with a recognised tag (sequence)")
+	if err := test.AddTags([]string{"rampart"}); err != nil {
+		t.Fatal("AddTags method returned error when called with a recognised tag (rampart)")
 	}
 }
 
@@ -65,8 +65,8 @@ func TestStatus(t *testing.T) {
 	}
 
 	// tag it with a recognised tag
-	if err := test.AddTags([]string{"sequence"}); err != nil {
-		t.Fatal("AddTags method returned error when called with a recognised tag (sequence)")
+	if err := test.AddTags([]string{"rampart"}); err != nil {
+		t.Fatal("AddTags method returned error when called with a recognised tag (rampart)")
 	}
 
 	// check the status is tagged

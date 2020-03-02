@@ -38,10 +38,11 @@ message Experiment {
     google.protobuf.Timestamp created = 1;
     string name = 2;
     repeated Comment history = 3;
-    string output_directory = 4;
-    string fast5_output_directory = 5;
-    string fastq_output_directory = 6;
-    Tags tags = 7;
+    Status status = 4;
+    string output_directory = 5;
+    string fast5_output_directory = 6;
+    string fastq_output_directory = 7;
+    Tags tags = 8;
 }
 
 /*

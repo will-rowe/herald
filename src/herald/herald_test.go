@@ -42,7 +42,7 @@ func TestHeraldCreateSample(t *testing.T) {
 
 	// create and add a sample
 	testLabel := "testLabel"
-	if err := tmp.CreateSample(testLabel, testExpName, 1, "test comment", []string{"sequence"}); err != nil {
+	if err := tmp.CreateSample(testLabel, testExpName, 1, "test comment", []string{"rampart"}); err != nil {
 		t.Fatal(err)
 	}
 

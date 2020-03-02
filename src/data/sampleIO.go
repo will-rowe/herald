@@ -10,11 +10,6 @@ import (
 // InitSample will init a sample struct with the minimum required values
 func InitSample(label string, experiment *Experiment, barcode int32, comment string) *Sample {
 
-	// create the tags and set all to false
-	tags := &Tags{
-		Sequence: false,
-	}
-
 	// create the sample
 	sample := &Sample{
 		Created:    ptypes.TimestampNow(),
@@ -23,7 +18,7 @@ func InitSample(label string, experiment *Experiment, barcode int32, comment str
 		Status:     1,
 		Barcode:    barcode,
 		History:    []*Comment{},
-		Tags:       tags,
+		Tags:       &Tags{},
 	}
 
 	// create the history and pin any comment
@@ -50,6 +45,7 @@ func (sample *Sample) AddComment(text string) error {
 }
 
 // AddTags is a method to tag a sample
+// TODO: this isn't great, and is re-used in the experimentIO, so come up with a better way which will do both
 func (sample *Sample) AddTags(tags []string) error {
 	if len(tags) == 0 {
 		return fmt.Errorf("no tags provided")
@@ -58,9 +54,9 @@ func (sample *Sample) AddTags(tags []string) error {
 	// add all the tags and check for unknown tags
 	for _, tag := range tags {
 		switch tag {
-		case "sequence":
-			sample.Tags.Sequence = true
-			if err := sample.AddComment("added sequence tag."); err != nil {
+		case "rampart":
+			sample.Tags.Rampart = true
+			if err := sample.AddComment("added rampart tag."); err != nil {
 				return err
 			}
 		default:

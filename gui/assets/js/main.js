@@ -191,6 +191,7 @@ experimentValidator.registerListener(async() => {
         formLabel_outputFAST5location.value = ''
         formLabel_outputFASTQlocation.value = ''
         fieldset_outputFASTQlocation.style.display = 'block'
+        document.getElementById('formLabel_basecallLabel').style.color = ''
         formLabel_basecall.disabled = true
         formLabel_basecall.checked = true
         return
@@ -237,6 +238,7 @@ experimentValidator.registerListener(async() => {
     fieldset_outputFASTQlocation.style.display = 'block'
 
     // disable basecalling if fastq_pass exists
+    document.getElementById('formLabel_basecallLabel').style.color = '#d3d3d3'
     formLabel_basecall.checked = false
     formLabel_basecall.disabled = true
 })

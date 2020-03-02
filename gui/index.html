@@ -72,13 +72,17 @@
                     <input type="text" placeholder="/Users/me/data" id="formLabel_outputLocation" required>
                     <!--validation output-->
                     <div id="createExperimentValidationMessage"></div>
+                    <label class="formLabel">Settings
+                        <i class="far fa-question-circle"><span class="tooltiptext">help box</span></i>
+                    </label>
+                    <label class="label-inline" for="formLabel_basecall" id="formLabel_basecallLabel"> - Run
+                        basecalling:
+                    </label>
+                    <input type="checkbox" id="formLabel_basecall" checked>
+                    <div class="clearfix"></div>
                     <!--paths-->
                     <label class="formLabel" for="formLabel_outputFAST5location">FAST5 data:</label>
                     <input type="text" id="formLabel_outputFAST5location" style="background: #d3d3d3;" readonly>
-                    <div class="clearfix"></div>
-                    <label class="label-inline" for="formLabel_basecall"> - Run basecalling: </label>
-                    <input type="checkbox" id="formLabel_basecall" checked>
-                    <div class="clearfix"></div>
                     <fieldset id="fieldset_outputFASTQlocation">
                         <label class="formLabel" for="formLabel_outputFASTQlocation">FASTQ data:</label>
                         <input type="text" id="formLabel_outputFASTQlocation" style="background: #d3d3d3;" readonly>

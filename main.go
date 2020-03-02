@@ -60,7 +60,7 @@ func main() {
 	ui.Bind("getExperimentName", heraldObj.GetExperimentName)
 
 	// Bind helper functions to the UI
-	ui.Bind("checkDir", helpers.CheckDir)
+	ui.Bind("checkDirExists", helpers.CheckDirExists)
 	ui.Bind("checkAPIstatus", minknow.CheckAPIstatus)
 
 	// Setup a JS function to init the HERALD and populate all storage data fields in the app

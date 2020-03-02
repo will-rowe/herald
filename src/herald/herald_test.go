@@ -71,4 +71,38 @@ func TestHeraldCreateSample(t *testing.T) {
 
 	// clean up
 	os.RemoveAll("./tmp/")
+
+}
+
+// TestHeraldCreateExperiment
+func TestHeraldCreateExperiment(t *testing.T) {
+
+	// open the storage
+	tmp, err := InitHerald("./tmp")
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	// create and add an experiment
+	testName := "test experiment"
+	if err := tmp.CreateExperiment(testName, "/tmp", "/tmp/fast5_pass", "/tmp/fastq_pass", []string{"sequence", "basecall"}); err != nil {
+		t.Fatal(err)
+	}
+
+	// check runtime info was updated
+	count := tmp.GetExperimentCount()
+	if count != 1 {
+		t.Fatal("herald experiment count not updated (should be 1)")
+	}
+	if storedName := tmp.GetExperimentName(0); storedName != testName {
+		t.Fatalf("stored label does not match that used during sample creation (%v vs %v)", storedName, testName)
+	}
+
+	// close the storage
+	if err := tmp.Destroy(); err != nil {
+		t.Fatal(err)
+	}
+
+	// clean up
+	os.RemoveAll("./tmp/")
 }

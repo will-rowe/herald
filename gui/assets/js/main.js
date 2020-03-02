@@ -146,7 +146,28 @@ var expOutputLocation = document.getElementById('formLabel_outputLocation')
 var fieldset_outputFASTQlocation = document.getElementById(
     'fieldset_outputFASTQlocation'
 )
+var formLabel_outputFAST5location = document.getElementById(
+    'formLabel_outputFAST5location'
+)
+var formLabel_outputFASTQlocation = document.getElementById(
+    'formLabel_outputFASTQlocation'
+)
+var formLabel_sequence = document.getElementById('formLabel_sequence')
 var formLabel_basecall = document.getElementById('formLabel_basecall')
+var formLabel_basecallLabel = document.getElementById('formLabel_basecallLabel')
+var msgDiv = document.getElementById('createExperimentValidationMessage')
+
+// reset func to clear the form changes
+function createExperimentFormReset() {
+    fieldset_outputFASTQlocation.style.display = 'block'
+    formLabel_outputFAST5location.value = ''
+    formLabel_outputFASTQlocation.value = ''
+    formLabel_sequence.checked = true
+    formLabel_basecall.checked = true
+    formLabel_basecallLabel.style.color = '#d3d3d3'
+    formLabel_basecall.disabled = true
+    msgDiv.innerHTML = ''
+}
 
 // set up the validator
 experimentValidator = {
@@ -174,26 +195,12 @@ experimentValidator = {
 
 // the validator listener will adjust form values depending on user input
 experimentValidator.registerListener(async() => {
-    var msgDiv = document.getElementById('createExperimentValidationMessage')
-    var formLabel_outputFAST5location = document.getElementById(
-        'formLabel_outputFAST5location'
-    )
-    var formLabel_outputFASTQlocation = document.getElementById(
-        'formLabel_outputFASTQlocation'
-    )
-
     // reset if user hasn't input both expName and expOutputLocation
     if (
         experimentValidator.expName === false ||
         experimentValidator.expLoc === false
     ) {
-        msgDiv.innerHTML = ''
-        formLabel_outputFAST5location.value = ''
-        formLabel_outputFASTQlocation.value = ''
-        fieldset_outputFASTQlocation.style.display = 'block'
-        document.getElementById('formLabel_basecallLabel').style.color = ''
-        formLabel_basecall.disabled = true
-        formLabel_basecall.checked = true
+        createExperimentFormReset()
         return
     }
 
@@ -208,6 +215,7 @@ experimentValidator.registerListener(async() => {
 
     // allow user to change basecalling option
     formLabel_basecall.disabled = false
+    formLabel_basecallLabel.style.color = ''
 
     // check for dirs and print an alert
     try {
@@ -224,6 +232,8 @@ experimentValidator.registerListener(async() => {
             '<div class="alert background-warning"><i class="fas fa-exclamation-circle"></i> - No <em>fast5_pass</em> directory found, this experiment will be tagged for sequencing</div>'
         return
     }
+    formLabel_sequence.checked = false
+
     try {
         await checkDirExists(fastq_dirName)
     } catch (e) {
@@ -238,7 +248,7 @@ experimentValidator.registerListener(async() => {
     fieldset_outputFASTQlocation.style.display = 'block'
 
     // disable basecalling if fastq_pass exists
-    document.getElementById('formLabel_basecallLabel').style.color = '#d3d3d3'
+    formLabel_basecallLabel.style.color = '#d3d3d3'
     formLabel_basecall.checked = false
     formLabel_basecall.disabled = true
 })
@@ -282,19 +292,29 @@ formLabel_basecall.addEventListener('click', async() => {
 createExperimentForm.addEventListener('submit', async() => {
     console.log('creating experiment')
 
-    var elements = createExperimentForm.elements
-    if (elements['formLabel_basecall'].checked === true) {
-        alert('bing bing bing')
-    }
+    /*
+    todo: check the tagging logic - sequence has been a bit of an afterthought and might not behave as expected
+    add optional comment box to form as well - it will encourage user to click off the other boxes and trigger the js stuff
+    SOMETHING BROKEN IN THIS FUNC
+*/
 
-    console.log(elements['formLabel_outputFAST5location'])
-    console.log(elements['formLabel_basecall'])
+    // create sequence and basecall tags
+    var tags = []
+    if (formLabel_sequence.checked === true) {
+        tags.push('sequence')
+    }
+    if (formLabel_basecall.checked === true) {
+        tags.push('basecall')
+    }
 
     // create an experiment and add it to the store
     try {
         await createExperiment(
-            elements['formLabel_experimentName'].value,
-            elements['formLabel_outputLocation'].value
+            expName.value,
+            expOutputLocation.value,
+            formLabel_outputFAST5location.value,
+            formLabel_outputFASTQlocation.value,
+            tags
         )
     } catch (e) {
         printErrorMsg(e)
@@ -303,9 +323,9 @@ createExperimentForm.addEventListener('submit', async() => {
 
     // reset the form, refresh the page, close the modal and report success
     createExperimentForm.reset()
+    createExperimentFormReset()
     pageRefresh()
     createExperimentModal.style.display = 'none'
-    document.getElementById('createExperimentValidationMessage').innerHTML = ''
     printSuccessMsg('experiment created')
 })
 

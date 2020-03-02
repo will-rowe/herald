@@ -70,15 +70,25 @@
                                 stored</span></i>
                     </label>
                     <input type="text" placeholder="/Users/me/data" id="formLabel_outputLocation" required>
+                    <!--comment box-->
+                    <label class="formLabel" for="formLabel_experimentComment">Comment</label>
+                    <textarea placeholder="insert any additional information" id="formLabel_experimentComment"></textarea>
+                    <div class="clearfix"></div>
                     <!--validation output-->
                     <div id="createExperimentValidationMessage"></div>
+                    <!--settings-->
                     <label class="formLabel">Settings
                         <i class="far fa-question-circle"><span class="tooltiptext">help box</span></i>
                     </label>
-                    <label class="label-inline" for="formLabel_basecall" id="formLabel_basecallLabel"> - Run
+                    <label class="label-inline" for="formLabel_sequence" id="formLabel_sequenceLabel" style="color: #d3d3d3;"> - Run
+                        sequencing:
+                    </label>
+                    <input type="checkbox" id="formLabel_sequence" checked disabled>
+                    <div class="clearfix"></div>
+                    <label class="label-inline" for="formLabel_basecall" id="formLabel_basecallLabel" style="color: #d3d3d3;"> - Run
                         basecalling:
                     </label>
-                    <input type="checkbox" id="formLabel_basecall" checked>
+                    <input type="checkbox" id="formLabel_basecall" checked disabled>
                     <div class="clearfix"></div>
                     <!--paths-->
                     <label class="formLabel" for="formLabel_outputFAST5location">FAST5 data:</label>
@@ -140,10 +150,6 @@
                     <div class="clearfix"></div>
                     <!--tags-->
                     <label>Tags</label>
-                    <!--tags_sequence-->
-                    <input type="checkbox" id="formLabel_sequenceTag" value="sequence">
-                    <label class="label-inline" for="formLabel_sequenceTag">Sequence sample</label>
-                    <div class="clearfix"></div>
                     <!--tags_rampart-->
                     <input type="checkbox" id="formLabel_rampartTag" value="rampart">
                     <label class="label-inline" for="formLabel_rampartTag">RAMPART</label>

@@ -18,6 +18,7 @@ func InitExperiment(name, outputDir, fast5Dir, fastqDir string) *Experiment {
 		OutputDirectory:      outputDir,
 		Fast5OutputDirectory: fast5Dir,
 		FastqOutputDirectory: fastqDir,
+		Tags:                 &Tags{},
 	}
 
 	// create the history
@@ -50,13 +51,13 @@ func (experiment *Experiment) AddTags(tags []string) error {
 	// add all the tags and check for unknown tags
 	for _, tag := range tags {
 		switch tag {
-		case "experiment":
+		case "sequence":
 			experiment.Tags.Sequence = true
 			if err := experiment.AddComment("added sequence tag."); err != nil {
 				return err
 			}
 		case "basecall":
-			experiment.Tags.Rampart = true
+			experiment.Tags.Basecall = true
 			if err := experiment.AddComment("added basecall tag."); err != nil {
 				return err
 			}

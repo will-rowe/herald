@@ -5,25 +5,25 @@ import (
 	"fmt"
 )
 
-// ProcessRegister is used to register all the available processes at runtime
+// ProcessRegister is used to register all the available processes
 var	ProcessRegister map[string]*Process
 
-// init the process definitions
+// init the process definitions at runtime
 func init() {
 
 	// init the process checker
 	ProcessRegister = make(map[string]*Process)
 
 	// create the process definitions
-	createProcessDefinition("sequence", nil)
-	createProcessDefinition("basecall", nil)
-	createProcessDefinition("rampart", nil)
-	createProcessDefinition("pipelineA", []string{"sequence", "basecall"})
+	createProcessDefinition("sequence", nil, true, false)
+	createProcessDefinition("basecall", nil, true, false)
+	createProcessDefinition("rampart", nil, false, true)
+	createProcessDefinition("pipelineA", []string{"sequence", "basecall"}, false, true)
 
 }
 
-// createProcessDefinition will init and populate a process struct
-func createProcessDefinition(pName string, pDependsOn []string) {
+// createProcessDefinition will init a process
+func createProcessDefinition(pName string, pDependsOn []string, availToExp, availToSamples bool) {
 
 	// check the process does not already exist
 	if _, exists := ProcessRegister[pName]; exists {
@@ -36,6 +36,8 @@ func createProcessDefinition(pName string, pDependsOn []string) {
 		Name: pName,
 		DependsOn: []*Process{},
 		History:   []*Comment{},
+		AvailableToExperiments: availToExp,
+		AvailableToSamples: availToSamples,
 	}
 
 	// check the dependencies

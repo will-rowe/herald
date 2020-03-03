@@ -356,18 +356,6 @@ const updateExperimentDropDown = async() => {
     }
 }
 
-// add listeners to the form tags so that more form appears when tags are selected
-document
-    .getElementById('formLabel_rampartTag')
-    .addEventListener('change', async() => {
-        var options = document.getElementById('addSampleForm_rampartOptions')
-        if (options.style.display === 'block') {
-            options.style.display = 'none'
-        } else {
-            options.style.display = 'block'
-        }
-    })
-
 // add an event listener to the addSampleForm submit button
 addSampleForm.addEventListener('submit', async() => {
     console.log('adding sample to storage')

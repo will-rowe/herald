@@ -41,8 +41,8 @@ func InitSample(label, expLabel string, barcode int32) *Sample {
 			History: []*Comment{},
 			Tags:    []*Process{},
 		},
-		ExperimentLabel: expLabel,
-		Barcode:         barcode,
+		ParentExperiment: expLabel,
+		Barcode:          barcode,
 	}
 
 	// create the history
@@ -65,7 +65,7 @@ func (heraldData *HeraldData) AddComment(text string) error {
 	return nil
 }
 
-// AddTags is a method to tag a process to an exeriment or sample
+// AddTags is a method to tag an exeriment or sample with a process
 func (heraldData *HeraldData) AddTags(tags []string) error {
 	if len(tags) == 0 {
 		return fmt.Errorf("no tags provided")

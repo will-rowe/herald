@@ -91,8 +91,8 @@ func (storage *Storage) GetSampleLabels() chan []byte {
 	return storage.sampleDB.Keys()
 }
 
-// GetExperimentNames returns a channel of experiment names (keys) held in storage
-func (storage *Storage) GetExperimentNames() chan []byte {
+// GetExperimentLabels returns a channel of experiment names (keys) held in storage
+func (storage *Storage) GetExperimentLabels() chan []byte {
 	return storage.experimentDB.Keys()
 }
 

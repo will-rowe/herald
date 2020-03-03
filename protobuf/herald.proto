@@ -12,17 +12,7 @@ message Comment {
 }
 
 /*
-    Tags are used to indicate what processes to run on a sample
-*/
-message Tags {
-    bool sequence = 1;
-    bool basecall = 2;
-    bool rampart = 3;
-    bool pipeline1 = 4;
-}
-
-/*
-    Status is used to determine if the sample is untagged, tagged or in the announcment queue
+    Status is used to determine if experiments/samples have tagged processes, or if they have been announced via the message server
 */
 enum Status {
     UN_INITIALIZED = 0;
@@ -32,28 +22,44 @@ enum Status {
 }
 
 /*
+    Process describes what to do to an experiment or sample
+*/
+message Process {
+    bool complete = 1;                          // set true if the process endpoint reached
+    string name = 2;                            // the name of the process
+    repeated Process dependsOn = 3;             // the processes that this process depends on (i.e. must already be marked complete)
+    repeated Comment history = 4;               // describes the history of the process
+    bool availableToExperiments = 5;            // if true, experiments can be tagged with this process
+    bool availableToSamples = 6;                // if true, samples can be tagged with this process
+}
+
+/*
+    HeraldData is the base type, used by both Experiment and Sample
+*/
+message HeraldData {
+    google.protobuf.Timestamp created = 1;
+    string label = 2;                            // the experiment or sample name
+    repeated Comment history = 3;                // describes the history of the experiment
+    Status status = 4;                           // describes if untagged/tagged/announced
+    repeated Process tags = 5;                   // tagged processes for this experiment
+}
+
+/*
     Experiment is used to describe a Nanopore sequencing run
 */
 message Experiment {
-    google.protobuf.Timestamp created = 1;
-    string name = 2;
-    repeated Comment history = 3;
-    Status status = 4;
-    string output_directory = 5;
-    string fast5_output_directory = 6;
-    string fastq_output_directory = 7;
-    Tags tags = 8;
+    HeraldData metadata = 1;                    // the base info
+    string output_directory = 2;                // where the experiment is stored
+    string fast5_output_directory = 3;          // where the experiment fast5 data is stored
+    string fastq_output_directory = 4;          // where the experiment fastq data is stored
+
 }
 
 /*
     Sample is used to describe a biological sample which is being sequenced as part of an Experiment
 */
 message Sample {
-    google.protobuf.Timestamp created = 1;
-    string label = 2;
-    repeated Comment history = 3;
-    Experiment experiment = 4;
-    Status status = 5;
-    int32 barcode = 6;
-    Tags tags = 7;
+    HeraldData metadata = 1;                   // the base info
+    string parentExperiment = 2;
+    int32 barcode = 3;
 }

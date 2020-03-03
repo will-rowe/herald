@@ -499,12 +499,18 @@ select:focus {
         text-align: center;
         font-family: lato;
         width: 10vw;
-        top: 100%;
+        top: 5vh;
         padding: 1em 0;
         border-radius: 6px;
         /* Position the tooltip text - see examples below! */
         position: absolute;
         z-index: 1;
+    }
+    .icon a {
+        color: $medium-gray;
+    }
+    .icon a:hover {
+        color: $primary-color;
     }
     .icon i:hover {
         color: $primary-color;

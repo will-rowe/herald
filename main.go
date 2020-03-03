@@ -13,6 +13,7 @@ import (
 
 	"github.com/zserge/lorca"
 
+	"github.com/will-rowe/herald/src/data"
 	"github.com/will-rowe/herald/src/helpers"
 	"github.com/will-rowe/herald/src/herald"
 	"github.com/will-rowe/herald/src/minknow"
@@ -39,7 +40,7 @@ func main() {
 	// create the HERALD
 	var heraldObj *herald.Herald
 	if heraldObj, err = herald.InitHerald(dbLocation); err != nil {
-		ui.Eval(fmt.Sprintf("`console.log('failed to init herald: %v')`", err))
+		ui.Eval(fmt.Sprintf(`console.log('failed to init herald: %v')`, err))
 	}
 	defer heraldObj.Destroy()
 
@@ -57,7 +58,7 @@ func main() {
 	ui.Bind("printSampleToJSONstring", heraldObj.PrintSampleToJSONstring)
 	ui.Bind("createExperiment", heraldObj.CreateExperiment)
 	ui.Bind("getExperimentCount", heraldObj.GetExperimentCount)
-	ui.Bind("getExperimentName", heraldObj.GetExperimentName)
+	ui.Bind("getExperimentName", heraldObj.GetLabel)
 
 	// Bind helper functions to the UI
 	ui.Bind("checkDirExists", helpers.CheckDirExists)
@@ -82,6 +83,14 @@ func main() {
 			ui.Eval(fmt.Sprintf(`document.getElementById('addSampleModalOpen').disabled = true`))
 		} else {
 			ui.Eval(fmt.Sprintf(`document.getElementById('addSampleModalOpen').disabled = false`))
+		}
+
+		// collect all the processes created at runtime and add to the tag lists in the app
+		ui.Eval(`document.getElementById('sampleTags').innerHTML = '<label>Tags</label>'`)
+		for procName, proc := range data.ProcessRegister {
+			if proc.GetAvailableToSamples() {
+				ui.Eval(fmt.Sprintf(`document.getElementById('sampleTags').innerHTML += '<input type="checkbox" id="formLabel_%v" value="%v"><label class="label-inline" for="formLabel_%v">%v</label><div class="clearfix"></div>'`, procName, procName, procName, procName))
+			}
 		}
 
 		// check the network connection

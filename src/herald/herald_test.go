@@ -33,9 +33,7 @@ func TestHeraldCreateSample(t *testing.T) {
 
 	// create an experiment
 	testExpName := "test experiment"
-	testExp := &data.Experiment{
-		Name: testExpName,
-	}
+	testExp := data.InitExperiment(testExpName, "", "", "")
 	if err := tmp.store.AddExperiment(testExp); err != nil {
 		t.Fatal(err)
 	}
@@ -85,7 +83,7 @@ func TestHeraldCreateExperiment(t *testing.T) {
 
 	// create and add an experiment
 	testName := "test experiment"
-	if err := tmp.CreateExperiment(testName, "/tmp", "/tmp/fast5_pass", "/tmp/fastq_pass", []string{"sequence", "basecall"}); err != nil {
+	if err := tmp.CreateExperiment(testName, "/tmp", "/tmp/fast5_pass", "/tmp/fastq_pass", "", []string{"sequence", "basecall"}); err != nil {
 		t.Fatal(err)
 	}
 
@@ -94,7 +92,7 @@ func TestHeraldCreateExperiment(t *testing.T) {
 	if count != 1 {
 		t.Fatal("herald experiment count not updated (should be 1)")
 	}
-	if storedName := tmp.GetExperimentName(0); storedName != testName {
+	if storedName := tmp.GetLabel(0); storedName != testName {
 		t.Fatalf("stored label does not match that used during sample creation (%v vs %v)", storedName, testName)
 	}
 

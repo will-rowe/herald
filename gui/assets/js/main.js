@@ -204,8 +204,11 @@ experimentValidator.registerListener(async() => {
         return
     }
 
+    // remove spaces from expName
+    var expNameDespaced = expName.value.replace(/\s/g, '_')
+
     // get expected dir names
-    var dirName = expOutputLocation.value + '/' + expName.value
+    var dirName = expOutputLocation.value + '/' + expNameDespaced
     var fast5_dirName = dirName + '/fast5_pass'
     var fastq_dirName = dirName + '/fastq_pass'
 
@@ -292,12 +295,6 @@ formLabel_basecall.addEventListener('click', async() => {
 createExperimentForm.addEventListener('submit', async() => {
     console.log('creating experiment')
 
-    /*
-    todo: check the tagging logic - sequence has been a bit of an afterthought and might not behave as expected
-    add optional comment box to form as well - it will encourage user to click off the other boxes and trigger the js stuff
-    SOMETHING BROKEN IN THIS FUNC
-*/
-
     // create sequence and basecall tags
     var tags = []
     if (formLabel_sequence.checked === true) {
@@ -314,6 +311,7 @@ createExperimentForm.addEventListener('submit', async() => {
             expOutputLocation.value,
             formLabel_outputFAST5location.value,
             formLabel_outputFASTQlocation.value,
+            document.getElementById('formLabel_experimentComment').value,
             tags
         )
     } catch (e) {
@@ -357,18 +355,6 @@ const updateExperimentDropDown = async() => {
         expDropDown.options.add(newOpt)
     }
 }
-
-// add listeners to the form tags so that more form appears when tags are selected
-document
-    .getElementById('formLabel_rampartTag')
-    .addEventListener('change', async() => {
-        var options = document.getElementById('addSampleForm_rampartOptions')
-        if (options.style.display === 'block') {
-            options.style.display = 'none'
-        } else {
-            options.style.display = 'block'
-        }
-    })
 
 // add an event listener to the addSampleForm submit button
 addSampleForm.addEventListener('submit', async() => {

@@ -1,3 +1,23 @@
+> note: this is incomplete documentation and is more of a brain dump whilst herald is being developed...
+
+## Processes
+
+**Herald** tags samples and experiments with _processes_. Processes included "sequencing", "basecalling", "pipeline X" etc.
+
+### Adding a process
+
+> note: the UI will only be updated if the process is for samples (I've left the experiment processes harcoded in the UI for now)
+
+1. add a process definition in `processes.go`
+
+This file is located in the source code (`src/data/processes.go`). An example function call is:
+
+```go
+createProcessDefinition("mypipeline", []string{"sequence", "basecall"}, false, true)
+```
+
+This will create a process called `mypipeline` which depends on the processes `sequence` and `basecall` being complete.
+
 ## Message passing
 
 ### dependencies

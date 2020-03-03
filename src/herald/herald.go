@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"sync"
 
-	sample "github.com/will-rowe/herald/src/data"
+	"github.com/will-rowe/herald/src/data"
 	"github.com/will-rowe/herald/src/server"
 	"github.com/will-rowe/herald/src/storage"
 )
@@ -82,13 +82,13 @@ func (herald *Herald) GetRuntimeInfo() error {
 		}
 
 		// add the details to the store
-		herald.sampleDetails[0][i] = sample.Label
-		herald.sampleDetails[1][i] = sample.Created.String()
-		herald.sampleDetails[2][i] = sample.GetExperiment().Name
+		herald.sampleDetails[0][i] = sample.Metadata.Label
+		herald.sampleDetails[1][i] = sample.Metadata.Created.String()
+		herald.sampleDetails[2][i] = sample.Metadata.GetLabel()
 
 		// check the status, update counts and refresh queues
 		// todo: refresh queues
-		status := sample.GetStatus().String()
+		status := sample.Metadata.GetStatus().String()
 		switch status {
 		case "untagged":
 			herald.untaggedSampleCount++
@@ -175,16 +175,23 @@ func (herald *Herald) GetAnnouncedSampleCount() int {
 
 // CreateExperiment creates an experiment record, updates the runtime info and adds the record to storage
 // TODO: this might be bypassed later and instead get JS to encode the form to protobuf directly
-func (herald *Herald) CreateExperiment(name, outDir, fast5Dir, fastqDir string, tags []string) error {
+func (herald *Herald) CreateExperiment(name, outDir, fast5Dir, fastqDir, comment string, tags []string) error {
 	herald.Lock()
 	defer herald.Unlock()
 
 	// create the experiment
-	exp := sample.InitExperiment(name, outDir, fast5Dir, fastqDir)
+	exp := data.InitExperiment(name, outDir, fast5Dir, fastqDir)
+
+	// add any comment
+	if len(comment) != 0 {
+		if err := exp.Metadata.AddComment(comment); err != nil {
+			return err
+		}
+	}
 
 	// tag the experiment and update it's status
 	if len(tags) != 0 {
-		if err := exp.AddTags(tags); err != nil {
+		if err := exp.Metadata.AddTags(tags); err != nil {
 			return err
 		}
 	}
@@ -212,12 +219,23 @@ func (herald *Herald) CreateSample(label string, experimentName string, barcode 
 		return err
 	}
 
+	// check the experiment
+	if err := exp.CheckStatus(); err != nil {
+		return err
+	}
+
 	// create the sample
-	sample := sample.InitSample(label, exp, barcode, comment)
+	sample := data.InitSample(label, exp.Metadata.GetLabel(), barcode)
+
+	if len(comment) != 0 {
+		if err := sample.Metadata.AddComment(comment); err != nil {
+			return err
+		}
+	}
 
 	// tag the sample and update status
 	if len(tags) != 0 {
-		if err := sample.AddTags(tags); err != nil {
+		if err := sample.Metadata.AddTags(tags); err != nil {
 			return err
 		}
 	}
@@ -229,7 +247,7 @@ func (herald *Herald) CreateSample(label string, experimentName string, barcode 
 
 	// update the runtime info (grow the label slice, tag slice etc.)
 	herald.sampleDetails[0] = append(herald.sampleDetails[0], label)
-	herald.sampleDetails[1] = append(herald.sampleDetails[1], sample.GetCreated().String())
+	herald.sampleDetails[1] = append(herald.sampleDetails[1], sample.Metadata.GetCreated().String())
 	herald.sampleDetails[2] = append(herald.sampleDetails[2], experimentName)
 	herald.sampleCount++
 	if len(tags) != 0 {
@@ -250,7 +268,7 @@ func (herald *Herald) GetSampleStatus(sampleLabel string) (string, error) {
 	}
 
 	// return status
-	return sample.GetStatus().String(), nil
+	return sample.Metadata.GetStatus().String(), nil
 }
 
 // DeleteSample removes a sample record from storage and updates the counts
@@ -265,7 +283,7 @@ func (herald *Herald) DeleteSample(sampleLabel string) error {
 	}
 
 	// get the status
-	status := sample.GetStatus().String()
+	status := sample.Metadata.GetStatus().String()
 
 	// prevent announced samples from being deleted
 	if status == "announced" {
@@ -323,10 +341,10 @@ func (herald *Herald) GetSampleExperiment(iterator int) string {
 	return herald.sampleDetails[2][iterator]
 }
 
-// GetExperimentName is used by JS to collect an experiment name from the runtime slice of experiment names
+// GetLabel is used by JS to collect an experiment name from the runtime slice of experiment names
 // NOTE: this assumes the caller has already run GetExperimentCount (or similar) to find the iterator range
 // TODO: add error on return too (will require re-write of JS function)
-func (herald *Herald) GetExperimentName(iterator int) string {
+func (herald *Herald) GetLabel(iterator int) string {
 	herald.Lock()
 	defer herald.Unlock()
 	return herald.experimentNames[iterator]

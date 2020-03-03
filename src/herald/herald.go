@@ -84,7 +84,7 @@ func (herald *Herald) GetRuntimeInfo() error {
 		// add the details to the store
 		herald.sampleDetails[0][i] = sample.Label
 		herald.sampleDetails[1][i] = sample.Created.String()
-		herald.sampleDetails[2][i] = sample.GetExperiment().Name
+		herald.sampleDetails[2][i] = sample.GetExperimentName()
 
 		// check the status, update counts and refresh queues
 		// todo: refresh queues
@@ -212,8 +212,10 @@ func (herald *Herald) CreateSample(label string, experimentName string, barcode 
 		return err
 	}
 
+	// TODO: check the experiment
+
 	// create the sample
-	sample := sample.InitSample(label, exp, barcode, comment)
+	sample := sample.InitSample(label, exp.GetName(), barcode, comment)
 
 	// tag the sample and update status
 	if len(tags) != 0 {

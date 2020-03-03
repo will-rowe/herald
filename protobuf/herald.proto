@@ -52,8 +52,8 @@ message Sample {
     google.protobuf.Timestamp created = 1;
     string label = 2;
     repeated Comment history = 3;
-    Experiment experiment = 4;
-    Status status = 5;
+    Status status = 4;
+    string experimentName = 5;
     int32 barcode = 6;
     Tags tags = 7;
 }

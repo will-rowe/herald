@@ -8,10 +8,8 @@ import (
 )
 
 // InitSample will init a sample struct with the minimum required values
-func InitSample(label, experiment string, barcode int32, comment string) *Sample {
-
-	// create the sample
-	sample := &Sample{
+func InitSample(label, experiment string, barcode int32) *Sample {
+	return &Sample{
 		Created:        ptypes.TimestampNow(),
 		Label:          label,
 		ExperimentName: experiment,
@@ -20,15 +18,6 @@ func InitSample(label, experiment string, barcode int32, comment string) *Sample
 		History:        []*Comment{},
 		Tags:           &Tags{},
 	}
-
-	// create the history and pin any comment
-	sample.AddComment("sample created.")
-	if len(comment) != 0 {
-		sample.AddComment(fmt.Sprintf("user comment: %v", comment))
-	}
-
-	// return pointer to the sample
-	return sample
 }
 
 // AddComment is a method to add a comment to the history of a sample

@@ -295,12 +295,6 @@ formLabel_basecall.addEventListener('click', async() => {
 createExperimentForm.addEventListener('submit', async() => {
     console.log('creating experiment')
 
-    /*
-    todo: check the tagging logic - sequence has been a bit of an afterthought and might not behave as expected
-    add optional comment box to form as well - it will encourage user to click off the other boxes and trigger the js stuff
-    SOMETHING BROKEN IN THIS FUNC
-*/
-
     // create sequence and basecall tags
     var tags = []
     if (formLabel_sequence.checked === true) {
@@ -317,6 +311,7 @@ createExperimentForm.addEventListener('submit', async() => {
             expOutputLocation.value,
             formLabel_outputFAST5location.value,
             formLabel_outputFASTQlocation.value,
+            document.getElementById('formLabel_experimentComment').value,
             tags
         )
     } catch (e) {

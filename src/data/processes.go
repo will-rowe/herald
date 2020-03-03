@@ -6,7 +6,7 @@ import (
 )
 
 // ProcessRegister is used to register all the available processes
-var	ProcessRegister map[string]*Process
+var ProcessRegister map[string]*Process
 
 // init the process definitions at runtime
 func init() {
@@ -32,12 +32,13 @@ func createProcessDefinition(pName string, pDependsOn []string, availToExp, avai
 
 	// init the process
 	newProcess := &Process{
-		Complete: false,
-		Name: pName,
-		DependsOn: []*Process{},
-		History:   []*Comment{},
+		Complete:               false,
+		Name:                   pName,
+		DependsOn:              []*Process{},
+		History:                []*Comment{},
 		AvailableToExperiments: availToExp,
-		AvailableToSamples: availToSamples,
+		AvailableToSamples:     availToSamples,
+		Endpoint:               "",
 	}
 
 	// check the dependencies
@@ -55,6 +56,9 @@ func createProcessDefinition(pName string, pDependsOn []string, availToExp, avai
 				panic(fmt.Sprintf("process dependency not registered: %v", depName))
 			}
 
+			// TODO: this needs proper checking and probably lends itself to some sort of DAG scenario
+			// then we can check for infinite loops etc.
+
 			// copy the dependency to the process
 			newProcess.DependsOn = append(newProcess.DependsOn, dependency.copyProcess())
 		}
@@ -68,8 +72,8 @@ func createProcessDefinition(pName string, pDependsOn []string, availToExp, avai
 // copyProcess is a helper function to create a new instance of a process
 func (process *Process) copyProcess() *Process {
 	return &Process{
-		Complete: false,
-		Name: process.Name,
+		Complete:  false,
+		Name:      process.Name,
 		DependsOn: process.DependsOn,
 		History:   process.History,
 	}

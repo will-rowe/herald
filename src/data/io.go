@@ -5,6 +5,7 @@ import (
 	"fmt"
 
 	"github.com/golang/protobuf/ptypes"
+	"github.com/will-rowe/herald/src/helpers"
 )
 
 // InitExperiment will init an experiment struct with the minimum required values
@@ -16,6 +17,7 @@ func InitExperiment(label, outputDir, fast5Dir, fastqDir string) *Experiment {
 			Created: ptypes.TimestampNow(),
 			Label:   label,
 			History: []*Comment{},
+			Status:  1,
 			Tags:    []*Process{},
 		},
 		OutputDirectory:      outputDir,
@@ -39,6 +41,7 @@ func InitSample(label, expLabel string, barcode int32) *Sample {
 			Created: ptypes.TimestampNow(),
 			Label:   label,
 			History: []*Comment{},
+			Status:  1,
 			Tags:    []*Process{},
 		},
 		ParentExperiment: expLabel,
@@ -99,8 +102,60 @@ func (heraldData *HeraldData) AddTags(tags []string) error {
 	return nil
 }
 
-// CheckStatus is a method to check the status of an experiment or sample and update it accordingly
+// CheckStatus checks for active tags and then determines if the process endpoints have been reached. It then updates tags and the status
 func (experiment *Experiment) CheckStatus() error {
+	status := experiment.Metadata.GetStatus()
+	switch status {
 
-	return nil
+	// uninitialised
+	case 0:
+		return fmt.Errorf("experiment is uninitialised: %v", experiment.GetMetadata().Label)
+
+	// untagged
+	case 1:
+		return nil
+
+	// tagged
+	case 2:
+
+		// check all the tagged processes for their endpoints
+		for _, tag := range experiment.Metadata.GetTags() {
+
+			// ignore completed tags
+			if tag.GetComplete() {
+				continue
+			}
+
+			// check the endpoint
+			// TODO: hardcoding sequence and basecalling basic test for now but I want to automate how we detect endpoints in each process
+			if tag.GetName() == "sequence" {
+				if err := helpers.CheckDirExists(experiment.GetFast5OutputDirectory()); err != nil {
+					tag.Complete = true
+				}
+			}
+			if tag.GetName() == "basecall" {
+				if err := helpers.CheckDirExists(experiment.GetFastqOutputDirectory()); err != nil {
+					tag.Complete = true
+				}
+			}
+		}
+
+		// loop over tags again and reset status to untagged if all processes finished
+		for _, tag := range experiment.Metadata.GetTags() {
+			if tag.GetComplete() == false {
+				break
+			}
+			experiment.Metadata.Status = 2
+		}
+
+		return nil
+
+	// announced
+	//case 3:
+	//	return nil
+
+	// unknown
+	default:
+		return fmt.Errorf("unknown status: %d", status)
+	}
 }

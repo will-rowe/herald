@@ -62,7 +62,7 @@ func TestStorageAdd(t *testing.T) {
 	}
 
 	// check you can retrieve a sample
-	sampleCopy, err := sampleStore.GetSample(sample.Metadata.Label)
+	sampleCopy, err := sampleStore.GetSample(sample.Metadata.GetLabel())
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -71,14 +71,14 @@ func TestStorageAdd(t *testing.T) {
 	}
 
 	// test a JSON dump
-	jsonDump, err := sampleStore.GetSampleJSONDump(sample.Metadata.Label)
+	jsonDump, err := sampleStore.GetSampleJSONDump(sample.Metadata.GetLabel())
 	if err != nil {
 		t.Fatal(err)
 	}
 	t.Log(jsonDump)
 
 	// check you can delete a sample
-	if err := sampleStore.DeleteSample(sample.Metadata.Label); err != nil {
+	if err := sampleStore.DeleteSample(sample.Metadata.GetLabel()); err != nil {
 		t.Fatal(err)
 	}
 	if sampleStore.GetNumSamples() != 8 {

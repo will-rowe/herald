@@ -31,6 +31,7 @@ message Process {
     repeated Comment history = 4;               // describes the history of the process
     bool availableToExperiments = 5;            // if true, experiments can be tagged with this process
     bool availableToSamples = 6;                // if true, samples can be tagged with this process
+    string endpoint = 7;                        // the filepath to check as an endpoint for this process // TODO: this is just a test solution for now
 }
 
 /*

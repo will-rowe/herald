@@ -235,7 +235,7 @@ experimentValidator.registerListener(async() => {
             '<div class="alert background-warning"><i class="fas fa-exclamation-circle"></i> - No <em>fast5_pass</em> directory found, this experiment will be tagged for sequencing</div>'
         return
     }
-    formLabel_sequence.checked = false
+    formLabel_sequence.checked = true
 
     try {
         await checkDirExists(fastq_dirName)
@@ -250,9 +250,9 @@ experimentValidator.registerListener(async() => {
     // make sure the fastq path is shown (could be hidden if user has been toggling)
     fieldset_outputFASTQlocation.style.display = 'block'
 
-    // disable basecalling if fastq_pass exists
+    // disable basecalling option if fastq_pass exists
     formLabel_basecallLabel.style.color = '#d3d3d3'
-    formLabel_basecall.checked = false
+    formLabel_basecall.checked = true
     formLabel_basecall.disabled = true
 })
 

@@ -2,6 +2,7 @@
 package herald
 
 import (
+	"container/list"
 	"fmt"
 	"sync"
 
@@ -12,9 +13,10 @@ import (
 
 // Herald is the struct for holding runtime data
 type Herald struct {
-	sync.Mutex                  // to make the UI binding thread safe
-	service    *server.Server   // orchestrates the announcements
-	store      *storage.Storage // the key-value store for the samples
+	sync.Mutex                    // to make the UI binding thread safe
+	service      *server.Server   // orchestrates the announcements
+	store        *storage.Storage // the key-value store for the samples
+	processQueue *list.List       // a FIFO queue for processes
 
 	// runtime info for JS:
 	storeLocation        string     // where the store is located on disk
@@ -40,6 +42,7 @@ func InitHerald(storeLocation string) (*Herald, error) {
 	// return an instance
 	return &Herald{
 		store:         store,
+		processQueue:  list.New(),
 		storeLocation: storeLocation,
 		sampleDetails: make([][]string, 3),
 	}, nil
@@ -82,9 +85,9 @@ func (herald *Herald) GetRuntimeInfo() error {
 		}
 
 		// add the details to the store
-		herald.sampleDetails[0][i] = sample.Metadata.Label
+		herald.sampleDetails[0][i] = sample.Metadata.GetLabel()
 		herald.sampleDetails[1][i] = sample.Metadata.Created.String()
-		herald.sampleDetails[2][i] = sample.Metadata.GetLabel()
+		herald.sampleDetails[2][i] = sample.GetParentExperiment()
 
 		// check the status, update counts and refresh queues
 		// todo: refresh queues
@@ -196,6 +199,11 @@ func (herald *Herald) CreateExperiment(expLabel, outDir, fast5Dir, fastqDir, com
 		}
 	}
 
+	// check and update the experiment (checks if any of the tagged processes have had endpoints reached yet)
+	if err := exp.CheckStatus(); err != nil {
+		return err
+	}
+
 	// add the experiment to the store
 	if err := herald.store.AddExperiment(exp); err != nil {
 		return err
@@ -204,6 +212,12 @@ func (herald *Herald) CreateExperiment(expLabel, outDir, fast5Dir, fastqDir, com
 	// update the runtime info (grow the label slice, tag slice etc.)
 	herald.experimentLabels = append(herald.experimentLabels, expLabel)
 	herald.experimentCount++
+
+	// add the experiment to the sequencing / basecall queue
+	if len(tags) != 0 {
+		herald.processQueue.PushBack(exp)
+	}
+
 	return nil
 }
 
@@ -219,10 +233,10 @@ func (herald *Herald) CreateSample(label string, experimentName string, barcode 
 		return err
 	}
 
-	// check the experiment
-	if err := exp.CheckStatus(); err != nil {
-		return err
-	}
+	// TODO: check the experiment - not sure yet how to handle experiments that are currently in the queue etc.
+	//if err := exp.CheckStatus(); err != nil {
+	//	return err
+	//}
 
 	// create the sample
 	sample := data.InitSample(label, exp.Metadata.GetLabel(), barcode)

@@ -204,8 +204,11 @@ experimentValidator.registerListener(async() => {
         return
     }
 
+    // remove spaces from expName
+    var expNameDespaced = expName.value.replace(/\s/g, '_')
+
     // get expected dir names
-    var dirName = expOutputLocation.value + '/' + expName.value
+    var dirName = expOutputLocation.value + '/' + expNameDespaced
     var fast5_dirName = dirName + '/fast5_pass'
     var fastq_dirName = dirName + '/fastq_pass'
 

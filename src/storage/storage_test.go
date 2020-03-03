@@ -40,10 +40,8 @@ func TestStorageAdd(t *testing.T) {
 	// add samples
 	var i int32
 	for i = 0; i < 9; i++ {
-		sample := &data.Sample{
-			Label:   fmt.Sprintf("sample %d", i),
-			Barcode: i,
-		}
+		sampleName := fmt.Sprintf("sample %d", i)
+		sample := data.InitSample(sampleName, "testExperiment", i)
 		if err := sampleStore.AddSample(sample); err != nil {
 			t.Fatal(err)
 		}
@@ -55,10 +53,7 @@ func TestStorageAdd(t *testing.T) {
 	}
 
 	// check you can't add a duplicate label
-	sample := &data.Sample{
-		Label:   "sample 1",
-		Barcode: 666,
-	}
+	sample := data.InitSample("sample 1", "testExperiment", 1)
 	if err := sampleStore.AddSample(sample); err == nil {
 		t.Fatal(err)
 	}
@@ -67,23 +62,23 @@ func TestStorageAdd(t *testing.T) {
 	}
 
 	// check you can retrieve a sample
-	sampleCopy, err := sampleStore.GetSample(sample.Label)
+	sampleCopy, err := sampleStore.GetSample(sample.Metadata.Label)
 	if err != nil {
 		t.Fatal(err)
 	}
-	if sample.GetLabel() != sampleCopy.GetLabel() {
+	if sample.Metadata.GetLabel() != sampleCopy.Metadata.GetLabel() {
 		t.Fatal("retrieved sample label does not match inserted sample label")
 	}
 
 	// test a JSON dump
-	jsonDump, err := sampleStore.GetSampleJSONDump(sample.Label)
+	jsonDump, err := sampleStore.GetSampleJSONDump(sample.Metadata.Label)
 	if err != nil {
 		t.Fatal(err)
 	}
 	t.Log(jsonDump)
 
 	// check you can delete a sample
-	if err := sampleStore.DeleteSample(sample.Label); err != nil {
+	if err := sampleStore.DeleteSample(sample.Metadata.Label); err != nil {
 		t.Fatal(err)
 	}
 	if sampleStore.GetNumSamples() != 8 {

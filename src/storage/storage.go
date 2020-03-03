@@ -115,8 +115,8 @@ func (storage *Storage) AddSample(sample *data.Sample) error {
 	}
 
 	// check the sample is not in the database already
-	if storage.sampleDB.Has([]byte(sample.Label)) {
-		return fmt.Errorf("duplicate label can't be added to the database (%s)", sample.Label)
+	if storage.sampleDB.Has([]byte(sample.Metadata.Label)) {
+		return fmt.Errorf("duplicate label can't be added to the database (%s)", sample.Metadata.Label)
 	}
 
 	// marshal the sample
@@ -126,7 +126,7 @@ func (storage *Storage) AddSample(sample *data.Sample) error {
 	}
 
 	// add the sample
-	if err := storage.sampleDB.Put([]byte(sample.Label), data); err != nil {
+	if err := storage.sampleDB.Put([]byte(sample.Metadata.Label), data); err != nil {
 		return err
 	}
 	return nil
@@ -141,8 +141,8 @@ func (storage *Storage) AddExperiment(experiment *data.Experiment) error {
 	}
 
 	// check the sample is not in the database already
-	if storage.experimentDB.Has([]byte(experiment.Name)) {
-		return fmt.Errorf("duplicate experiment name can't be added to the database (%s)", experiment.Name)
+	if storage.experimentDB.Has([]byte(experiment.Metadata.Label)) {
+		return fmt.Errorf("duplicate experiment name can't be added to the database (%s)", experiment.Metadata.Label)
 	}
 
 	// marshal the sample
@@ -152,7 +152,7 @@ func (storage *Storage) AddExperiment(experiment *data.Experiment) error {
 	}
 
 	// add the sample
-	if err := storage.experimentDB.Put([]byte(experiment.Name), data); err != nil {
+	if err := storage.experimentDB.Put([]byte(experiment.Metadata.Label), data); err != nil {
 		return err
 	}
 	return nil

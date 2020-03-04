@@ -15,15 +15,15 @@ func init() {
 	ProcessRegister = make(map[string]*Process)
 
 	// create the process definitions
-	createProcessDefinition("sequence", nil, true, false)
-	createProcessDefinition("basecall", nil, true, false)
-	createProcessDefinition("rampart", nil, false, true)
-	createProcessDefinition("pipelineA", []string{"sequence", "basecall"}, false, true)
+	createProcessDefinition("sequence", nil)
+	createProcessDefinition("basecall", nil)
+	createProcessDefinition("rampart", nil)
+	createProcessDefinition("pipelineA", []string{"sequence", "basecall"})
 
 }
 
 // createProcessDefinition will init a process
-func createProcessDefinition(pName string, pDependsOn []string, availToExp, availToSamples bool) {
+func createProcessDefinition(pName string, pDependsOn []string) {
 
 	// check the process does not already exist
 	if _, exists := ProcessRegister[pName]; exists {
@@ -32,13 +32,11 @@ func createProcessDefinition(pName string, pDependsOn []string, availToExp, avai
 
 	// init the process
 	newProcess := &Process{
-		Complete:               false,
-		Name:                   pName,
-		DependsOn:              []*Process{},
-		History:                []*Comment{},
-		AvailableToExperiments: availToExp,
-		AvailableToSamples:     availToSamples,
-		Endpoint:               "",
+		Complete:  false,
+		Name:      pName,
+		DependsOn: []*Process{},
+		History:   []*Comment{},
+		Endpoint:  "",
 	}
 
 	// check the dependencies

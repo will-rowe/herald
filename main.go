@@ -23,6 +23,18 @@ import (
 // dbLocation is where the db is stored - it is set at compile time to be platform specific
 var dbLocation string
 
+// getTagsHTML returns the HTML needed to display all available processes for sample tagging
+func getTagsHTML() string {
+	procTagsHTML := "<label>Tags</label>"
+	for procName := range data.ProcessRegister {
+		if procName == "sequence" || procName == "basecall" {
+			continue
+		}
+		procTagsHTML += fmt.Sprintf("<input type=\"checkbox\" id=\"formLabel_%v\" value=\"%v\"><label class=\"label-inline\" for=\"formLabel_%v\">%v</label><div class=\"clearfix\"></div>", procName, procName, procName, procName)
+	}
+	return procTagsHTML
+}
+
 // main is the app entrypoint
 func main() {
 
@@ -36,6 +48,9 @@ func main() {
 		log.Fatal(err)
 	}
 	defer ui.Close()
+
+	// get the available processes for tagging
+	procTagsHTML := getTagsHTML()
 
 	// create the HERALD
 	var heraldObj *herald.Herald
@@ -85,13 +100,8 @@ func main() {
 			ui.Eval(fmt.Sprintf(`document.getElementById('addSampleModalOpen').disabled = false`))
 		}
 
-		// collect all the processes created at runtime and add to the tag lists in the app
-		ui.Eval(`document.getElementById('sampleTags').innerHTML = '<label>Tags</label>'`)
-		for procName, proc := range data.ProcessRegister {
-			if proc.GetAvailableToSamples() {
-				ui.Eval(fmt.Sprintf(`document.getElementById('sampleTags').innerHTML += '<input type="checkbox" id="formLabel_%v" value="%v"><label class="label-inline" for="formLabel_%v">%v</label><div class="clearfix"></div>'`, procName, procName, procName, procName))
-			}
-		}
+		// update the add sample form with the available processes for tagging
+		ui.Eval(fmt.Sprintf(`document.getElementById('sampleTags').innerHTML = '%v'`, procTagsHTML))
 
 		// check the network connection
 		if server.NetworkActive() {

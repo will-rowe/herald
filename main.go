@@ -13,7 +13,6 @@ import (
 
 	"github.com/zserge/lorca"
 
-	"github.com/will-rowe/herald/src/clients"
 	"github.com/will-rowe/herald/src/data"
 	"github.com/will-rowe/herald/src/helpers"
 	"github.com/will-rowe/herald/src/herald"
@@ -24,16 +23,16 @@ import (
 // dbLocation is where the db is stored - it is set at compile time to be platform specific
 var dbLocation string
 
-// getTagsHTML returns the HTML needed to display all available processes for sample tagging
+// getTagsHTML returns the HTML needed to display all available services for sample tagging
 func getTagsHTML() string {
-	procTagsHTML := "<label>Tags</label>"
-	for procName := range data.ProcessRegister {
-		if procName == "sequence" || procName == "basecall" {
+	ServiceTagsHTML := "<label>Tags</label>"
+	for serviceName := range data.ServiceRegister {
+		if serviceName == "sequence" || serviceName == "basecall" {
 			continue
 		}
-		procTagsHTML += fmt.Sprintf("<input type=\"checkbox\" id=\"formLabel_%v\" value=\"%v\"><label class=\"label-inline\" for=\"formLabel_%v\">%v</label><div class=\"clearfix\"></div>", procName, procName, procName, procName)
+		ServiceTagsHTML += fmt.Sprintf("<input type=\"checkbox\" id=\"formLabel_%v\" value=\"%v\"><label class=\"label-inline\" for=\"formLabel_%v\">%v</label><div class=\"clearfix\"></div>", serviceName, serviceName, serviceName, serviceName)
 	}
-	return procTagsHTML
+	return ServiceTagsHTML
 }
 
 // main is the app entrypoint
@@ -51,7 +50,7 @@ func main() {
 	defer ui.Close()
 
 	// get the available processes for tagging
-	procTagsHTML := getTagsHTML()
+	ServiceTagsHTML := getTagsHTML()
 
 	// create the HERALD
 	var heraldObj *herald.Herald
@@ -102,7 +101,7 @@ func main() {
 		}
 
 		// update the add sample form with the available processes for tagging
-		ui.Eval(fmt.Sprintf(`document.getElementById('sampleTags').innerHTML = '%v'`, procTagsHTML))
+		ui.Eval(fmt.Sprintf(`document.getElementById('sampleTags').innerHTML = '%v'`, ServiceTagsHTML))
 
 		// check the network connection
 		if server.NetworkActive() {
@@ -128,9 +127,6 @@ func main() {
 	defer ln.Close()
 	go http.Serve(ln, http.FileServer(FS))
 	ui.Load(fmt.Sprintf("http://%s", ln.Addr()))
-
-	// test service request
-	clients.SubmitSequencingProcess()
 
 	// Wait until the interrupt signal arrives or browser window is closed
 	sigc := make(chan os.Signal)

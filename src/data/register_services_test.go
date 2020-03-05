@@ -8,7 +8,7 @@ import (
 func Test_init(t *testing.T) {
 
 	// check known processes populated
-	if len(ProcessRegister) == 0 {
+	if len(ServiceRegister) == 0 {
 		t.Fatalf("init function did not register any processes")
 	}
 }

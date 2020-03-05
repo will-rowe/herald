@@ -14,11 +14,12 @@ func InitExperiment(label, outputDir, fast5Dir, fastqDir string) *Experiment {
 	// create the experiment
 	experiment := &Experiment{
 		Metadata: &HeraldData{
-			Created: ptypes.TimestampNow(),
-			Label:   label,
-			History: []*Comment{},
-			Status:  1,
-			Tags:    []*Process{},
+			Created:      ptypes.TimestampNow(),
+			Label:        label,
+			History:      []*Comment{},
+			Status:       1,
+			Tags:         make(map[string]bool),
+			RequestOrder: []string{},
 		},
 		OutputDirectory:      outputDir,
 		Fast5OutputDirectory: fast5Dir,
@@ -38,11 +39,12 @@ func InitSample(label, expLabel string, barcode int32) *Sample {
 	// create the sample
 	sample := &Sample{
 		Metadata: &HeraldData{
-			Created: ptypes.TimestampNow(),
-			Label:   label,
-			History: []*Comment{},
-			Status:  1,
-			Tags:    []*Process{},
+			Created:      ptypes.TimestampNow(),
+			Label:        label,
+			History:      []*Comment{},
+			Status:       1,
+			Tags:         make(map[string]bool),
+			RequestOrder: []string{},
 		},
 		ParentExperiment: expLabel,
 		Barcode:          barcode,
@@ -68,41 +70,46 @@ func (heraldData *HeraldData) AddComment(text string) error {
 	return nil
 }
 
-// AddTags is a method to tag an exeriment or sample with a process
+// AddTags is a method to tag an exeriment or sample with a service
 func (heraldData *HeraldData) AddTags(tags []string) error {
 	if len(tags) == 0 {
 		return fmt.Errorf("no tags provided")
 	}
 
-	// range over the tags to be added
-	for _, processName := range tags {
+	// reset requestOrder
+	heraldData.RequestOrder = []string{}
 
-		// check the tags are recognised processes
-		process, ok := ProcessRegister[processName]
+	// range over the tags to be added
+	for _, serviceName := range tags {
+
+		// check the tag is a recognised service
+		_, ok := ServiceRegister[serviceName]
 		if !ok {
-			return fmt.Errorf("unrecognised process name: %v", processName)
+			return fmt.Errorf("unrecognised service name: %v", serviceName)
 		}
 
-		// make sure the sample is not already tagged with this process
-		for _, existingTag := range heraldData.Tags {
-			if existingTag.Name == processName {
-				return fmt.Errorf("sample already tagged with process: %v", processName)
+		// make sure this data has not already been tagged with this service
+		for existingTag := range heraldData.Tags {
+			if existingTag == serviceName {
+				return fmt.Errorf("data already tagged with service: %v", serviceName)
 			}
 		}
 
-		// make a copy of the process and tag the sample
-		heraldData.Tags = append(heraldData.Tags, process)
-		if err := heraldData.AddComment(fmt.Sprintf("tagged with process: %v.", processName)); err != nil {
-			return err
-		}
+		// tag the sample
+		heraldData.Tags[serviceName] = false
 	}
 
 	// update the status to "tagged"
 	heraldData.Status = 2
+
+	// generate new request order
+	//
+	//
+
 	return nil
 }
 
-// CheckStatus checks for active tags and then determines if the process endpoints have been reached. It then updates tags and the status
+// CheckStatus checks for active tags and then determines if the service endpoints have been reached. It then updates tags and the status
 func (experiment *Experiment) CheckStatus() error {
 	status := experiment.Metadata.GetStatus()
 	switch status {
@@ -119,30 +126,30 @@ func (experiment *Experiment) CheckStatus() error {
 	case 2:
 
 		// check all the tagged processes for their endpoints
-		for _, tag := range experiment.Metadata.GetTags() {
+		for serviceName, complete := range experiment.Metadata.GetTags() {
 
 			// ignore completed tags
-			if tag.GetComplete() {
+			if complete {
 				continue
 			}
 
 			// check the endpoint
-			// TODO: hardcoding sequence and basecalling basic test for now but I want to automate how we detect endpoints in each process
-			if tag.GetName() == "sequence" {
+			// TODO: hardcoding sequence and basecalling basic test for now but I want to automate how we detect endpoints in each service
+			if serviceName == "sequence" {
 				if err := helpers.CheckDirExists(experiment.GetFast5OutputDirectory()); err != nil {
-					tag.Complete = true
+					experiment.Metadata.Tags[serviceName] = true
 				}
 			}
-			if tag.GetName() == "basecall" {
+			if serviceName == "basecall" {
 				if err := helpers.CheckDirExists(experiment.GetFastqOutputDirectory()); err != nil {
-					tag.Complete = true
+					experiment.Metadata.Tags[serviceName] = true
 				}
 			}
 		}
 
 		// loop over tags again and reset status to untagged if all processes finished
-		for _, tag := range experiment.Metadata.GetTags() {
-			if tag.GetComplete() == false {
+		for _, complete := range experiment.Metadata.GetTags() {
+			if !complete {
 				break
 			}
 			experiment.Metadata.Status = 2

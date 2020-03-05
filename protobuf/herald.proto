@@ -22,16 +22,6 @@ enum Status {
 }
 
 /*
-    Process describes what to do to an experiment or sample
-*/
-message Process {
-    bool complete = 1;                          // set true if the process endpoint reached
-    string name = 2;                            // the name of the process
-    repeated Process dependsOn = 3;             // the processes that this process depends on (i.e. must already be marked complete)
-    repeated Comment history = 4;               // describes the history of the process
-}
-
-/*
     HeraldData is the base type, used by both Experiment and Sample
 */
 message HeraldData {
@@ -39,7 +29,8 @@ message HeraldData {
     string label = 2;                            // the experiment or sample name
     repeated Comment history = 3;                // describes the history of the experiment
     Status status = 4;                           // describes if untagged/tagged/announced
-    repeated Process tags = 5;                   // tagged processes for this experiment
+    map<string, bool> tags = 5;                  // tagged services and their complete status (true=complete, false=incomplete)
+    repeated string requestOrder = 6;            // the order to send requests to the tagged services
 }
 
 /*

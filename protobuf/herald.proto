@@ -29,7 +29,6 @@ message Process {
     string name = 2;                            // the name of the process
     repeated Process dependsOn = 3;             // the processes that this process depends on (i.e. must already be marked complete)
     repeated Comment history = 4;               // describes the history of the process
-    string endpoint = 5;                        // the filepath to check as an endpoint for this process // TODO: this is just a test solution for now
 }
 
 /*

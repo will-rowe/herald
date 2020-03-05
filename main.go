@@ -13,6 +13,7 @@ import (
 
 	"github.com/zserge/lorca"
 
+	"github.com/will-rowe/herald/src/clients"
 	"github.com/will-rowe/herald/src/data"
 	"github.com/will-rowe/herald/src/helpers"
 	"github.com/will-rowe/herald/src/herald"
@@ -127,6 +128,9 @@ func main() {
 	defer ln.Close()
 	go http.Serve(ln, http.FileServer(FS))
 	ui.Load(fmt.Sprintf("http://%s", ln.Addr()))
+
+	// test service request
+	clients.SubmitSequencingProcess()
 
 	// Wait until the interrupt signal arrives or browser window is closed
 	sigc := make(chan os.Signal)

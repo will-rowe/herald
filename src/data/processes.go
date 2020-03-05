@@ -3,6 +3,8 @@ package data
 
 import (
 	"fmt"
+
+	"github.com/will-rowe/herald/src/clients"
 )
 
 // ProcessRegister is used to register all the available processes
@@ -15,28 +17,37 @@ func init() {
 	ProcessRegister = make(map[string]*Process)
 
 	// create the process definitions
-	createProcessDefinition("sequence", nil)
-	createProcessDefinition("basecall", nil)
-	createProcessDefinition("rampart", nil)
-	createProcessDefinition("pipelineA", []string{"sequence", "basecall"})
+	createProcessDefinition("sequence", nil, clients.DummyProcess)
+	//createProcessDefinition("basecall", nil)
+	//createProcessDefinition("rampart", nil)
+	//createProcessDefinition("pipelineA", []string{"sequence", "basecall"})
 
 }
 
+
+this morning - remove the protobuf Process and keep that in memory (shouldn't need to serialise)
+then we can attach the client function, the port to send requests and the service name
+these processes can be inited at runtime 
+
+
 // createProcessDefinition will init a process
-func createProcessDefinition(pName string, pDependsOn []string) {
+func createProcessDefinition(pName string, pDependsOn []string, pFunc func()) {
 
 	// check the process does not already exist
 	if _, exists := ProcessRegister[pName]; exists {
 		panic(fmt.Sprintf("process already exists: %v", pName))
 	}
 
+	// call func
+	// TODO: attach this to the process
+	// TODO: Process does not need to be protobuff message
+	pFunc()
+
 	// init the process
 	newProcess := &Process{
 		Complete:  false,
 		Name:      pName,
 		DependsOn: []*Process{},
-		History:   []*Comment{},
-		Endpoint:  "",
 	}
 
 	// check the dependencies

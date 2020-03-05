@@ -1,18 +1,20 @@
-// Package data adds some wrapper functions to the protobuf messages
-package data
+//go:generate protoc -I=protobuf --go_out=plugins=grpc:src/services protobuf/*.proto
+
+// Package services contains the wrappers for the protobuf messages and the client request callbacks
+package services
 
 import (
 	"fmt"
 
-	"github.com/will-rowe/herald/src/clients"
+	"google.golang.org/grpc"
 )
 
 // Service is holds the information needed by Herald to send messages to a service provider
 type Service struct {
-	name            string   // name of the service
-	dependsOn       []string // the other services that should have completed prior to this one being contacted
-	port            int      // the port the service is accepting requests on
-	requestCallback func()   // the function to run when contacting the service
+	name            string                                         // name of the service
+	dependsOn       []string                                       // the other services that should have completed prior to this one being contacted
+	port            int                                            // the port the service is accepting requests on
+	requestCallback func(experiment *Experiment, service *Service) // the function to run when contacting the service
 }
 
 // ServiceRegister is used to register all the available processes
@@ -24,15 +26,19 @@ func init() {
 	// init the process checker
 	ServiceRegister = make(map[string]*Service)
 
+	///
 	// create the process definitions
-	createServiceDefinition("sequence", nil, 7777, clients.DummyProcess)
-	createServiceDefinition("basecall", nil, 7778, clients.DummyProcess)
-	createServiceDefinition("pipelineA", []string{"sequence", "basecall"}, 7779, clients.DummyProcess)
-	//createServiceDefinition("rampart", nil)
+	//
+	registerService("sequence", nil, 7777, SubmitSequencingProcess)
+	registerService("basecall", nil, 7778, SubmitSequencingProcess)
+	registerService("pipelineA", []string{"sequence", "basecall"}, 7779, SubmitSequencingProcess)
+	//
+	//
+	//
 }
 
-// createServiceDefinition will init a process
-func createServiceDefinition(sName string, sDependsOn []string, sPort int, sFunc func()) {
+// registerService will init a process
+func registerService(sName string, sDependsOn []string, sPort int, sFunc func(experiment *Experiment, service *Service)) {
 
 	// check the process does not already exist
 	if _, exists := ServiceRegister[sName]; exists {
@@ -77,5 +83,17 @@ func createServiceDefinition(sName string, sDependsOn []string, sPort int, sFunc
 
 // CheckAccess will check to see if the service port can be accessed
 func (service *Service) CheckAccess() error {
-	return clients.TestServiceConnection(service.port)
+	// instantiate a client connection, on the TCP port the server is bound to
+	var conn *grpc.ClientConn
+	conn, err := grpc.Dial(fmt.Sprintf(":%d", service.port), grpc.WithInsecure())
+	if err != nil {
+		return fmt.Errorf("did not connect to port %d: %s", service.port, err)
+	}
+	conn.Close()
+	return nil
+}
+
+// GetDeps will return a slice of the dependency names
+func (service *Service) GetDeps() []string {
+	return service.dependsOn
 }

@@ -1,12 +1,10 @@
-// Package data adds some wrapper functions to the protobuf messages
-package data
+package services
 
 import (
 	"fmt"
 
 	"github.com/golang/protobuf/ptypes"
 	toposort "github.com/philopon/go-toposort"
-	"github.com/will-rowe/herald/src/helpers"
 )
 
 // InitExperiment will init an experiment struct with the minimum required values
@@ -107,14 +105,14 @@ func (heraldData *HeraldData) AddTags(tags []string) error {
 	return heraldData.createServiceDAG()
 }
 
-// CheckStatus checks for active tags and then determines if the service endpoints have been reached. It then updates tags and the status
-func (experiment *Experiment) CheckStatus() error {
-	status := experiment.Metadata.GetStatus()
+// CheckStatus checks the tags and updates the status if all tags are now marked complete
+func (heraldData *HeraldData) CheckStatus() error {
+	status := heraldData.GetStatus()
 	switch status {
 
 	// uninitialised
 	case 0:
-		return fmt.Errorf("experiment is uninitialised: %v", experiment.GetMetadata().Label)
+		return fmt.Errorf("encountered uninitialised data: %v", heraldData.Label)
 
 	// untagged
 	case 1:
@@ -123,36 +121,14 @@ func (experiment *Experiment) CheckStatus() error {
 	// tagged
 	case 2:
 
-		// check all the tagged processes for their endpoints
-		for serviceName, complete := range experiment.Metadata.GetTags() {
-
-			// ignore completed tags
-			if complete {
-				continue
-			}
-
-			// check the endpoint
-			// TODO: hardcoding sequence and basecalling basic test for now but I want to automate how we detect endpoints in each service
-			if serviceName == "sequence" {
-				if err := helpers.CheckDirExists(experiment.GetFast5OutputDirectory()); err != nil {
-					experiment.Metadata.Tags[serviceName] = true
-				}
-			}
-			if serviceName == "basecall" {
-				if err := helpers.CheckDirExists(experiment.GetFastqOutputDirectory()); err != nil {
-					experiment.Metadata.Tags[serviceName] = true
-				}
-			}
-		}
-
-		// loop over tags again and reset status to untagged if all processes finished
-		for _, complete := range experiment.Metadata.GetTags() {
+		// if there is an incomplete tag, nothing to do
+		for _, complete := range heraldData.GetTags() {
 			if !complete {
-				break
+				return nil
 			}
-			experiment.Metadata.Status = 2
 		}
-
+		// set status to untagged
+		heraldData.Status = 1
 		return nil
 
 	// announced
@@ -190,12 +166,12 @@ func (heraldData *HeraldData) createServiceDAG() error {
 
 		// ignore services with no dependencies
 		service := ServiceRegister[serviceName]
-		if len(service.dependsOn) == 0 {
+		if len(service.GetDeps()) == 0 {
 			continue
 		}
 
 		// loop over the depencies and draw edges
-		for _, dependencyName := range service.dependsOn {
+		for _, dependencyName := range service.GetDeps() {
 			dag.AddEdge(dependencyName, serviceName)
 		}
 	}

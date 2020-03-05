@@ -9,7 +9,7 @@ import (
 	"github.com/golang/protobuf/proto"
 	"github.com/prologic/bitcask"
 
-	"github.com/will-rowe/herald/src/data"
+	"github.com/will-rowe/herald/src/services"
 )
 
 // dbMaxEntries is used to cap the number of db elements that can be added
@@ -107,7 +107,7 @@ func (storage *Storage) DeleteExperiment(experimentName string) error {
 }
 
 // AddSample is a method to marshal a sample and store it
-func (storage *Storage) AddSample(sample *data.Sample) error {
+func (storage *Storage) AddSample(sample *services.Sample) error {
 
 	// check the DB limit hasn't been reached
 	if storage.sampleDB.Len() == dbMaxEntries {
@@ -133,7 +133,7 @@ func (storage *Storage) AddSample(sample *data.Sample) error {
 }
 
 // AddExperiment is a method to marshal an experiment and store it
-func (storage *Storage) AddExperiment(experiment *data.Experiment) error {
+func (storage *Storage) AddExperiment(experiment *services.Experiment) error {
 
 	// check the DB limit hasn't been reached
 	if storage.experimentDB.Len() == dbMaxEntries {
@@ -159,7 +159,7 @@ func (storage *Storage) AddExperiment(experiment *data.Experiment) error {
 }
 
 // GetSample is a method to retrieve a sample from storage and unmarshal it to a struct
-func (storage *Storage) GetSample(sampleLabel string) (*data.Sample, error) {
+func (storage *Storage) GetSample(sampleLabel string) (*services.Sample, error) {
 
 	// get the sample from the bit cask
 	dbData, err := storage.sampleDB.Get([]byte(sampleLabel))
@@ -168,7 +168,7 @@ func (storage *Storage) GetSample(sampleLabel string) (*data.Sample, error) {
 	}
 
 	// unmarshal the sample
-	sample := &data.Sample{}
+	sample := &services.Sample{}
 	if err := proto.Unmarshal(dbData, sample); err != nil {
 		return nil, err
 	}
@@ -176,7 +176,7 @@ func (storage *Storage) GetSample(sampleLabel string) (*data.Sample, error) {
 }
 
 // GetExperiment is a method to retrieve an experiment from storage and unmarshal it to a struct
-func (storage *Storage) GetExperiment(experimentName string) (*data.Experiment, error) {
+func (storage *Storage) GetExperiment(experimentName string) (*services.Experiment, error) {
 
 	// get the experiment from the bit cask
 	dbData, err := storage.experimentDB.Get([]byte(experimentName))
@@ -185,7 +185,7 @@ func (storage *Storage) GetExperiment(experimentName string) (*data.Experiment, 
 	}
 
 	// unmarshal the sample
-	exp := &data.Experiment{}
+	exp := &services.Experiment{}
 	if err := proto.Unmarshal(dbData, exp); err != nil {
 		return nil, err
 	}
@@ -202,7 +202,7 @@ func (storage *Storage) GetSampleProtoDump(sampleLabel string) (string, error) {
 	}
 
 	// unmarshal the sample
-	sample := &data.Sample{}
+	sample := &services.Sample{}
 	if err := proto.Unmarshal(dbData, sample); err != nil {
 		return "", err
 	}
@@ -220,7 +220,7 @@ func (storage *Storage) GetSampleJSONDump(sampleLabel string) (string, error) {
 	}
 
 	// unmarshal the sample
-	sample := &data.Sample{}
+	sample := &services.Sample{}
 	if err := proto.Unmarshal(dbData, sample); err != nil {
 		return "", err
 	}

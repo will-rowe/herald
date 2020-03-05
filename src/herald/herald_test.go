@@ -4,7 +4,7 @@ import (
 	"os"
 	"testing"
 
-	"github.com/will-rowe/herald/src/data"
+	"github.com/will-rowe/herald/src/services"
 )
 
 // TestHeraldInit
@@ -33,7 +33,7 @@ func TestHeraldCreateSample(t *testing.T) {
 
 	// create an experiment
 	testExpName := "test experiment"
-	testExp := data.InitExperiment(testExpName, "", "", "")
+	testExp := services.InitExperiment(testExpName, "", "", "")
 	if err := tmp.store.AddExperiment(testExp); err != nil {
 		t.Fatal(err)
 	}

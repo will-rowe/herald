@@ -6,8 +6,8 @@ import (
 	"fmt"
 	"sync"
 
-	"github.com/will-rowe/herald/src/data"
 	"github.com/will-rowe/herald/src/server"
+	"github.com/will-rowe/herald/src/services"
 	"github.com/will-rowe/herald/src/storage"
 )
 
@@ -183,7 +183,7 @@ func (herald *Herald) CreateExperiment(expLabel, outDir, fast5Dir, fastqDir, com
 	defer herald.Unlock()
 
 	// create the experiment
-	exp := data.InitExperiment(expLabel, outDir, fast5Dir, fastqDir)
+	exp := services.InitExperiment(expLabel, outDir, fast5Dir, fastqDir)
 
 	// add any comment
 	if len(comment) != 0 {
@@ -200,7 +200,7 @@ func (herald *Herald) CreateExperiment(expLabel, outDir, fast5Dir, fastqDir, com
 	}
 
 	// check and update the experiment (checks if any of the tagged processes have had endpoints reached yet)
-	if err := exp.CheckStatus(); err != nil {
+	if err := exp.Metadata.CheckStatus(); err != nil {
 		return err
 	}
 
@@ -239,7 +239,7 @@ func (herald *Herald) CreateSample(label string, experimentName string, barcode 
 	//}
 
 	// create the sample
-	sample := data.InitSample(label, exp.Metadata.GetLabel(), barcode)
+	sample := services.InitSample(label, exp.Metadata.GetLabel(), barcode)
 
 	if len(comment) != 0 {
 		if err := sample.Metadata.AddComment(comment); err != nil {

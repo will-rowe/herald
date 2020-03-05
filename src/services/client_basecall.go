@@ -1,4 +1,4 @@
-package clients
+package services
 
 import (
 	"fmt"
@@ -6,8 +6,6 @@ import (
 
 	"golang.org/x/net/context"
 	"google.golang.org/grpc"
-
-	"github.com/will-rowe/herald/src/services"
 )
 
 // submitBasecallingProcess will send a basecalling request
@@ -19,9 +17,9 @@ func submitBasecallingProcess() {
 		log.Fatalf("did not connect: %s", err)
 	}
 	defer conn.Close()
-	c := services.NewBasecallClient(conn)
+	c := NewBasecallClient(conn)
 
-	response, err := c.RunBasecalling(context.Background(), &services.ProcessSubmission2{Val1: "basecalling request"})
+	response, err := c.RunBasecalling(context.Background(), &ProcessSubmission2{Val1: "basecalling request"})
 	if err != nil {
 		log.Fatalf("Error when calling RunBasecalling: %s", err)
 	}

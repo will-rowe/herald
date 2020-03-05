@@ -13,11 +13,11 @@ import (
 
 	"github.com/zserge/lorca"
 
-	"github.com/will-rowe/herald/src/data"
 	"github.com/will-rowe/herald/src/helpers"
 	"github.com/will-rowe/herald/src/herald"
 	"github.com/will-rowe/herald/src/minknow"
 	"github.com/will-rowe/herald/src/server"
+	"github.com/will-rowe/herald/src/services"
 )
 
 // dbLocation is where the db is stored - it is set at compile time to be platform specific
@@ -26,7 +26,7 @@ var dbLocation string
 // getTagsHTML returns the HTML needed to display all available services for sample tagging
 func getTagsHTML() string {
 	ServiceTagsHTML := "<label>Tags</label>"
-	for serviceName := range data.ServiceRegister {
+	for serviceName := range services.ServiceRegister {
 		if serviceName == "sequence" || serviceName == "basecall" {
 			continue
 		}

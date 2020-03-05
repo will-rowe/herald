@@ -5,7 +5,7 @@ import (
 	"os"
 	"testing"
 
-	"github.com/will-rowe/herald/src/data"
+	"github.com/will-rowe/herald/src/services"
 )
 
 // TestStorage open and close
@@ -41,7 +41,7 @@ func TestStorageAdd(t *testing.T) {
 	var i int32
 	for i = 0; i < 9; i++ {
 		sampleName := fmt.Sprintf("sample %d", i)
-		sample := data.InitSample(sampleName, "testExperiment", i)
+		sample := services.InitSample(sampleName, "testExperiment", i)
 		if err := sampleStore.AddSample(sample); err != nil {
 			t.Fatal(err)
 		}
@@ -53,7 +53,7 @@ func TestStorageAdd(t *testing.T) {
 	}
 
 	// check you can't add a duplicate label
-	sample := data.InitSample("sample 1", "testExperiment", 1)
+	sample := services.InitSample("sample 1", "testExperiment", 1)
 	if err := sampleStore.AddSample(sample); err == nil {
 		t.Fatal(err)
 	}

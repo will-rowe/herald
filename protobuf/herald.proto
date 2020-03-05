@@ -1,5 +1,5 @@
 syntax = "proto3";
-package data;
+package services;
 
 import "google/protobuf/timestamp.proto";
 
@@ -38,9 +38,9 @@ message HeraldData {
 */
 message Experiment {
     HeraldData metadata = 1;                    // the base info
-    string output_directory = 2;                // where the experiment is stored
-    string fast5_output_directory = 3;          // where the experiment fast5 data is stored
-    string fastq_output_directory = 4;          // where the experiment fastq data is stored
+    string outputDirectory = 2;                // where the experiment is stored
+    string fast5OutputDirectory = 3;          // where the experiment fast5 data is stored
+    string fastqOutputDirectory = 4;          // where the experiment fastq data is stored
 
 }
 

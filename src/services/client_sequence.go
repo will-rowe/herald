@@ -18,7 +18,7 @@ func SubmitSequencingProcess(experiment *Experiment, service *Service) error {
 
 		// mark tag as complete
 		experiment.Metadata.GetTags()[service.name] = true
-		return nil
+		return fmt.Errorf("dummy message - found fast5 dir")
 	}
 
 	// instantiate a client connection, on the TCP port the server is bound to

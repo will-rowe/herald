@@ -9,6 +9,10 @@ import (
 // AnnounceSamples will processes the queues and submit service requests
 func (herald *Herald) AnnounceSamples() error {
 
+	if herald.announcementQueue.Len() == 0 {
+		return fmt.Errorf("announcement queue is empty")
+	}
+
 	// check service providers are available
 	for _, service := range services.ServiceRegister {
 		if err := service.CheckAccess(); err != nil {
@@ -16,43 +20,46 @@ func (herald *Herald) AnnounceSamples() error {
 		}
 	}
 
-	// process the experiments first
-	if err := herald.processExperimentQueue(); err != nil {
-		return err
-	}
-
-	return nil
-}
-
-// processExperimentQueue will run the service requests in the experiment queue
-func (herald *Herald) processExperimentQueue() error {
-	if herald.experimentQueue.Len() == 0 {
-		return fmt.Errorf("experiment queue is empty")
-	}
-
 	// process the queue
-	for herald.experimentQueue.Len() > 0 {
+	for herald.announcementQueue.Len() > 0 {
 
-		// grab the experiment that is first in the queue
-		e := herald.experimentQueue.Front()
-		exp := e.Value.(*services.Experiment)
+		// grab the sample that is first in the queue
+		s := herald.announcementQueue.Front()
+		sample := s.Value.(*services.Sample)
 
 		// get the tags in order
-		for _, tag := range exp.Metadata.GetRequestOrder() {
+		for _, tag := range sample.Metadata.GetRequestOrder() {
 
 			// get the service details
 			service := services.ServiceRegister[tag]
 
+			if tag == "sequencing" {
+				exp, err := herald.store.GetExperiment(sample.GetParentExperiment())
+				if err != nil {
+					return err
+				}
+
+				// run the service request
+				service.SendRequest(exp)
+
+			}
+
 			// run the service request
-			service.SendRequest(exp)
+			//service.SendRequest(sample)
 
 			// TODO: if the service is blocking, wait for it
 		}
 
-		fmt.Print(exp)
+		fmt.Print(sample)
 
-		// dequeue the experiment
-		herald.experimentQueue.Remove(e)
+		// evalute the sample
+
+		// update fields and propogate to linked data
+
+		// decide if it should be dequeued
+
+		// dequeue the sample
+		herald.announcementQueue.Remove(s)
 	}
 
 	return nil

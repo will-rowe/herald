@@ -12,9 +12,9 @@ import (
 
 // Herald is the struct for holding runtime data
 type Herald struct {
-	sync.Mutex                       // to make the UI binding thread safe
-	store           *storage.Storage // the key-value store for the samples
-	experimentQueue *list.List       // a FIFO queue for processes
+	sync.Mutex                         // to make the UI binding thread safe
+	store             *storage.Storage // the key-value store for the samples
+	announcementQueue *list.List       // a FIFO queue for announcements
 
 	// runtime info for JS:
 	storeLocation        string     // where the store is located on disk
@@ -39,10 +39,10 @@ func InitHerald(storeLocation string) (*Herald, error) {
 
 	// return an instance
 	return &Herald{
-		store:           store,
-		experimentQueue: list.New(),
-		storeLocation:   storeLocation,
-		sampleDetails:   make([][]string, 3),
+		store:             store,
+		announcementQueue: list.New(),
+		storeLocation:     storeLocation,
+		sampleDetails:     make([][]string, 3),
 	}, nil
 }
 
@@ -205,12 +205,6 @@ func (herald *Herald) CreateExperiment(expLabel, outDir, fast5Dir, fastqDir, com
 	// update the runtime info (grow the label slice, tag slice etc.)
 	herald.experimentLabels = append(herald.experimentLabels, expLabel)
 	herald.experimentCount++
-
-	// add the experiment to the sequencing / basecall queue
-	if len(tags) != 0 {
-		herald.experimentQueue.PushBack(exp)
-	}
-
 	return nil
 }
 
@@ -231,7 +225,6 @@ func (herald *Herald) CreateSample(label string, experimentName string, barcode 
 
 	// create the sample
 	sample := services.InitSample(label, exp.Metadata.GetLabel(), barcode)
-
 	if len(comment) != 0 {
 		if err := sample.Metadata.AddComment(comment); err != nil {
 			return err
@@ -243,6 +236,11 @@ func (herald *Herald) CreateSample(label string, experimentName string, barcode 
 		if err := sample.Metadata.AddTags(tags); err != nil {
 			return err
 		}
+	}
+
+	// add to the announcement queue
+	if len(tags) != 0 {
+		herald.announcementQueue.PushBack(sample)
 	}
 
 	// add the sample to the store

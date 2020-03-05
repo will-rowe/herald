@@ -16,7 +16,6 @@ import (
 	"github.com/will-rowe/herald/src/helpers"
 	"github.com/will-rowe/herald/src/herald"
 	"github.com/will-rowe/herald/src/minknow"
-	"github.com/will-rowe/herald/src/server"
 	"github.com/will-rowe/herald/src/services"
 )
 
@@ -60,6 +59,7 @@ func main() {
 	defer heraldObj.Destroy()
 
 	// Bind HERALD methods to the UI
+	ui.Bind("announceSamples", heraldObj.AnnounceSamples)
 	ui.Bind("wipeStorage", heraldObj.WipeStorage)
 	ui.Bind("getSampleCount", heraldObj.GetSampleCount)
 	ui.Bind("getUntaggedSampleCount", heraldObj.GetUntaggedSampleCount)
@@ -103,8 +103,15 @@ func main() {
 		// update the add sample form with the available processes for tagging
 		ui.Eval(fmt.Sprintf(`document.getElementById('sampleTags').innerHTML = '%v'`, ServiceTagsHTML))
 
+		// enable the announce button if there are tagged samples
+		if heraldObj.GetTaggedSampleCount() == 0 {
+			ui.Eval(fmt.Sprintf(`document.getElementById('staging_announce').disabled = true`))
+		} else {
+			ui.Eval(fmt.Sprintf(`document.getElementById('staging_announce').disabled = false`))
+		}
+
 		// check the network connection
-		if server.NetworkActive() {
+		if helpers.NetworkActive() {
 			ui.Eval(fmt.Sprintf(`document.getElementById('status_network').innerHTML = '<i class="far fa-check-circle" style="color: #35cebe;"></i>'`))
 		} else {
 			ui.Eval(fmt.Sprintf(`document.getElementById('status_network').innerHTML = '<i class="far fa-times-circle" style="color: red;"></i>'`))

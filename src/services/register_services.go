@@ -11,10 +11,10 @@ import (
 
 // Service is holds the information needed by Herald to send messages to a service provider
 type Service struct {
-	name            string                                         // name of the service
-	dependsOn       []string                                       // the other services that should have completed prior to this one being contacted
-	port            int                                            // the port the service is accepting requests on
-	requestCallback func(experiment *Experiment, service *Service) // the function to run when contacting the service
+	name            string                                               // name of the service
+	dependsOn       []string                                             // the other services that should have completed prior to this one being contacted
+	port            int                                                  // the port the service is accepting requests on
+	requestCallback func(experiment *Experiment, service *Service) error // the function to run when contacting the service
 }
 
 // ServiceRegister is used to register all the available processes
@@ -38,7 +38,7 @@ func init() {
 }
 
 // registerService will init a process
-func registerService(sName string, sDependsOn []string, sPort int, sFunc func(experiment *Experiment, service *Service)) {
+func registerService(sName string, sDependsOn []string, sPort int, sFunc func(experiment *Experiment, service *Service) error) {
 
 	// check the process does not already exist
 	if _, exists := ServiceRegister[sName]; exists {
@@ -96,4 +96,9 @@ func (service *Service) CheckAccess() error {
 // GetDeps will return a slice of the dependency names
 func (service *Service) GetDeps() []string {
 	return service.dependsOn
+}
+
+// SendRequest will run the service callback function
+func (service *Service) SendRequest(experiment *Experiment) error {
+	return service.requestCallback(experiment, service)
 }

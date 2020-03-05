@@ -68,6 +68,7 @@ window.addEventListener('offline', () =>
 // BUTTONS
 // get the buttons that control the app
 const refreshPage = document.getElementById('refreshPage')
+const announceSamplesButton = document.getElementById('staging_announce')
 const wipeDatabase = document.getElementById('wipeDatabase')
 
 // add an event listener to the refreshPage button
@@ -76,6 +77,21 @@ refreshPage.addEventListener('click', async() => {
 
     pageRefresh()
     printSuccessMsg('refreshed the app')
+})
+
+// add an event listener to the staging_announce button
+announceSamplesButton.addEventListener('click', async() => {
+    console.log('announcing samples')
+
+    // call the Go announceSamples method
+    try {
+        await announceSamples()
+    } catch (e) {
+        console.log(e)
+        printErrorMsg(e)
+        return
+    }
+    console.log('announced')
 })
 
 // add an event listener to wipeDatabase button

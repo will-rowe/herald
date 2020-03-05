@@ -13,15 +13,26 @@ import (
 
 	"github.com/zserge/lorca"
 
-	"github.com/will-rowe/herald/src/data"
 	"github.com/will-rowe/herald/src/helpers"
 	"github.com/will-rowe/herald/src/herald"
 	"github.com/will-rowe/herald/src/minknow"
-	"github.com/will-rowe/herald/src/server"
+	"github.com/will-rowe/herald/src/services"
 )
 
 // dbLocation is where the db is stored - it is set at compile time to be platform specific
 var dbLocation string
+
+// getTagsHTML returns the HTML needed to display all available services for sample tagging
+func getTagsHTML() string {
+	ServiceTagsHTML := "<label>Tags</label>"
+	for serviceName := range services.ServiceRegister {
+		if serviceName == "sequence" || serviceName == "basecall" {
+			continue
+		}
+		ServiceTagsHTML += fmt.Sprintf("<input type=\"checkbox\" id=\"formLabel_%v\" value=\"%v\"><label class=\"label-inline\" for=\"formLabel_%v\">%v</label><div class=\"clearfix\"></div>", serviceName, serviceName, serviceName, serviceName)
+	}
+	return ServiceTagsHTML
+}
 
 // main is the app entrypoint
 func main() {
@@ -37,6 +48,9 @@ func main() {
 	}
 	defer ui.Close()
 
+	// get the available processes for tagging
+	ServiceTagsHTML := getTagsHTML()
+
 	// create the HERALD
 	var heraldObj *herald.Herald
 	if heraldObj, err = herald.InitHerald(dbLocation); err != nil {
@@ -45,6 +59,7 @@ func main() {
 	defer heraldObj.Destroy()
 
 	// Bind HERALD methods to the UI
+	ui.Bind("announceSamples", heraldObj.AnnounceSamples)
 	ui.Bind("wipeStorage", heraldObj.WipeStorage)
 	ui.Bind("getSampleCount", heraldObj.GetSampleCount)
 	ui.Bind("getUntaggedSampleCount", heraldObj.GetUntaggedSampleCount)
@@ -85,16 +100,18 @@ func main() {
 			ui.Eval(fmt.Sprintf(`document.getElementById('addSampleModalOpen').disabled = false`))
 		}
 
-		// collect all the processes created at runtime and add to the tag lists in the app
-		ui.Eval(`document.getElementById('sampleTags').innerHTML = '<label>Tags</label>'`)
-		for procName, proc := range data.ProcessRegister {
-			if proc.GetAvailableToSamples() {
-				ui.Eval(fmt.Sprintf(`document.getElementById('sampleTags').innerHTML += '<input type="checkbox" id="formLabel_%v" value="%v"><label class="label-inline" for="formLabel_%v">%v</label><div class="clearfix"></div>'`, procName, procName, procName, procName))
-			}
+		// update the add sample form with the available processes for tagging
+		ui.Eval(fmt.Sprintf(`document.getElementById('sampleTags').innerHTML = '%v'`, ServiceTagsHTML))
+
+		// enable the announce button if there are tagged samples
+		if heraldObj.GetTaggedSampleCount() == 0 {
+			ui.Eval(fmt.Sprintf(`document.getElementById('staging_announce').disabled = true`))
+		} else {
+			ui.Eval(fmt.Sprintf(`document.getElementById('staging_announce').disabled = false`))
 		}
 
 		// check the network connection
-		if server.NetworkActive() {
+		if helpers.NetworkActive() {
 			ui.Eval(fmt.Sprintf(`document.getElementById('status_network').innerHTML = '<i class="far fa-check-circle" style="color: #35cebe;"></i>'`))
 		} else {
 			ui.Eval(fmt.Sprintf(`document.getElementById('status_network').innerHTML = '<i class="far fa-times-circle" style="color: red;"></i>'`))

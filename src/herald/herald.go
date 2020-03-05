@@ -1,20 +1,20 @@
-// Package herald acts as an interface between the storage and server packages
+// Package herald acts as an interface between the storage and service packages
 package herald
 
 import (
+	"container/list"
 	"fmt"
 	"sync"
 
-	"github.com/will-rowe/herald/src/data"
-	"github.com/will-rowe/herald/src/server"
+	"github.com/will-rowe/herald/src/services"
 	"github.com/will-rowe/herald/src/storage"
 )
 
 // Herald is the struct for holding runtime data
 type Herald struct {
-	sync.Mutex                  // to make the UI binding thread safe
-	service    *server.Server   // orchestrates the announcements
-	store      *storage.Storage // the key-value store for the samples
+	sync.Mutex                         // to make the UI binding thread safe
+	store             *storage.Storage // the key-value store for the samples
+	announcementQueue *list.List       // a FIFO queue for announcements
 
 	// runtime info for JS:
 	storeLocation        string     // where the store is located on disk
@@ -24,7 +24,7 @@ type Herald struct {
 	taggedSampleCount    int        // the number of samples in the store that are tagged with at least one process
 	announcedSampleCount int        // the number of samples in the store that are currently being announced
 	sampleDetails        [][]string // used to store all the sample labels, creation dates and corresponding experiment in memory (for JS to access)
-	experimentNames      []string   // used to store all the experiment names in memory (for JS to access)
+	experimentLabels     []string   // used to store all the experiment names in memory (for JS to access)
 }
 
 // InitHerald will initiate the Herald instance
@@ -39,9 +39,10 @@ func InitHerald(storeLocation string) (*Herald, error) {
 
 	// return an instance
 	return &Herald{
-		store:         store,
-		storeLocation: storeLocation,
-		sampleDetails: make([][]string, 3),
+		store:             store,
+		announcementQueue: list.New(),
+		storeLocation:     storeLocation,
+		sampleDetails:     make([][]string, 3),
 	}, nil
 }
 
@@ -65,7 +66,7 @@ func (herald *Herald) GetRuntimeInfo() error {
 	herald.sampleCount = herald.store.GetNumSamples()
 
 	// create the holders
-	herald.experimentNames = make([]string, herald.experimentCount)
+	herald.experimentLabels = make([]string, herald.experimentCount)
 	herald.sampleDetails = make([][]string, 3)
 	for i := 0; i < 3; i++ {
 		herald.sampleDetails[i] = make([]string, herald.sampleCount)
@@ -82,9 +83,9 @@ func (herald *Herald) GetRuntimeInfo() error {
 		}
 
 		// add the details to the store
-		herald.sampleDetails[0][i] = sample.Metadata.Label
+		herald.sampleDetails[0][i] = sample.Metadata.GetLabel()
 		herald.sampleDetails[1][i] = sample.Metadata.Created.String()
-		herald.sampleDetails[2][i] = sample.Metadata.GetLabel()
+		herald.sampleDetails[2][i] = sample.GetParentExperiment()
 
 		// check the status, update counts and refresh queues
 		// todo: refresh queues
@@ -103,10 +104,10 @@ func (herald *Herald) GetRuntimeInfo() error {
 		i++
 	}
 
-	// range over the experiment names via the key channel from the bit cask
+	// range over the experiment labels via the key channel from the bit cask
 	i = 0
-	for name := range herald.store.GetExperimentNames() {
-		herald.experimentNames[i] = string(name)
+	for label := range herald.store.GetExperimentLabels() {
+		herald.experimentLabels[i] = string(label)
 		i++
 	}
 	return nil
@@ -175,12 +176,12 @@ func (herald *Herald) GetAnnouncedSampleCount() int {
 
 // CreateExperiment creates an experiment record, updates the runtime info and adds the record to storage
 // TODO: this might be bypassed later and instead get JS to encode the form to protobuf directly
-func (herald *Herald) CreateExperiment(name, outDir, fast5Dir, fastqDir, comment string, tags []string) error {
+func (herald *Herald) CreateExperiment(expLabel, outDir, fast5Dir, fastqDir, comment string, tags []string) error {
 	herald.Lock()
 	defer herald.Unlock()
 
 	// create the experiment
-	exp := data.InitExperiment(name, outDir, fast5Dir, fastqDir)
+	exp := services.InitExperiment(expLabel, outDir, fast5Dir, fastqDir)
 
 	// add any comment
 	if len(comment) != 0 {
@@ -189,11 +190,12 @@ func (herald *Herald) CreateExperiment(name, outDir, fast5Dir, fastqDir, comment
 		}
 	}
 
-	// tag the experiment and update it's status
+	// tag the experiment, add to announcement queue and update it's status
 	if len(tags) != 0 {
 		if err := exp.Metadata.AddTags(tags); err != nil {
 			return err
 		}
+		herald.announcementQueue.PushBack(exp)
 	}
 
 	// add the experiment to the store
@@ -202,7 +204,7 @@ func (herald *Herald) CreateExperiment(name, outDir, fast5Dir, fastqDir, comment
 	}
 
 	// update the runtime info (grow the label slice, tag slice etc.)
-	herald.experimentNames = append(herald.experimentNames, name)
+	herald.experimentLabels = append(herald.experimentLabels, expLabel)
 	herald.experimentCount++
 	return nil
 }
@@ -219,25 +221,23 @@ func (herald *Herald) CreateSample(label string, experimentName string, barcode 
 		return err
 	}
 
-	// check the experiment
-	if err := exp.CheckStatus(); err != nil {
-		return err
-	}
+	// copy the tags over to the samples (sequence and basecall)
+	tags = append(exp.Metadata.GetRequestOrder(), tags...)
 
 	// create the sample
-	sample := data.InitSample(label, exp.Metadata.GetLabel(), barcode)
-
+	sample := services.InitSample(label, exp.Metadata.GetLabel(), barcode)
 	if len(comment) != 0 {
 		if err := sample.Metadata.AddComment(comment); err != nil {
 			return err
 		}
 	}
 
-	// tag the sample and update status
+	// tag the sample, add to the announcement queue and update status
 	if len(tags) != 0 {
 		if err := sample.Metadata.AddTags(tags); err != nil {
 			return err
 		}
+		herald.announcementQueue.PushBack(sample)
 	}
 
 	// add the sample to the store
@@ -347,5 +347,5 @@ func (herald *Herald) GetSampleExperiment(iterator int) string {
 func (herald *Herald) GetLabel(iterator int) string {
 	herald.Lock()
 	defer herald.Unlock()
-	return herald.experimentNames[iterator]
+	return herald.experimentLabels[iterator]
 }

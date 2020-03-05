@@ -68,6 +68,7 @@ window.addEventListener('offline', () =>
 // BUTTONS
 // get the buttons that control the app
 const refreshPage = document.getElementById('refreshPage')
+const announceSamplesButton = document.getElementById('staging_announce')
 const wipeDatabase = document.getElementById('wipeDatabase')
 
 // add an event listener to the refreshPage button
@@ -76,6 +77,20 @@ refreshPage.addEventListener('click', async() => {
 
     pageRefresh()
     printSuccessMsg('refreshed the app')
+})
+
+// add an event listener to the staging_announce button
+announceSamplesButton.addEventListener('click', async() => {
+    console.log('announcing samples')
+
+    // call the Go announceSamples method
+    try {
+        await announceSamples()
+    } catch (e) {
+        printErrorMsg(e)
+        return
+    }
+    console.log('announced')
 })
 
 // add an event listener to wipeDatabase button
@@ -88,7 +103,6 @@ wipeDatabase.addEventListener('click', async() => {
     try {
         await wipeStorage()
     } catch (e) {
-        console.log(e)
         printErrorMsg(e)
         return
     }
@@ -235,7 +249,7 @@ experimentValidator.registerListener(async() => {
             '<div class="alert background-warning"><i class="fas fa-exclamation-circle"></i> - No <em>fast5_pass</em> directory found, this experiment will be tagged for sequencing</div>'
         return
     }
-    formLabel_sequence.checked = false
+    formLabel_sequence.checked = true
 
     try {
         await checkDirExists(fastq_dirName)
@@ -250,9 +264,9 @@ experimentValidator.registerListener(async() => {
     // make sure the fastq path is shown (could be hidden if user has been toggling)
     fieldset_outputFASTQlocation.style.display = 'block'
 
-    // disable basecalling if fastq_pass exists
+    // disable basecalling option if fastq_pass exists
     formLabel_basecallLabel.style.color = '#d3d3d3'
-    formLabel_basecall.checked = false
+    formLabel_basecall.checked = true
     formLabel_basecall.disabled = true
 })
 
@@ -445,7 +459,6 @@ $('#sampleTable tbody').on('click', 'button', function() {
                 try {
                     await deleteSample(sampleLabel)
                 } catch (e) {
-                    console.log(e)
                     printErrorMsg(e)
                     return
                 }

@@ -190,11 +190,12 @@ func (herald *Herald) CreateExperiment(expLabel, outDir, fast5Dir, fastqDir, com
 		}
 	}
 
-	// tag the experiment and update it's status
+	// tag the experiment, add to announcement queue and update it's status
 	if len(tags) != 0 {
 		if err := exp.Metadata.AddTags(tags); err != nil {
 			return err
 		}
+		herald.announcementQueue.PushBack(exp)
 	}
 
 	// add the experiment to the store
@@ -231,15 +232,11 @@ func (herald *Herald) CreateSample(label string, experimentName string, barcode 
 		}
 	}
 
-	// tag the sample and update status
+	// tag the sample, add to the announcement queue and update status
 	if len(tags) != 0 {
 		if err := sample.Metadata.AddTags(tags); err != nil {
 			return err
 		}
-	}
-
-	// add to the announcement queue
-	if len(tags) != 0 {
 		herald.announcementQueue.PushBack(sample)
 	}
 

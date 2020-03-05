@@ -20,7 +20,39 @@ func (herald *Herald) AnnounceSamples() error {
 		}
 	}
 
-	// process the queue
+	// iterate once over the queue and process all the experiments that need sequencing and basecalling
+	for e := herald.announcementQueue.Front(); e != nil; e = e.Next() {
+
+		switch v := e.Value.(type) {
+		default:
+			return fmt.Errorf("unexpected type in queue: %T", v)
+		case *services.Sample:
+			continue
+		case *services.Experiment:
+
+			// get the tags in order
+			for _, tag := range v.Metadata.GetRequestOrder() {
+
+				// check it's not been completed already
+				if complete := v.Metadata.GetTags()[tag]; complete {
+					continue
+				}
+
+				// get the service details
+				service := services.ServiceRegister[tag]
+
+				// run the service request
+				if err := service.SendRequest(v); err != nil {
+					return err
+				}
+			}
+
+			// dequeue the sample
+			herald.announcementQueue.Remove(e)
+		}
+	}
+
+	// process the remaining queue (should just be samples now)
 	for herald.announcementQueue.Len() > 0 {
 
 		// grab the sample that is first in the queue
@@ -29,28 +61,8 @@ func (herald *Herald) AnnounceSamples() error {
 
 		// get the tags in order
 		for _, tag := range sample.Metadata.GetRequestOrder() {
-
-			// get the service details
-			service := services.ServiceRegister[tag]
-
-			if tag == "sequencing" {
-				exp, err := herald.store.GetExperiment(sample.GetParentExperiment())
-				if err != nil {
-					return err
-				}
-
-				// run the service request
-				service.SendRequest(exp)
-
-			}
-
-			// run the service request
-			//service.SendRequest(sample)
-
-			// TODO: if the service is blocking, wait for it
+			_ = tag
 		}
-
-		fmt.Print(sample)
 
 		// evalute the sample
 

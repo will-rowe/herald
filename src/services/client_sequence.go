@@ -38,6 +38,6 @@ func SubmitSequencingProcess(experiment *Experiment, service *Service) error {
 
 	// process the response
 	//log.Printf("Response from server: %s", response.Val2)
-	_ = response
-	return nil
+
+	return fmt.Errorf("test print of response: %v", response)
 }

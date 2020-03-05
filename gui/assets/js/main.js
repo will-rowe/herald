@@ -87,7 +87,6 @@ announceSamplesButton.addEventListener('click', async() => {
     try {
         await announceSamples()
     } catch (e) {
-        console.log(e)
         printErrorMsg(e)
         return
     }
@@ -104,7 +103,6 @@ wipeDatabase.addEventListener('click', async() => {
     try {
         await wipeStorage()
     } catch (e) {
-        console.log(e)
         printErrorMsg(e)
         return
     }
@@ -461,7 +459,6 @@ $('#sampleTable tbody').on('click', 'button', function() {
                 try {
                     await deleteSample(sampleLabel)
                 } catch (e) {
-                    console.log(e)
                     printErrorMsg(e)
                     return
                 }

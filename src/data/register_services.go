@@ -4,6 +4,8 @@ package data
 import (
 	"fmt"
 
+	toposort "github.com/philopon/go-toposort"
+
 	"github.com/will-rowe/herald/src/clients"
 )
 
@@ -27,9 +29,8 @@ func init() {
 	// create the process definitions
 	createServiceDefinition("sequence", nil, 7777, clients.DummyProcess)
 	createServiceDefinition("basecall", nil, 7778, clients.DummyProcess)
+	createServiceDefinition("pipelineA", []string{"sequence", "basecall"}, 7779, clients.DummyProcess)
 	//createServiceDefinition("rampart", nil)
-	//createServiceDefinition("pipelineA", []string{"sequence", "basecall"})
-
 }
 
 // createServiceDefinition will init a process
@@ -74,4 +75,47 @@ func createServiceDefinition(sName string, sDependsOn []string, sPort int, sFunc
 	// register the process
 	ServiceRegister[sName] = newService
 	return
+}
+
+// createServiceDAG returns a linear ordering of services that accounts for service dependencies
+func createServiceDAG(services map[string]bool) ([]string, error) {
+	serviceList := make([]string, len(services))
+
+	// check the services are recognised
+	numServices := 0
+	for serviceName := range services {
+		if _, ok := ServiceRegister[serviceName]; !ok {
+			return nil, fmt.Errorf("unrecognised service: %v", serviceName)
+		}
+		serviceList[numServices] = serviceName
+		numServices++
+	}
+
+	// create a dag
+	dag := toposort.NewGraph(numServices)
+
+	// create the nodes
+	dag.AddNodes(serviceList...)
+
+	// loop through input list and create edges
+	for _, serviceName := range serviceList {
+
+		// ignore services with no dependencies
+		service := ServiceRegister[serviceName]
+		if len(service.dependsOn) == 0 {
+			continue
+		}
+
+		// loop over the depencies and draw edges
+		for _, dependencyName := range service.dependsOn {
+			dag.AddEdge(dependencyName, serviceName)
+		}
+	}
+
+	// sort the graph and check for cycles
+	result, ok := dag.Toposort()
+	if !ok {
+		return nil, fmt.Errorf("service dependency cycle detected")
+	}
+	return result, nil
 }

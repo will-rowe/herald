@@ -75,6 +75,9 @@ func (heraldData *HeraldData) AddTags(tags []string) error {
 	if len(tags) == 0 {
 		return fmt.Errorf("no tags provided")
 	}
+	if len(heraldData.GetTags()) != 0 {
+		return fmt.Errorf("data has already been tagged")
+	}
 
 	// reset requestOrder
 	heraldData.RequestOrder = []string{}
@@ -103,9 +106,11 @@ func (heraldData *HeraldData) AddTags(tags []string) error {
 	heraldData.Status = 2
 
 	// generate new request order
-	//
-	//
-
+	requestOrder, err := createServiceDAG(heraldData.GetTags())
+	if err != nil {
+		return err
+	}
+	heraldData.RequestOrder = requestOrder
 	return nil
 }
 

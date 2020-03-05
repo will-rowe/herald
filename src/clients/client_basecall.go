@@ -1,6 +1,3 @@
-//go:generate protoc -I=protobuf/services --go_out=plugins=grpc:src/services protobuf/services/*.proto
-
-// Package clients contains the functions that make requests to services and parses their responses
 package clients
 
 import (

@@ -5,6 +5,7 @@ import (
 	"fmt"
 
 	"github.com/golang/protobuf/ptypes"
+	toposort "github.com/philopon/go-toposort"
 	"github.com/will-rowe/herald/src/helpers"
 )
 
@@ -79,9 +80,6 @@ func (heraldData *HeraldData) AddTags(tags []string) error {
 		return fmt.Errorf("data has already been tagged")
 	}
 
-	// reset requestOrder
-	heraldData.RequestOrder = []string{}
-
 	// range over the tags to be added
 	for _, serviceName := range tags {
 
@@ -106,12 +104,7 @@ func (heraldData *HeraldData) AddTags(tags []string) error {
 	heraldData.Status = 2
 
 	// generate new request order
-	requestOrder, err := createServiceDAG(heraldData.GetTags())
-	if err != nil {
-		return err
-	}
-	heraldData.RequestOrder = requestOrder
-	return nil
+	return heraldData.createServiceDAG()
 }
 
 // CheckStatus checks for active tags and then determines if the service endpoints have been reached. It then updates tags and the status
@@ -170,4 +163,48 @@ func (experiment *Experiment) CheckStatus() error {
 	default:
 		return fmt.Errorf("unknown status: %d", status)
 	}
+}
+
+// createServiceDAG creates a linear ordering of services that accounts for service dependencies
+func (heraldData *HeraldData) createServiceDAG() error {
+
+	// reset requestOrder
+	heraldData.RequestOrder = []string{}
+
+	// transfer service names from map to slice
+	serviceList := make([]string, len(heraldData.Tags))
+	numServices := 0
+	for serviceName := range heraldData.GetTags() {
+		serviceList[numServices] = serviceName
+		numServices++
+	}
+
+	// create a dag
+	dag := toposort.NewGraph(numServices)
+
+	// create the nodes
+	dag.AddNodes(serviceList...)
+
+	// loop through input list and create edges
+	for _, serviceName := range serviceList {
+
+		// ignore services with no dependencies
+		service := ServiceRegister[serviceName]
+		if len(service.dependsOn) == 0 {
+			continue
+		}
+
+		// loop over the depencies and draw edges
+		for _, dependencyName := range service.dependsOn {
+			dag.AddEdge(dependencyName, serviceName)
+		}
+	}
+
+	// sort the graph and check for cycles
+	result, ok := dag.Toposort()
+	if !ok {
+		return fmt.Errorf("service dependency cycle detected")
+	}
+	heraldData.RequestOrder = result
+	return nil
 }

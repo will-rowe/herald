@@ -1,6 +1,3 @@
-//go:generate protoc -I=protobuf/services --go_out=plugins=grpc:src/services protobuf/services/*.proto
-
-// Package clients contains the functions that make requests to services and parses their responses
 package clients
 
 import (
@@ -12,11 +9,6 @@ import (
 
 	"github.com/will-rowe/herald/src/services"
 )
-
-//
-func DummyProcess() {
-	fmt.Println("dummy called")
-}
 
 // SubmitSequencingProcess will send a sequencing request
 func SubmitSequencingProcess() {

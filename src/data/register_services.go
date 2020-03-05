@@ -4,17 +4,15 @@ package data
 import (
 	"fmt"
 
-	toposort "github.com/philopon/go-toposort"
-
 	"github.com/will-rowe/herald/src/clients"
 )
 
-// Service
+// Service is holds the information needed by Herald to send messages to a service provider
 type Service struct {
-	name      string
-	dependsOn []string
-	port      int
-	callback  func()
+	name            string   // name of the service
+	dependsOn       []string // the other services that should have completed prior to this one being contacted
+	port            int      // the port the service is accepting requests on
+	requestCallback func()   // the function to run when contacting the service
 }
 
 // ServiceRegister is used to register all the available processes
@@ -43,10 +41,10 @@ func createServiceDefinition(sName string, sDependsOn []string, sPort int, sFunc
 
 	// init the process
 	newService := &Service{
-		name:      sName,
-		dependsOn: []string{},
-		port:      sPort,
-		callback:  sFunc,
+		name:            sName,
+		dependsOn:       []string{},
+		port:            sPort,
+		requestCallback: sFunc,
 	}
 
 	// check the dependencies
@@ -77,45 +75,7 @@ func createServiceDefinition(sName string, sDependsOn []string, sPort int, sFunc
 	return
 }
 
-// createServiceDAG returns a linear ordering of services that accounts for service dependencies
-func createServiceDAG(services map[string]bool) ([]string, error) {
-	serviceList := make([]string, len(services))
-
-	// check the services are recognised
-	numServices := 0
-	for serviceName := range services {
-		if _, ok := ServiceRegister[serviceName]; !ok {
-			return nil, fmt.Errorf("unrecognised service: %v", serviceName)
-		}
-		serviceList[numServices] = serviceName
-		numServices++
-	}
-
-	// create a dag
-	dag := toposort.NewGraph(numServices)
-
-	// create the nodes
-	dag.AddNodes(serviceList...)
-
-	// loop through input list and create edges
-	for _, serviceName := range serviceList {
-
-		// ignore services with no dependencies
-		service := ServiceRegister[serviceName]
-		if len(service.dependsOn) == 0 {
-			continue
-		}
-
-		// loop over the depencies and draw edges
-		for _, dependencyName := range service.dependsOn {
-			dag.AddEdge(dependencyName, serviceName)
-		}
-	}
-
-	// sort the graph and check for cycles
-	result, ok := dag.Toposort()
-	if !ok {
-		return nil, fmt.Errorf("service dependency cycle detected")
-	}
-	return result, nil
+// CheckAccess will check to see if the service port can be accessed
+func (service *Service) CheckAccess() error {
+	return clients.TestServiceConnection(service.port)
 }

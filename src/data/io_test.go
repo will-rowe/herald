@@ -72,8 +72,18 @@ func TestTaggingExp(t *testing.T) {
 		t.Fatal("AddTags method did not return error when called with unrecognised tag")
 	}
 
-	// tag it with a recognised tag
-	if err := test.Metadata.AddTags([]string{"sequence"}); err != nil {
-		t.Fatal("AddTags method returned error when called with a recognised tag (sequence)")
+	// tag it with recognised tags
+	if err := test.Metadata.AddTags([]string{"pipelineA", "basecall", "sequence"}); err != nil {
+		t.Fatalf("AddTags method returned error when called with recognised tags (sequence, basecall, pipelineA): %v", err)
+	}
+
+	// check ordering
+	if err := test.Metadata.createServiceDAG(); err != nil {
+		t.Fatal(err)
+	}
+
+	// pipelineA depends on sequence and basecall, so should be moved last
+	if test.GetMetadata().GetRequestOrder()[2] != "pipelineA" {
+		t.Fatal("service list was not ordered correctly")
 	}
 }

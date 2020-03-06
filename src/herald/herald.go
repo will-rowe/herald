@@ -159,9 +159,12 @@ func (herald *Herald) GetRuntimeInfo() error {
 
 // CreateExperiment creates an experiment record, updates the runtime info and adds the record to storage
 // TODO: this might be bypassed later and instead get JS to encode the form to protobuf directly
-func (herald *Herald) CreateExperiment(expLabel, outDir, fast5Dir, fastqDir, comment string, tags []string) error {
+func (herald *Herald) CreateExperiment(expLabel, outDir, fast5Dir, fastqDir, comment string, tags []string, historicExp bool) error {
 	herald.Lock()
 	defer herald.Unlock()
+
+	// TODO: process the historic experiment flag
+	// this tells Herald that sequence data is already available
 
 	// create the experiment
 	exp := services.InitExperiment(expLabel, outDir, fast5Dir, fastqDir)

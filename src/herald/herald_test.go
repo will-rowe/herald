@@ -31,7 +31,7 @@ func TestHerald(t *testing.T) {
 
 	// create and add an experiment
 	testExpName := "test experiment"
-	if err := tmp.CreateExperiment(testExpName, "/tmp", "/tmp/fast5_pass", "/tmp/fastq_pass", "", []string{"sequence", "basecall"}); err != nil {
+	if err := tmp.CreateExperiment(testExpName, "/tmp", "/tmp/fast5_pass", "/tmp/fastq_pass", "", []string{"sequence", "basecall"}, false); err != nil {
 		t.Fatal(err)
 	}
 

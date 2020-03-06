@@ -154,6 +154,9 @@ const sampleDetailsModal = document.getElementById('sampleDetailsModal')
 const createExperimentForm = document.getElementById('createExperimentForm')
 createExperimentForm.addEventListener('submit', handleForm)
 
+// historic experiment toggle (set true if an experiment is entered that already has fast5 data)
+var historicExp = false
+
 // get some fields
 var expName = document.getElementById('formLabel_experimentName')
 var expOutputLocation = document.getElementById('formLabel_outputLocation')
@@ -173,6 +176,7 @@ var msgDiv = document.getElementById('createExperimentValidationMessage')
 
 // reset func to clear the form changes
 function createExperimentFormReset() {
+    historicExp = false
     fieldset_outputFASTQlocation.style.display = 'block'
     formLabel_outputFAST5location.value = ''
     formLabel_outputFASTQlocation.value = ''
@@ -249,7 +253,8 @@ experimentValidator.registerListener(async() => {
             '<div class="alert background-warning"><i class="fas fa-exclamation-circle"></i> - No <em>fast5_pass</em> directory found, this experiment will be tagged for sequencing</div>'
         return
     }
-    formLabel_sequence.checked = true
+    formLabel_sequence.checked = false
+    historicExp = true
 
     try {
         await checkDirExists(fastq_dirName)
@@ -266,7 +271,7 @@ experimentValidator.registerListener(async() => {
 
     // disable basecalling option if fastq_pass exists
     formLabel_basecallLabel.style.color = '#d3d3d3'
-    formLabel_basecall.checked = true
+    formLabel_basecall.checked = false
     formLabel_basecall.disabled = true
 })
 
@@ -326,7 +331,8 @@ createExperimentForm.addEventListener('submit', async() => {
             formLabel_outputFAST5location.value,
             formLabel_outputFASTQlocation.value,
             document.getElementById('formLabel_experimentComment').value,
-            tags
+            tags,
+            historicExp
         )
     } catch (e) {
         printErrorMsg(e)

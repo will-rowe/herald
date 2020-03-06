@@ -105,7 +105,25 @@ func (heraldData *HeraldData) AddTags(tags []string) error {
 	return heraldData.createServiceDAG()
 }
 
+// SetTag is a method to set a tag either true or false (complete or incomplete)
+func (heraldData *HeraldData) SetTag(serviceName string, value bool) error {
+
+	// check the tag is a recognised service
+	if _, ok := ServiceRegister[serviceName]; !ok {
+		return fmt.Errorf("unrecognised service name: %v", serviceName)
+	}
+
+	// check the data has this tag and set it
+	if _, ok := heraldData.Tags[serviceName]; !ok {
+		return fmt.Errorf("%v does not have tag: %v", heraldData.GetLabel(), serviceName)
+	}
+	heraldData.Tags[serviceName] = value
+	heraldData.AddComment(fmt.Sprintf("%v tag marked as %v.", serviceName, value))
+	return nil
+}
+
 // CheckStatus checks the tags and updates the status if all tags are now marked complete
+// TODO: this func is incomplete - it only checks for tagged services atm
 func (heraldData *HeraldData) CheckStatus() error {
 	status := heraldData.GetStatus()
 	switch status {

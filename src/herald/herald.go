@@ -163,9 +163,6 @@ func (herald *Herald) CreateExperiment(expLabel, outDir, fast5Dir, fastqDir, com
 	herald.Lock()
 	defer herald.Unlock()
 
-	// TODO: process the historic experiment flag
-	// this tells Herald that sequence data is already available
-
 	// create the experiment
 	exp := services.InitExperiment(expLabel, outDir, fast5Dir, fastqDir)
 
@@ -179,6 +176,27 @@ func (herald *Herald) CreateExperiment(expLabel, outDir, fast5Dir, fastqDir, com
 	// tag the experiment and update its status
 	if len(tags) != 0 {
 		if err := exp.Metadata.AddTags(tags); err != nil {
+			return err
+		}
+	}
+
+	// if it's an historic sample, update the sequence (and basecall) tags
+	if historicExp {
+
+		// update the sequencing service tag to complete
+		if err := exp.Metadata.SetTag("sequence", true); err != nil {
+			return err
+		}
+
+		// update basecall if necessary
+		if _, ok := exp.GetMetadata().GetTags()["basecall"]; ok {
+			if err := exp.Metadata.SetTag("basecall", true); err != nil {
+				return err
+			}
+		}
+
+		// check and update the status (all tags might now be set to complete)
+		if err := exp.Metadata.CheckStatus(); err != nil {
 			return err
 		}
 	}

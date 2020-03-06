@@ -253,7 +253,7 @@ experimentValidator.registerListener(async() => {
             '<div class="alert background-warning"><i class="fas fa-exclamation-circle"></i> - No <em>fast5_pass</em> directory found, this experiment will be tagged for sequencing</div>'
         return
     }
-    formLabel_sequence.checked = false
+    formLabel_sequence.checked = true
     historicExp = true
 
     try {
@@ -271,7 +271,7 @@ experimentValidator.registerListener(async() => {
 
     // disable basecalling option if fastq_pass exists
     formLabel_basecallLabel.style.color = '#d3d3d3'
-    formLabel_basecall.checked = false
+    formLabel_basecall.checked = true
     formLabel_basecall.disabled = true
 })
 

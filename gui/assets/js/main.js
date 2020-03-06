@@ -543,14 +543,14 @@ var myPieChart = new Chart(pieCanvas, {
 // updatePieChart will refresh the pie chart with current data
 const updatePieChart = async() => {
     // get counts
-    var untaggedSampleCount = `${await window.getUntaggedSampleCount()}`
-    var taggedSampleCount = `${await window.getTaggedSampleCount()}`
+    var untaggedRecordCount = `${await window.getUntaggedSampleCount()}`
+    var taggedRecordCount = `${await window.getTaggedSampleCount()}`
     var announcementCount = `${await window.getAnnouncementCount()}`
 
     // update the chart data
     myPieChart.data.datasets[0].data[0] = announcementCount
-    myPieChart.data.datasets[0].data[1] = taggedSampleCount
-    myPieChart.data.datasets[0].data[2] = untaggedSampleCount
+    myPieChart.data.datasets[0].data[1] = taggedRecordCount
+    myPieChart.data.datasets[0].data[2] = untaggedRecordCount
 
     // update the chart
     myPieChart.update()

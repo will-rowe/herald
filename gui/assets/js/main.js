@@ -521,7 +521,7 @@ function printTimeStamps() {
 // set up the empty pie chart
 var pieCanvas = document.getElementById('pieChart')
 var pieData = {
-    labels: ['Active Announcements', 'Tagged Samples', 'Untagged Samples'],
+    labels: ['Announcements Made', 'Tagged Samples', 'Untagged Samples'],
     datasets: [{
         label: 'entry point',
         data: [0, 0, 0],
@@ -545,10 +545,10 @@ const updatePieChart = async() => {
     // get counts
     var untaggedSampleCount = `${await window.getUntaggedSampleCount()}`
     var taggedSampleCount = `${await window.getTaggedSampleCount()}`
-    var activeAnnouncementCount = `${await window.getAnnouncedSampleCount()}`
+    var announcementCount = `${await window.getAnnouncementCount()}`
 
     // update the chart data
-    myPieChart.data.datasets[0].data[0] = activeAnnouncementCount
+    myPieChart.data.datasets[0].data[0] = announcementCount
     myPieChart.data.datasets[0].data[1] = taggedSampleCount
     myPieChart.data.datasets[0].data[2] = untaggedSampleCount
 

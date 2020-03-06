@@ -16,15 +16,17 @@ type Herald struct {
 	store             *storage.Storage // the key-value store for the samples
 	announcementQueue *list.List       // a FIFO queue for announcements
 
-	// runtime info for JS:
-	storeLocation        string     // where the store is located on disk
-	experimentCount      int        // the number of experiments currently in the store
-	sampleCount          int        // the number of samples currently in the store
-	untaggedSampleCount  int        // the number of samples in the store that are untagged
-	taggedSampleCount    int        // the number of samples in the store that are tagged with at least one process
-	announcedSampleCount int        // the number of samples in the store that are currently being announced
-	sampleDetails        [][]string // used to store all the sample labels, creation dates and corresponding experiment in memory (for JS to access)
-	experimentLabels     []string   // used to store all the experiment names in memory (for JS to access)
+	// runtime count info for JS:
+	experimentCount     int // the number of experiments currently in the store
+	sampleCount         int // the number of samples currently in the store
+	untaggedSampleCount int // the number of samples in the store that are untagged
+	taggedSampleCount   int // the number of samples in the store that are tagged with at least one process
+	announcementCount   int // the number of samples in the store that have been announced
+
+	// easy access label holders for JS
+	sampleDetails    [][]string // used to store all the sample labels, creation dates and corresponding experiment in memory (for JS to access)
+	experimentLabels []string   // used to store all the experiment names in memory (for JS to access)
+	storeLocation    string     // where the store is located on disk
 }
 
 // InitHerald will initiate the Herald instance
@@ -37,13 +39,37 @@ func InitHerald(storeLocation string) (*Herald, error) {
 		return nil, err
 	}
 
-	// return an instance
-	return &Herald{
+	// get a new instance
+	heraldObj := &Herald{
 		store:             store,
 		announcementQueue: list.New(),
-		storeLocation:     storeLocation,
 		sampleDetails:     make([][]string, 3),
-	}, nil
+		storeLocation:     storeLocation,
+	}
+
+	// populate runtime info
+	if err := heraldObj.GetRuntimeInfo(); err != nil {
+		heraldObj.Destroy()
+		return nil, err
+	}
+	return heraldObj, nil
+}
+
+// Destroy will properly close down the Herald instance and sync the store to disk
+func (herald *Herald) Destroy() error {
+	herald.Lock()
+	defer herald.Unlock()
+	return herald.store.CloseStorage()
+}
+
+// WipeStorage will clear all samples and experiments from storage and reset the runtime info
+func (herald *Herald) WipeStorage() error {
+	herald.Lock()
+	defer herald.Unlock()
+	if err := herald.store.Wipe(); err != nil {
+		return err
+	}
+	return nil
 }
 
 // GetRuntimeInfo makes a pass of the experiment and sample stores before populating the Herald instance with data:
@@ -59,119 +85,76 @@ func (herald *Herald) GetRuntimeInfo() error {
 	herald.sampleCount = 0
 	herald.untaggedSampleCount = 0
 	herald.taggedSampleCount = 0
-	herald.announcedSampleCount = 0
+	herald.announcementCount = 0
 
 	// get the experiment and sample counts from the store
-	herald.experimentCount = herald.store.GetNumExperiments()
-	herald.sampleCount = herald.store.GetNumSamples()
+	baselineExpCount := herald.store.GetNumExperiments()
+	baselineSampleCount := herald.store.GetNumSamples()
 
-	// create the holders
-	herald.experimentLabels = make([]string, herald.experimentCount)
-	herald.sampleDetails = make([][]string, 3)
-	for i := 0; i < 3; i++ {
-		herald.sampleDetails[i] = make([]string, herald.sampleCount)
+	// restart the queue
+	herald.announcementQueue.Init()
+
+	// create experiment label holder
+	herald.experimentLabels = make([]string, baselineExpCount)
+
+	// range over the experiments in storage
+	expIterator := 0
+	for label := range herald.store.GetExperimentLabels() {
+
+		// get the full experiment from storage
+		exp, err := herald.store.GetExperiment(string(label))
+		if err != nil {
+			return err
+		}
+
+		// update the relevant counts
+		if err := herald.updateCounts(exp, true); err != nil {
+			return err
+		}
+
+		// add the experiment label to the holder (for display in app)
+		herald.experimentLabels[expIterator] = exp.Metadata.GetLabel()
+
+		// increment the iterator
+		expIterator++
+	}
+	if (baselineExpCount != expIterator) || (baselineExpCount != herald.experimentCount) {
+		return fmt.Errorf("experiment mistmatch between db and in-memory store: %d vs %d", baselineExpCount, expIterator)
 	}
 
-	// range over the sample labels via the key channel from the bit cask
-	i := 0
+	// setup the sample details holder
+	herald.sampleDetails = make([][]string, 3)
+	for i := 0; i < 3; i++ {
+		herald.sampleDetails[i] = make([]string, baselineSampleCount)
+	}
+
+	// range over the samples in storage
+	sampleIterator := 0
 	for label := range herald.store.GetSampleLabels() {
 
-		// get the full sample
+		// get the full sample from storage
 		sample, err := herald.store.GetSample(string(label))
 		if err != nil {
 			return err
 		}
 
-		// add the details to the store
-		herald.sampleDetails[0][i] = sample.Metadata.GetLabel()
-		herald.sampleDetails[1][i] = sample.Metadata.Created.String()
-		herald.sampleDetails[2][i] = sample.GetParentExperiment()
-
-		// check the status, update counts and refresh queues
-		// todo: refresh queues
-		status := sample.Metadata.GetStatus().String()
-		switch status {
-		case "untagged":
-			herald.untaggedSampleCount++
-		case "tagged":
-			herald.taggedSampleCount++
-		case "announced":
-			herald.announcedSampleCount++
-		default:
-			return fmt.Errorf("encountered sample with unknown status (%v)", status)
+		// update the relevant counts
+		if err := herald.updateCounts(sample, true); err != nil {
+			return err
 		}
 
-		i++
-	}
+		// add the details to the holders (for display in app)
+		herald.sampleDetails[0][sampleIterator] = sample.Metadata.GetLabel()
+		herald.sampleDetails[1][sampleIterator] = sample.Metadata.Created.String()
+		herald.sampleDetails[2][sampleIterator] = sample.GetParentExperiment()
 
-	// range over the experiment labels via the key channel from the bit cask
-	i = 0
-	for label := range herald.store.GetExperimentLabels() {
-		herald.experimentLabels[i] = string(label)
-		i++
+		// increment the iterator
+		sampleIterator++
+	}
+	if (baselineSampleCount != sampleIterator) || (baselineSampleCount != herald.sampleCount) {
+		return fmt.Errorf("sample mistmatch between db and in-memory store: %d vs %d", baselineSampleCount, sampleIterator)
 	}
 	return nil
-}
-
-// Destroy will properly close down the Herald instance and sync the store to disk
-func (herald *Herald) Destroy() error {
-	herald.Lock()
-	defer herald.Unlock()
-	return herald.store.CloseStorage()
-}
-
-// WipeStorage will clear all samples and experiments from storage
-func (herald *Herald) WipeStorage() error {
-	herald.Lock()
-	defer herald.Unlock()
-	if err := herald.store.Wipe(); err != nil {
-		return err
-	}
-	herald.sampleCount = 0
-	herald.experimentCount = 0
-	return nil
-}
-
-// GetDbPath returns the location of the storage on disk
-func (herald *Herald) GetDbPath() string {
-	herald.Lock()
-	defer herald.Unlock()
-	return herald.storeLocation
-}
-
-// GetExperimentCount returns the current number of experiments in storage
-func (herald *Herald) GetExperimentCount() int {
-	herald.Lock()
-	defer herald.Unlock()
-	return herald.experimentCount
-}
-
-// GetSampleCount returns the current number of samples in storage
-func (herald *Herald) GetSampleCount() int {
-	herald.Lock()
-	defer herald.Unlock()
-	return herald.sampleCount
-}
-
-// GetUntaggedSampleCount returns the current number of samples in storage that are untagged
-func (herald *Herald) GetUntaggedSampleCount() int {
-	herald.Lock()
-	defer herald.Unlock()
-	return herald.untaggedSampleCount
-}
-
-// GetTaggedSampleCount returns the current number of samples in storage that are tagged with at least one process
-func (herald *Herald) GetTaggedSampleCount() int {
-	herald.Lock()
-	defer herald.Unlock()
-	return herald.taggedSampleCount
-}
-
-// GetAnnouncedSampleCount returns the current number of samples that have been announced
-func (herald *Herald) GetAnnouncedSampleCount() int {
-	herald.Lock()
-	defer herald.Unlock()
-	return herald.announcedSampleCount
 }
 
 // CreateExperiment creates an experiment record, updates the runtime info and adds the record to storage
@@ -190,12 +173,11 @@ func (herald *Herald) CreateExperiment(expLabel, outDir, fast5Dir, fastqDir, com
 		}
 	}
 
-	// tag the experiment, add to announcement queue and update it's status
+	// tag the experiment and update its status
 	if len(tags) != 0 {
 		if err := exp.Metadata.AddTags(tags); err != nil {
 			return err
 		}
-		herald.announcementQueue.PushBack(exp)
 	}
 
 	// add the experiment to the store
@@ -203,10 +185,9 @@ func (herald *Herald) CreateExperiment(expLabel, outDir, fast5Dir, fastqDir, com
 		return err
 	}
 
-	// update the runtime info (grow the label slice, tag slice etc.)
+	// update the runtime info (grow the label slice, update counts, add to announcement queue etc.)
 	herald.experimentLabels = append(herald.experimentLabels, expLabel)
-	herald.experimentCount++
-	return nil
+	return herald.updateCounts(exp, true)
 }
 
 // CreateSample creates a sample record, updates the runtime info and adds the record to storage
@@ -221,8 +202,8 @@ func (herald *Herald) CreateSample(label string, experimentName string, barcode 
 		return err
 	}
 
-	// copy the tags over to the samples (sequence and basecall)
-	tags = append(exp.Metadata.GetRequestOrder(), tags...)
+	// TODO: copy the tag history over from the experiment to the samples (sequence and basecall)?
+	//tags = append(exp.Metadata.GetRequestOrder(), tags...)
 
 	// create the sample
 	sample := services.InitSample(label, exp.Metadata.GetLabel(), barcode)
@@ -232,12 +213,11 @@ func (herald *Herald) CreateSample(label string, experimentName string, barcode 
 		}
 	}
 
-	// tag the sample, add to the announcement queue and update status
+	// tag the sample and update its status
 	if len(tags) != 0 {
 		if err := sample.Metadata.AddTags(tags); err != nil {
 			return err
 		}
-		herald.announcementQueue.PushBack(sample)
 	}
 
 	// add the sample to the store
@@ -245,30 +225,11 @@ func (herald *Herald) CreateSample(label string, experimentName string, barcode 
 		return err
 	}
 
-	// update the runtime info (grow the label slice, tag slice etc.)
+	// update the runtime info (grow the label slice, update counts, add to announcement queue etc.)
 	herald.sampleDetails[0] = append(herald.sampleDetails[0], label)
 	herald.sampleDetails[1] = append(herald.sampleDetails[1], sample.Metadata.GetCreated().String())
 	herald.sampleDetails[2] = append(herald.sampleDetails[2], experimentName)
-	herald.sampleCount++
-	if len(tags) != 0 {
-		herald.taggedSampleCount++
-	}
-	return nil
-}
-
-// GetSampleStatus will check the status of a sample
-func (herald *Herald) GetSampleStatus(sampleLabel string) (string, error) {
-	herald.Lock()
-	defer herald.Unlock()
-
-	// get the sample from storage
-	sample, err := herald.store.GetSample(sampleLabel)
-	if err != nil {
-		return "", err
-	}
-
-	// return status
-	return sample.Metadata.GetStatus().String(), nil
+	return herald.updateCounts(sample, true)
 }
 
 // DeleteSample removes a sample record from storage and updates the counts
@@ -282,70 +243,62 @@ func (herald *Herald) DeleteSample(sampleLabel string) error {
 		return err
 	}
 
-	// get the status
-	status := sample.Metadata.GetStatus().String()
-
-	// prevent announced samples from being deleted
-	if status == "announced" {
-		return fmt.Errorf("can't delete sample during announcement: %v", sampleLabel)
-	}
-
 	// delete the sample from the store
 	if err := herald.store.DeleteSample(sampleLabel); err != nil {
 		return err
 	}
 
-	// update the counts
-	herald.sampleCount--
-	if status == "tagged" {
-		herald.taggedSampleCount--
+	// update the counts etc.
+	return herald.updateCounts(sample, false)
+}
+
+// updateCounts takes an element and a bool to indicate if it is being added (true) or removed (false)
+// from the storage.
+// it will check the provided element is either an experiment or sample
+// it will then increment/decrement the appropriate counters.
+// it will also add/remove it from the queue if needed.
+func (herald *Herald) updateCounts(element interface{}, add bool) error {
+	value := -1
+	if add {
+		value = 1
 	}
-	return nil
-}
 
-// PrintSampleToJSONstring collects a sample from the database and returns a string of the sample protobuf data in JSON
-func (herald *Herald) PrintSampleToJSONstring(label string) string {
-	herald.Lock()
-	defer herald.Unlock()
+	// check for experiment or sample
+	var status string
+	switch element.(type) {
+	case *services.Experiment:
+		status = element.(*services.Experiment).Metadata.GetStatus().String()
+		herald.experimentCount += value
+	case *services.Sample:
+		status = element.(*services.Sample).Metadata.GetStatus().String()
+		herald.sampleCount += value
+	default:
+		return fmt.Errorf("unsupported type provided to updateCounts")
+	}
 
-	// TODO: check the error from GetSampleJSONDump method
-	sampleString, _ := herald.store.GetSampleJSONDump(label)
+	// process the status
+	switch status {
 
-	return sampleString
-}
+	case "untagged":
+		herald.untaggedSampleCount += value
+		return nil
 
-// GetSampleLabel is used by JS to collect a sample label from the runtime slice of sample data
-// NOTE: this assumes the caller has already run GetSampleCount (or similar) to find the iterator range
-// TODO: add error on return too (will require re-write of JS function)
-func (herald *Herald) GetSampleLabel(iterator int) string {
-	herald.Lock()
-	defer herald.Unlock()
-	return herald.sampleDetails[0][iterator]
-}
+	case "tagged":
+		herald.taggedSampleCount += value
 
-// GetSampleCreation is used by JS to collect a sample created timestamp from the runtime slice of sample data
-// NOTE: this assumes the caller has already run GetSampleCount (or similar) to find the iterator range
-// TODO: add error on return too (will require re-write of JS function)
-func (herald *Herald) GetSampleCreation(iterator int) string {
-	herald.Lock()
-	defer herald.Unlock()
-	return herald.sampleDetails[1][iterator]
-}
+		// handle the queue
+		if add {
+			herald.announcementQueue.PushBack(element)
+		} else {
+			herald.announcementQueue.Remove(&list.Element{Value: element})
+		}
+		return nil
 
-// GetSampleExperiment is used by JS to collect a sample experiment name from the runtime slice of sample data
-// NOTE: this assumes the caller has already run GetSampleCount (or similar) to find the iterator range
-// TODO: add error on return too (will require re-write of JS function)
-func (herald *Herald) GetSampleExperiment(iterator int) string {
-	herald.Lock()
-	defer herald.Unlock()
-	return herald.sampleDetails[2][iterator]
-}
+	case "announced":
+		herald.announcementCount += value
+		return nil
 
-// GetLabel is used by JS to collect an experiment name from the runtime slice of experiment names
-// NOTE: this assumes the caller has already run GetExperimentCount (or similar) to find the iterator range
-// TODO: add error on return too (will require re-write of JS function)
-func (herald *Herald) GetLabel(iterator int) string {
-	herald.Lock()
-	defer herald.Unlock()
-	return herald.experimentLabels[iterator]
+	default:
+		return fmt.Errorf("unrecognised status: %v", status)
+	}
 }

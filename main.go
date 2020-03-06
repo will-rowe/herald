@@ -59,21 +59,24 @@ func main() {
 	defer heraldObj.Destroy()
 
 	// Bind HERALD methods to the UI
+	// buttons
+	ui.Bind("createExperiment", heraldObj.CreateExperiment)
+	ui.Bind("createSample", heraldObj.CreateSample)
+	ui.Bind("deleteSample", heraldObj.DeleteSample)
 	ui.Bind("announceSamples", heraldObj.AnnounceSamples)
 	ui.Bind("wipeStorage", heraldObj.WipeStorage)
+	// counters
+	ui.Bind("getExperimentCount", heraldObj.GetExperimentCount)
 	ui.Bind("getSampleCount", heraldObj.GetSampleCount)
 	ui.Bind("getUntaggedSampleCount", heraldObj.GetUntaggedSampleCount)
 	ui.Bind("getTaggedSampleCount", heraldObj.GetTaggedSampleCount)
-	ui.Bind("getAnnouncedSampleCount", heraldObj.GetAnnouncedSampleCount)
-	ui.Bind("createSample", heraldObj.CreateSample)
-	ui.Bind("deleteSample", heraldObj.DeleteSample)
+	ui.Bind("getAnnouncementCount", heraldObj.GetAnnouncementCount)
+	// table / modals / forms
+	ui.Bind("getExperimentName", heraldObj.GetLabel)
 	ui.Bind("getSampleLabel", heraldObj.GetSampleLabel)
 	ui.Bind("getSampleCreation", heraldObj.GetSampleCreation)
 	ui.Bind("getSampleExperiment", heraldObj.GetSampleExperiment)
 	ui.Bind("printSampleToJSONstring", heraldObj.PrintSampleToJSONstring)
-	ui.Bind("createExperiment", heraldObj.CreateExperiment)
-	ui.Bind("getExperimentCount", heraldObj.GetExperimentCount)
-	ui.Bind("getExperimentName", heraldObj.GetLabel)
 
 	// Bind helper functions to the UI
 	ui.Bind("checkDirExists", helpers.CheckDirExists)
@@ -88,8 +91,8 @@ func main() {
 		}
 
 		// print the db location and number of experiments and samples in storage
-		ui.Eval(fmt.Sprintf(`document.getElementById('staging_experimentCount').innerText = '%d'`, heraldObj.GetExperimentCount()))
 		ui.Eval(fmt.Sprintf(`document.getElementById('staging_dbLocation').innerHTML = 'filepath: %v'`, heraldObj.GetDbPath()))
+		ui.Eval(fmt.Sprintf(`document.getElementById('staging_experimentCount').innerText = '%d'`, heraldObj.GetExperimentCount()))
 		ui.Eval(fmt.Sprintf(`document.getElementById('staging_sampleCount').innerText = '%d'`, heraldObj.GetSampleCount()))
 		ui.Eval(fmt.Sprintf(`document.getElementById('staging_taggedCount').innerText = '%d'`, heraldObj.GetTaggedSampleCount()))
 
@@ -117,7 +120,6 @@ func main() {
 			ui.Eval(fmt.Sprintf(`document.getElementById('status_network').innerHTML = '<i class="far fa-times-circle" style="color: red;"></i>'`))
 		}
 
-		// print a message
 		return nil
 	})
 

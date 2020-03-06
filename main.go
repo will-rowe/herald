@@ -68,8 +68,8 @@ func main() {
 	// counters
 	ui.Bind("getExperimentCount", heraldObj.GetExperimentCount)
 	ui.Bind("getSampleCount", heraldObj.GetSampleCount)
-	ui.Bind("getUntaggedSampleCount", heraldObj.GetUntaggedSampleCount)
-	ui.Bind("getTaggedSampleCount", heraldObj.GetTaggedSampleCount)
+	ui.Bind("getUntaggedSampleCount", heraldObj.GetUntaggedRecordCount)
+	ui.Bind("getTaggedSampleCount", heraldObj.GetTaggedRecordCount)
 	ui.Bind("getAnnouncementCount", heraldObj.GetAnnouncementCount)
 	// table / modals / forms
 	ui.Bind("getExperimentName", heraldObj.GetLabel)
@@ -90,11 +90,12 @@ func main() {
 			return err
 		}
 
-		// print the db location and number of experiments and samples in storage
+		// print the db location and number of experiments and samples in storage etc.
 		ui.Eval(fmt.Sprintf(`document.getElementById('staging_dbLocation').innerHTML = 'filepath: %v'`, heraldObj.GetDbPath()))
 		ui.Eval(fmt.Sprintf(`document.getElementById('staging_experimentCount').innerText = '%d'`, heraldObj.GetExperimentCount()))
 		ui.Eval(fmt.Sprintf(`document.getElementById('staging_sampleCount').innerText = '%d'`, heraldObj.GetSampleCount()))
-		ui.Eval(fmt.Sprintf(`document.getElementById('staging_taggedCount').innerText = '%d'`, heraldObj.GetTaggedSampleCount()))
+		ui.Eval(fmt.Sprintf(`document.getElementById('staging_taggedCount').innerText = '%d'`, heraldObj.GetTaggedRecordCount()))
+		ui.Eval(fmt.Sprintf(`document.getElementById('staging_processCount').innerText = '%d untagged'`, heraldObj.GetUntaggedRecordCount()))
 
 		// enable the add sample button if there are experiments to use
 		if heraldObj.GetExperimentCount() == 0 {
@@ -107,7 +108,7 @@ func main() {
 		ui.Eval(fmt.Sprintf(`document.getElementById('sampleTags').innerHTML = '%v'`, ServiceTagsHTML))
 
 		// enable the announce button if there are tagged samples
-		if heraldObj.GetTaggedSampleCount() == 0 {
+		if heraldObj.GetTaggedRecordCount() == 0 {
 			ui.Eval(fmt.Sprintf(`document.getElementById('staging_announce').disabled = true`))
 		} else {
 			ui.Eval(fmt.Sprintf(`document.getElementById('staging_announce').disabled = false`))

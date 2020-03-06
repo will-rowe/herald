@@ -19,8 +19,8 @@ type Herald struct {
 	// runtime count info for JS:
 	experimentCount     int // the number of experiments currently in the store
 	sampleCount         int // the number of samples currently in the store
-	untaggedSampleCount int // the number of samples in the store that are untagged
-	taggedSampleCount   int // the number of samples in the store that are tagged with at least one process
+	untaggedRecordCount int // the number of samples in the store that are untagged
+	taggedRecordCount   int // the number of samples in the store that are tagged with at least one process
 	announcementCount   int // the number of samples in the store that have been announced
 
 	// easy access label holders for JS
@@ -83,8 +83,8 @@ func (herald *Herald) GetRuntimeInfo() error {
 	// reset the runtime data
 	herald.experimentCount = 0
 	herald.sampleCount = 0
-	herald.untaggedSampleCount = 0
-	herald.taggedSampleCount = 0
+	herald.untaggedRecordCount = 0
+	herald.taggedRecordCount = 0
 	herald.announcementCount = 0
 
 	// get the experiment and sample counts from the store
@@ -159,7 +159,7 @@ func (herald *Herald) GetRuntimeInfo() error {
 
 // CreateExperiment creates an experiment record, updates the runtime info and adds the record to storage
 // TODO: this might be bypassed later and instead get JS to encode the form to protobuf directly
-func (herald *Herald) CreateExperiment(expLabel, outDir, fast5Dir, fastqDir, comment string, tags []string) error {
+func (herald *Herald) CreateExperiment(expLabel, outDir, fast5Dir, fastqDir, comment string, tags []string, historicExp bool) error {
 	herald.Lock()
 	defer herald.Unlock()
 
@@ -176,6 +176,27 @@ func (herald *Herald) CreateExperiment(expLabel, outDir, fast5Dir, fastqDir, com
 	// tag the experiment and update its status
 	if len(tags) != 0 {
 		if err := exp.Metadata.AddTags(tags); err != nil {
+			return err
+		}
+	}
+
+	// if it's an historic sample, update the sequence (and basecall) tags
+	if historicExp {
+
+		// update the sequencing service tag to complete
+		if err := exp.Metadata.SetTag("sequence", true); err != nil {
+			return err
+		}
+
+		// update basecall if necessary
+		if _, ok := exp.GetMetadata().GetTags()["basecall"]; ok {
+			if err := exp.Metadata.SetTag("basecall", true); err != nil {
+				return err
+			}
+		}
+
+		// check and update the status (all tags might now be set to complete)
+		if err := exp.Metadata.CheckStatus(); err != nil {
 			return err
 		}
 	}
@@ -280,11 +301,11 @@ func (herald *Herald) updateCounts(element interface{}, add bool) error {
 	switch status {
 
 	case "untagged":
-		herald.untaggedSampleCount += value
+		herald.untaggedRecordCount += value
 		return nil
 
 	case "tagged":
-		herald.taggedSampleCount += value
+		herald.taggedRecordCount += value
 
 		// handle the queue
 		if add {

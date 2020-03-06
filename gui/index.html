@@ -78,7 +78,8 @@
                     <div id="createExperimentValidationMessage"></div>
                     <!--settings-->
                     <label class="formLabel">Tags
-                        <i class="far fa-question-circle"><span class="tooltiptext">help box</span></i>
+                        <i class="far fa-question-circle"><span class="tooltiptext">tag this experiment with services to
+                                run</span></i>
                     </label>
                     <label class="label-inline" for="formLabel_sequence" id="formLabel_sequenceLabel" style="color: #d3d3d3;"> - Sequence:
                     </label>
@@ -232,9 +233,9 @@
                             <div class="mt-1">
                                 <div class="badge background-primary float-left" id="staging_experimentCount">0</div>
                                 <div class="float-left ml-1">
-                                    <p class="m-0"><strong>Experiments</strong> <span class="text-muted">on
-                                            record</span></p>
-                                    <p class="text-small text-muted">unused text field</p>
+                                    <p class="m-0"><strong>Experiments</strong> <span class="text-muted">in the
+                                            database</span></p>
+                                    <p class="text-small text-muted" id="staging_dbLocation">na</p>
                                 </div>
                                 <div class="clearfix"></div>
                                 <hr class="m-0 mb-2" />
@@ -243,19 +244,21 @@
                             <div class="mt-1">
                                 <div class="badge background-primary float-left" id="staging_sampleCount">0</div>
                                 <div class="float-left ml-1">
-                                    <p class="m-0"><strong>Samples</strong> <span class="text-muted">in the
-                                            database</span></p>
-                                    <p class="text-small text-muted" id="staging_dbLocation">na</p>
+                                    <p class="m-0"><strong>Samples</strong> <span class="text-muted">across all
+                                            experiments</span></p>
+                                    <p class="text-small text-muted">unused text field</p>
                                 </div>
                                 <div class="clearfix"></div>
                                 <hr class="m-0 mb-2" />
                             </div>
-                            <!--tagged samples and total number of proccesses-->
+                            <!--Queued announcements-->
                             <div class="mt-1">
                                 <div class="badge background-primary float-left" id="staging_taggedCount">0</div>
                                 <div class="float-left ml-1">
-                                    <p class="m-0"><strong>Tagged</strong> <span class="text-muted">samples</span></p>
-                                    <p class="text-small text-muted" id="staging_processCount">x processes in total</p>
+                                    <p class="m-0"><strong>Tagged</strong> <span class="text-muted">records in the
+                                            queue</span></p>
+                                    <p class="text-small text-muted" id="staging_processCount">x experiments, y samples
+                                    </p>
                                 </div>
                                 <div class="clearfix"></div>
                                 <hr class="m-0 mb-2" />
@@ -269,11 +272,11 @@
                     </div>
                 </div>
 
-                <!--announcements-->
+                <!--breakdown-->
                 <div class="column column-50">
                     <div class="card">
                         <div class="card-title">
-                            <h2>Announcements</h2>
+                            <h2>Breakdown</h2>
                         </div>
                         <div class="card-block">
                             <div class="canvas-wrapper">
@@ -285,11 +288,11 @@
             </div>
             <div class="row grid-responsive mt-1">
 
-                <!--status-->
+                <!--service status-->
                 <div class="column column-50">
                     <div class="card">
                         <div class="card-title">
-                            <h2 class="float-left">Status</h2>
+                            <h2 class="float-left">Service status</h2>
                             <div class="clearfix"></div>
                         </div>
                         <div class="card-block">
@@ -319,12 +322,12 @@
                     </div>
                 </div>
 
-                <!--tasks-->
+                <!--announcements-->
                 <div class="column column-50">
                     <div class="card">
                         <div class="card-title">
-                            <h2 class="float-left">Tasks</h2>
-                            <div class="badge float-right">3 In Progress</div>
+                            <h2 class="float-left">Announcements</h2>
+                            <div class="badge float-right">X In Progress</div>
                             <!--<div class="badge background-success float-right mr-1">5 Complete</div>-->
                             <div class="clearfix"></div>
                         </div>

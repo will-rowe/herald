@@ -21,18 +21,18 @@ func (herald *Herald) GetSampleCount() int {
 	return herald.sampleCount
 }
 
-// GetUntaggedSampleCount returns the current number of samples in storage that are untagged
-func (herald *Herald) GetUntaggedSampleCount() int {
+// GetUntaggedRecordCount returns the current number of samples in storage that are untagged
+func (herald *Herald) GetUntaggedRecordCount() int {
 	herald.Lock()
 	defer herald.Unlock()
-	return herald.untaggedSampleCount
+	return herald.untaggedRecordCount
 }
 
-// GetTaggedSampleCount returns the current number of samples in storage that are tagged with at least one process
-func (herald *Herald) GetTaggedSampleCount() int {
+// GetTaggedRecordCount returns the current number of samples in storage that are tagged with at least one process
+func (herald *Herald) GetTaggedRecordCount() int {
 	herald.Lock()
 	defer herald.Unlock()
-	return herald.taggedSampleCount
+	return herald.taggedRecordCount
 }
 
 // GetAnnouncementCount returns the current number of samples that have been announced

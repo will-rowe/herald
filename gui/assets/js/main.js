@@ -154,6 +154,9 @@ const sampleDetailsModal = document.getElementById('sampleDetailsModal')
 const createExperimentForm = document.getElementById('createExperimentForm')
 createExperimentForm.addEventListener('submit', handleForm)
 
+// historic experiment toggle (set true if an experiment is entered that already has fast5 data)
+var historicExp = false
+
 // get some fields
 var expName = document.getElementById('formLabel_experimentName')
 var expOutputLocation = document.getElementById('formLabel_outputLocation')
@@ -173,6 +176,7 @@ var msgDiv = document.getElementById('createExperimentValidationMessage')
 
 // reset func to clear the form changes
 function createExperimentFormReset() {
+    historicExp = false
     fieldset_outputFASTQlocation.style.display = 'block'
     formLabel_outputFAST5location.value = ''
     formLabel_outputFASTQlocation.value = ''
@@ -250,6 +254,7 @@ experimentValidator.registerListener(async() => {
         return
     }
     formLabel_sequence.checked = true
+    historicExp = true
 
     try {
         await checkDirExists(fastq_dirName)
@@ -326,7 +331,8 @@ createExperimentForm.addEventListener('submit', async() => {
             formLabel_outputFAST5location.value,
             formLabel_outputFASTQlocation.value,
             document.getElementById('formLabel_experimentComment').value,
-            tags
+            tags,
+            historicExp
         )
     } catch (e) {
         printErrorMsg(e)
@@ -543,14 +549,14 @@ var myPieChart = new Chart(pieCanvas, {
 // updatePieChart will refresh the pie chart with current data
 const updatePieChart = async() => {
     // get counts
-    var untaggedSampleCount = `${await window.getUntaggedSampleCount()}`
-    var taggedSampleCount = `${await window.getTaggedSampleCount()}`
+    var untaggedRecordCount = `${await window.getUntaggedSampleCount()}`
+    var taggedRecordCount = `${await window.getTaggedSampleCount()}`
     var announcementCount = `${await window.getAnnouncementCount()}`
 
     // update the chart data
     myPieChart.data.datasets[0].data[0] = announcementCount
-    myPieChart.data.datasets[0].data[1] = taggedSampleCount
-    myPieChart.data.datasets[0].data[2] = untaggedSampleCount
+    myPieChart.data.datasets[0].data[1] = taggedRecordCount
+    myPieChart.data.datasets[0].data[2] = untaggedRecordCount
 
     // update the chart
     myPieChart.update()

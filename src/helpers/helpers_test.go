@@ -15,8 +15,8 @@ func TestHelpers(t *testing.T) {
 }
 
 // Test release version check
-func TestCheckRelease(t *testing.T) {
-	if _, _, _, err := CheckLatestRelease(); err != nil {
-		t.Fatal(err)
-	}
-}
+//func TestCheckRelease(t *testing.T) {
+//	if _, _, _, err := CheckLatestRelease(); err != nil {
+//		t.Fatal(err)
+//	}
+//}

@@ -37,6 +37,25 @@ function printSuccessMsg(msg) {
     })
 }
 
+// printUpdateMsg
+function printUpdateMsg(msg, link) {
+    $('body').overhang({
+        type: 'confirm',
+        custom: true,
+        primary: '#35cebe',
+        accent: '#25beae',
+        html: true,
+        overlay: true,
+        closeConfirm: true,
+        message: msg,
+        callback: function(value) {
+            if (value) {
+                window.location.href = link
+            }
+        }
+    })
+}
+
 // updatStatus will print status icon and check time
 function updateStatus(id, active) {
     var today = new Date()

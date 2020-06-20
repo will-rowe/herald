@@ -99,9 +99,9 @@ func main() {
 
 		// enable the add sample button if there are experiments to use
 		if heraldObj.GetExperimentCount() == 0 {
-			ui.Eval(fmt.Sprintf(`document.getElementById('addSampleModalOpen').disabled = true`))
+			ui.Eval(`document.getElementById('addSampleModalOpen').disabled = true`)
 		} else {
-			ui.Eval(fmt.Sprintf(`document.getElementById('addSampleModalOpen').disabled = false`))
+			ui.Eval(`document.getElementById('addSampleModalOpen').disabled = false`)
 		}
 
 		// update the add sample form with the available processes for tagging
@@ -109,16 +109,16 @@ func main() {
 
 		// enable the announce button if there are tagged samples
 		if heraldObj.GetTaggedRecordCount() == 0 {
-			ui.Eval(fmt.Sprintf(`document.getElementById('staging_announce').disabled = true`))
+			ui.Eval(`document.getElementById('staging_announce').disabled = true`)
 		} else {
-			ui.Eval(fmt.Sprintf(`document.getElementById('staging_announce').disabled = false`))
+			ui.Eval(`document.getElementById('staging_announce').disabled = false`)
 		}
 
 		// check the network connection
 		if helpers.NetworkActive() {
-			ui.Eval(fmt.Sprintf(`document.getElementById('status_network').innerHTML = '<i class="far fa-check-circle" style="color: #35cebe;"></i>'`))
+			ui.Eval(`document.getElementById('status_network').innerHTML = '<i class="far fa-check-circle" style="color: #35cebe;"></i>'`)
 		} else {
-			ui.Eval(fmt.Sprintf(`document.getElementById('status_network').innerHTML = '<i class="far fa-times-circle" style="color: red;"></i>'`))
+			ui.Eval(`document.getElementById('status_network').innerHTML = '<i class="far fa-times-circle" style="color: red;"></i>'`)
 		}
 
 		return nil
@@ -137,6 +137,15 @@ func main() {
 	defer ln.Close()
 	go http.Serve(ln, http.FileServer(FS))
 	ui.Load(fmt.Sprintf("http://%s", ln.Addr()))
+
+	// alert if a new release is available
+	updateAvailable, releaseVersion, releaseLink, err := helpers.CheckLatestRelease()
+	if err != nil {
+		ui.Eval(fmt.Sprintf(`printErrorMsg('%v')`, err))
+	}
+	if updateAvailable {
+		ui.Eval(fmt.Sprintf(`printUpdateMsg('a new version is available (%v), download now?', '%v')`, releaseVersion, releaseLink))
+	}
 
 	// Wait until the interrupt signal arrives or browser window is closed
 	sigc := make(chan os.Signal)

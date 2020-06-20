@@ -2,9 +2,13 @@
 package helpers
 
 import (
+	"context"
 	"fmt"
 	"net/http"
 	"os"
+
+	"github.com/google/go-github/github"
+	"github.com/will-rowe/herald/src/version"
 )
 
 // CheckDirExists is used to check a directory exists
@@ -33,6 +37,41 @@ func DeduplicateStringSlice(s []string) []string {
 		j++
 	}
 	return s[:j]
+}
+
+// CheckLatestRelease will query the GitHub API check the latest released version of Herald against the one in use
+// returns a bool indicating if there is a newer version available, the newest release tag, a link to the release, and any error
+func CheckLatestRelease() (bool, string, string, error) {
+	client := github.NewClient(nil)
+	opt := &github.ListOptions{}
+
+	// get the releases via GitHub API
+	releases, _, err := client.Repositories.ListReleases(context.Background(), "will-rowe", "herald", opt)
+	if err != nil {
+		return false, "", "", err
+	}
+
+	tagName, url := "", ""
+	updateBool := false
+
+	// iterate over the release tags until the most recent, non pre-release is reached
+	for _, release := range releases {
+
+		// ignore pre-releases
+		if release.GetPrerelease() {
+			continue
+		}
+
+		// arrived at most recent release
+		tagName = release.GetTagName()
+		url = release.GetTarballURL()
+		if release.GetTagName() != version.VERSION {
+			updateBool = true
+		}
+		break
+	}
+
+	return updateBool, tagName, url, nil
 }
 
 // NetworkActive is a helper function to check outgoing calls can be made

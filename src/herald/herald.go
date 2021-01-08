@@ -17,16 +17,16 @@ type Herald struct {
 	announcementQueue *list.List       // a FIFO queue for announcements
 
 	// runtime count info for JS:
-	experimentCount     int // the number of experiments currently in the store
+	runCount            int // the number of runs currently in the store
 	sampleCount         int // the number of samples currently in the store
 	untaggedRecordCount int // the number of samples in the store that are untagged
 	taggedRecordCount   int // the number of samples in the store that are tagged with at least one process
 	announcementCount   int // the number of samples in the store that have been announced
 
 	// easy access label holders for JS
-	sampleDetails    [][]string // used to store all the sample labels, creation dates and corresponding experiment in memory (for JS to access)
-	experimentLabels []string   // used to store all the experiment names in memory (for JS to access)
-	storeLocation    string     // where the store is located on disk
+	sampleDetails [][]string // used to store all the sample labels, creation dates and corresponding run in memory (for JS to access)
+	runLabels     []string   // used to store all the run names in memory (for JS to access)
+	storeLocation string     // where the store is located on disk
 }
 
 // InitHerald will initiate the Herald instance
@@ -62,7 +62,7 @@ func (herald *Herald) Destroy() error {
 	return herald.store.CloseStorage()
 }
 
-// WipeStorage will clear all samples and experiments from storage and reset the runtime info
+// WipeStorage will clear all samples and runs from storage and reset the runtime info
 func (herald *Herald) WipeStorage() error {
 	herald.Lock()
 	defer herald.Unlock()
@@ -72,7 +72,7 @@ func (herald *Herald) WipeStorage() error {
 	return nil
 }
 
-// GetRuntimeInfo makes a pass of the experiment and sample stores before populating the Herald instance with data:
+// GetRuntimeInfo makes a pass of the run and sample stores before populating the Herald instance with data:
 // - how many samples are in the storage
 // - notes any samples with tags
 // - loads all sample labels into a slice (for JS to access)
@@ -81,28 +81,28 @@ func (herald *Herald) GetRuntimeInfo() error {
 	defer herald.Unlock()
 
 	// reset the runtime data
-	herald.experimentCount = 0
+	herald.runCount = 0
 	herald.sampleCount = 0
 	herald.untaggedRecordCount = 0
 	herald.taggedRecordCount = 0
 	herald.announcementCount = 0
 
-	// get the experiment and sample counts from the store
-	baselineExpCount := herald.store.GetNumExperiments()
+	// get the run and sample counts from the store
+	baselineExpCount := herald.store.GetNumRuns()
 	baselineSampleCount := herald.store.GetNumSamples()
 
 	// restart the queue
 	herald.announcementQueue.Init()
 
-	// create experiment label holder
-	herald.experimentLabels = make([]string, baselineExpCount)
+	// create run label holder
+	herald.runLabels = make([]string, baselineExpCount)
 
-	// range over the experiments in storage
+	// range over the runs in storage
 	expIterator := 0
-	for label := range herald.store.GetExperimentLabels() {
+	for label := range herald.store.GetRunLabels() {
 
-		// get the full experiment from storage
-		exp, err := herald.store.GetExperiment(string(label))
+		// get the full run from storage
+		exp, err := herald.store.GetRun(string(label))
 		if err != nil {
 			return err
 		}
@@ -112,14 +112,14 @@ func (herald *Herald) GetRuntimeInfo() error {
 			return err
 		}
 
-		// add the experiment label to the holder (for display in app)
-		herald.experimentLabels[expIterator] = exp.Metadata.GetLabel()
+		// add the run label to the holder (for display in app)
+		herald.runLabels[expIterator] = exp.Metadata.GetLabel()
 
 		// increment the iterator
 		expIterator++
 	}
-	if (baselineExpCount != expIterator) || (baselineExpCount != herald.experimentCount) {
-		return fmt.Errorf("experiment mistmatch between db and in-memory store: %d vs %d", baselineExpCount, expIterator)
+	if (baselineExpCount != expIterator) || (baselineExpCount != herald.runCount) {
+		return fmt.Errorf("run mistmatch between db and in-memory store: %d vs %d", baselineExpCount, expIterator)
 	}
 
 	// setup the sample details holder
@@ -146,7 +146,7 @@ func (herald *Herald) GetRuntimeInfo() error {
 		// add the details to the holders (for display in app)
 		herald.sampleDetails[0][sampleIterator] = sample.Metadata.GetLabel()
 		herald.sampleDetails[1][sampleIterator] = sample.Metadata.Created.String()
-		herald.sampleDetails[2][sampleIterator] = sample.GetParentExperiment()
+		herald.sampleDetails[2][sampleIterator] = sample.GetParentRun()
 
 		// increment the iterator
 		sampleIterator++
@@ -157,14 +157,14 @@ func (herald *Herald) GetRuntimeInfo() error {
 	return nil
 }
 
-// CreateExperiment creates an experiment record, updates the runtime info and adds the record to storage
+// AddRun creates an run record, updates the runtime info and adds the record to storage
 // TODO: this might be bypassed later and instead get JS to encode the form to protobuf directly
-func (herald *Herald) CreateExperiment(expLabel, outDir, fast5Dir, fastqDir, comment string, tags []string, historicExp bool) error {
+func (herald *Herald) AddRun(expLabel, outDir, fast5Dir, fastqDir, comment string, tags []string, historicExp bool) error {
 	herald.Lock()
 	defer herald.Unlock()
 
-	// create the experiment
-	exp := services.InitExperiment(expLabel, outDir, fast5Dir, fastqDir)
+	// create the run
+	exp := services.InitRun(expLabel, outDir, fast5Dir, fastqDir)
 
 	// add any comment
 	if len(comment) != 0 {
@@ -173,7 +173,7 @@ func (herald *Herald) CreateExperiment(expLabel, outDir, fast5Dir, fastqDir, com
 		}
 	}
 
-	// tag the experiment and update its status
+	// tag the run and update its status
 	if len(tags) != 0 {
 		if err := exp.Metadata.AddTags(tags); err != nil {
 			return err
@@ -201,29 +201,29 @@ func (herald *Herald) CreateExperiment(expLabel, outDir, fast5Dir, fastqDir, com
 		}
 	}
 
-	// add the experiment to the store
-	if err := herald.store.AddExperiment(exp); err != nil {
+	// add the run to the store
+	if err := herald.store.AddRun(exp); err != nil {
 		return err
 	}
 
 	// update the runtime info (grow the label slice, update counts, add to announcement queue etc.)
-	herald.experimentLabels = append(herald.experimentLabels, expLabel)
+	herald.runLabels = append(herald.runLabels, expLabel)
 	return herald.updateCounts(exp, true)
 }
 
 // CreateSample creates a sample record, updates the runtime info and adds the record to storage
 // TODO: this might be bypassed later and instead get JS to encode the form to protobuf directly
-func (herald *Herald) CreateSample(label string, experimentName string, barcode int32, comment string, tags []string) error {
+func (herald *Herald) CreateSample(label string, runName string, barcode int32, comment string, tags []string) error {
 	herald.Lock()
 	defer herald.Unlock()
 
-	// get the experiment from storage
-	exp, err := herald.store.GetExperiment(experimentName)
+	// get the run from storage
+	exp, err := herald.store.GetRun(runName)
 	if err != nil {
 		return err
 	}
 
-	// TODO: copy the tag history over from the experiment to the samples (sequence and basecall)?
+	// TODO: copy the tag history over from the run to the samples (sequence and basecall)?
 	//tags = append(exp.Metadata.GetRequestOrder(), tags...)
 
 	// create the sample
@@ -249,7 +249,7 @@ func (herald *Herald) CreateSample(label string, experimentName string, barcode 
 	// update the runtime info (grow the label slice, update counts, add to announcement queue etc.)
 	herald.sampleDetails[0] = append(herald.sampleDetails[0], label)
 	herald.sampleDetails[1] = append(herald.sampleDetails[1], sample.Metadata.GetCreated().String())
-	herald.sampleDetails[2] = append(herald.sampleDetails[2], experimentName)
+	herald.sampleDetails[2] = append(herald.sampleDetails[2], runName)
 	return herald.updateCounts(sample, true)
 }
 
@@ -275,7 +275,7 @@ func (herald *Herald) DeleteSample(sampleLabel string) error {
 
 // updateCounts takes an element and a bool to indicate if it is being added (true) or removed (false)
 // from the storage.
-// it will check the provided element is either an experiment or sample
+// it will check the provided element is either a run or sample
 // it will then increment/decrement the appropriate counters.
 // it will also add/remove it from the queue if needed.
 func (herald *Herald) updateCounts(element interface{}, add bool) error {
@@ -284,12 +284,12 @@ func (herald *Herald) updateCounts(element interface{}, add bool) error {
 		value = 1
 	}
 
-	// check for experiment or sample
+	// check for run or sample
 	var status string
 	switch element.(type) {
-	case *services.Experiment:
-		status = element.(*services.Experiment).Metadata.GetStatus().String()
-		herald.experimentCount += value
+	case *services.Run:
+		status = element.(*services.Run).Metadata.GetStatus().String()
+		herald.runCount += value
 	case *services.Sample:
 		status = element.(*services.Sample).Metadata.GetStatus().String()
 		herald.sampleCount += value

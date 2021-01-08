@@ -7,11 +7,11 @@ import (
 	toposort "github.com/philopon/go-toposort"
 )
 
-// InitExperiment will init an experiment struct with the minimum required values
-func InitExperiment(label, outputDir, fast5Dir, fastqDir string) *Experiment {
+// InitRun will init an run struct with the minimum required values
+func InitRun(label, outputDir, fast5Dir, fastqDir string) *Run {
 
-	// create the experiment
-	experiment := &Experiment{
+	// create the run
+	run := &Run{
 		Metadata: &HeraldData{
 			Created:      ptypes.TimestampNow(),
 			Label:        label,
@@ -26,10 +26,10 @@ func InitExperiment(label, outputDir, fast5Dir, fastqDir string) *Experiment {
 	}
 
 	// create the history
-	experiment.Metadata.AddComment("experiment created.")
+	run.Metadata.AddComment("run created.")
 
-	// return pointer to the experiment
-	return experiment
+	// return pointer to the run
+	return run
 }
 
 // InitSample will init a sample struct with the minimum required values
@@ -45,18 +45,18 @@ func InitSample(label, expLabel string, barcode int32) *Sample {
 			Tags:         make(map[string]bool),
 			RequestOrder: []string{},
 		},
-		ParentExperiment: expLabel,
-		Barcode:          barcode,
+		ParentRun: expLabel,
+		Barcode:   barcode,
 	}
 
 	// create the history
-	sample.Metadata.AddComment("experiment created.")
+	sample.Metadata.AddComment("run created.")
 
-	// return pointer to the experiment
+	// return pointer to the run
 	return sample
 }
 
-// AddComment is a method to add a comment to the history of an experiment or sample
+// AddComment is a method to add a comment to the history of an run or sample
 func (heraldData *HeraldData) AddComment(text string) error {
 	if len(text) == 0 {
 		return fmt.Errorf("no comment provided")

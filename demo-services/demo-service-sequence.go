@@ -26,8 +26,8 @@ func (s *Server) RunSequencing(ctx context.Context, submission *services.Process
 	if submission.GetVal1() == "" {
 		return nil, fmt.Errorf("no label sent")
 	}
-	log.Printf("experiment label: %s", submission.GetVal1())
-	return &services.ProcessSummary{Val2: fmt.Sprintf("here is a response for the client regarding experiment label: %v", submission.GetVal1())}, nil
+	log.Printf("run label: %s", submission.GetVal1())
+	return &services.ProcessSummary{Val2: fmt.Sprintf("here is a response for the client regarding run label: %v", submission.GetVal1())}, nil
 }
 
 // StartServices will start a gRPC server, attach the service and then waits for connection

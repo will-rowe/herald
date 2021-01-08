@@ -60,22 +60,22 @@ func main() {
 
 	// Bind HERALD methods to the UI
 	// buttons
-	ui.Bind("createExperiment", heraldObj.CreateExperiment)
+	ui.Bind("addRun", heraldObj.AddRun)
 	ui.Bind("createSample", heraldObj.CreateSample)
 	ui.Bind("deleteSample", heraldObj.DeleteSample)
 	ui.Bind("announceSamples", heraldObj.AnnounceSamples)
 	ui.Bind("wipeStorage", heraldObj.WipeStorage)
 	// counters
-	ui.Bind("getExperimentCount", heraldObj.GetExperimentCount)
+	ui.Bind("getRunCount", heraldObj.GetRunCount)
 	ui.Bind("getSampleCount", heraldObj.GetSampleCount)
 	ui.Bind("getUntaggedSampleCount", heraldObj.GetUntaggedRecordCount)
 	ui.Bind("getTaggedSampleCount", heraldObj.GetTaggedRecordCount)
 	ui.Bind("getAnnouncementCount", heraldObj.GetAnnouncementCount)
 	// table / modals / forms
-	ui.Bind("getExperimentName", heraldObj.GetLabel)
+	ui.Bind("getRunName", heraldObj.GetLabel)
 	ui.Bind("getSampleLabel", heraldObj.GetSampleLabel)
 	ui.Bind("getSampleCreation", heraldObj.GetSampleCreation)
-	ui.Bind("getSampleExperiment", heraldObj.GetSampleExperiment)
+	ui.Bind("getSampleRun", heraldObj.GetSampleRun)
 	ui.Bind("printSampleToJSONstring", heraldObj.PrintSampleToJSONstring)
 
 	// Bind helper functions to the UI
@@ -90,15 +90,15 @@ func main() {
 			return err
 		}
 
-		// print the db location and number of experiments and samples in storage etc.
+		// print the db location and number of runs and samples in storage etc.
 		ui.Eval(fmt.Sprintf(`document.getElementById('staging_dbLocation').innerHTML = 'filepath: %v'`, heraldObj.GetDbPath()))
-		ui.Eval(fmt.Sprintf(`document.getElementById('staging_experimentCount').innerText = '%d'`, heraldObj.GetExperimentCount()))
+		ui.Eval(fmt.Sprintf(`document.getElementById('staging_runCount').innerText = '%d'`, heraldObj.GetRunCount()))
 		ui.Eval(fmt.Sprintf(`document.getElementById('staging_sampleCount').innerText = '%d'`, heraldObj.GetSampleCount()))
 		ui.Eval(fmt.Sprintf(`document.getElementById('staging_taggedCount').innerText = '%d'`, heraldObj.GetTaggedRecordCount()))
 		ui.Eval(fmt.Sprintf(`document.getElementById('staging_processCount').innerText = '%d untagged'`, heraldObj.GetUntaggedRecordCount()))
 
-		// enable the add sample button if there are experiments to use
-		if heraldObj.GetExperimentCount() == 0 {
+		// enable the add sample button if there are runs to use
+		if heraldObj.GetRunCount() == 0 {
 			ui.Eval(`document.getElementById('addSampleModalOpen').disabled = true`)
 		} else {
 			ui.Eval(`document.getElementById('addSampleModalOpen').disabled = false`)

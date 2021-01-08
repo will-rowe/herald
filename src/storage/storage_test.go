@@ -41,7 +41,7 @@ func TestStorageAdd(t *testing.T) {
 	var i int32
 	for i = 0; i < 9; i++ {
 		sampleName := fmt.Sprintf("sample %d", i)
-		sample := services.InitSample(sampleName, "testExperiment", i)
+		sample := services.InitSample(sampleName, "testRun", i)
 		if err := sampleStore.AddSample(sample); err != nil {
 			t.Fatal(err)
 		}
@@ -53,7 +53,7 @@ func TestStorageAdd(t *testing.T) {
 	}
 
 	// check you can't add a duplicate label
-	sample := services.InitSample("sample 1", "testExperiment", 1)
+	sample := services.InitSample("sample 1", "testRun", 1)
 	if err := sampleStore.AddSample(sample); err == nil {
 		t.Fatal(err)
 	}

@@ -50,35 +50,35 @@
     </div>
 
     <!--CREATE EXPERIMENT MODAL-->
-    <div id="createExperimentModal" class="modal">
+    <div id="addRunModal" class="modal">
         <div class="modal-content">
             <span class="modal-close">&times;</span>
-            <h1>Create an experiment</h1>
+            <h1>Add a run</h1>
             <div class="clearfix"></div>
             <hr class="m-0 mb-2" />
-            <form id="createExperimentForm">
+            <form id="addRunForm">
                 <fieldset>
                     <!--label-->
-                    <label class="formLabel" for="formLabel_experimentName">Experiment name
+                    <label class="formLabel" for="formLabel_runName">Run name
                         <i class="far fa-question-circle"><span class="tooltiptext">the name for the
-                                experiment</span></i>
+                                run</span></i>
                     </label>
-                    <input type="text" placeholder="a unique experiment name" id="formLabel_experimentName" required>
+                    <input type="text" placeholder="a unique run name" id="formLabel_runName" required>
                     <!--output location-->
-                    <label class="formLabel" for="formLabel_outputLocation">Output location
-                        <i class="far fa-question-circle"><span class="tooltiptext">directory where experiment is
+                    <label class="formLabel" for="formLabel_outputLocation">Run location
+                        <i class="far fa-question-circle"><span class="tooltiptext">directory where run data is
                                 stored</span></i>
                     </label>
                     <input type="text" placeholder="/Users/me/data" id="formLabel_outputLocation" required>
                     <!--comment box-->
-                    <label class="formLabel" for="formLabel_experimentComment">Comment</label>
-                    <textarea placeholder="insert any additional information" id="formLabel_experimentComment"></textarea>
+                    <label class="formLabel" for="formLabel_runComment">Comment</label>
+                    <textarea placeholder="insert any additional information" id="formLabel_runComment"></textarea>
                     <div class="clearfix"></div>
                     <!--validation output-->
-                    <div id="createExperimentValidationMessage"></div>
+                    <div id="addRunValidationMessage"></div>
                     <!--settings-->
                     <label class="formLabel">Tags
-                        <i class="far fa-question-circle"><span class="tooltiptext">tag this experiment with services to
+                        <i class="far fa-question-circle"><span class="tooltiptext">tag this run with services to
                                 run</span></i>
                     </label>
                     <label class="label-inline" for="formLabel_sequence" id="formLabel_sequenceLabel" style="color: #d3d3d3;"> - Sequence:
@@ -100,7 +100,7 @@
                     <!--submit button-->
                     <div class="clearfix"></div>
                     <hr class="m-0 mb-2" />
-                    <input class="button-primary" type="submit" value="Create experiment">
+                    <input class="button-primary" type="submit" value="Add run">
                 </fieldset>
             </form>
         </div>
@@ -121,13 +121,13 @@
                                 sample</span></i>
                     </label>
                     <input type="text" placeholder="sample xxx" id="formLabel_sampleLabel" required>
-                    <!--experiment-->
-                    <label class="formLabel" for="formLabel_sampleExperiment">Experiment
+                    <!--run-->
+                    <label class="formLabel" for="formLabel_sampleRun">Run
                         <i class="far fa-question-circle"><span class="tooltiptext">the
-                                experiment this sample belongs to</span></i>
+                                run this sample belongs to</span></i>
                     </label>
-                    <select id="formLabel_sampleExperiment" required>
-                        <option value="" disabled selected>create an experiment first!</option>
+                    <select id="formLabel_sampleRun" required>
+                        <option value="" disabled selected>add a run first!</option>
                     </select>
                     <!--barcode-->
                     <label class="formLabel" for="formLabel_sampleBarcode">Barcode</label>
@@ -210,8 +210,8 @@
                 <div class="column page-heading">
                     <div class="large-card">
                         <h1>Welcome to Herald</h1>
-                        <p class="text-large">Get started by creating an experiment and then adding some samples.</p>
-                        <button class="button" id="createExperimentModalOpen">create experiment</button>
+                        <p class="text-large">Get started by adding a run and then adding some samples to it.</p>
+                        <button class="button" id="addRunModalOpen">add run</button>
                         <button class="button" id="addSampleModalOpen" disabled>add sample</button>
                     </div>
                 </div>
@@ -229,11 +229,11 @@
                             <h2>Staging</h2>
                         </div>
                         <div class="card-block">
-                            <!--experiment count-->
+                            <!--run count-->
                             <div class="mt-1">
-                                <div class="badge background-primary float-left" id="staging_experimentCount">0</div>
+                                <div class="badge background-primary float-left" id="staging_runCount">0</div>
                                 <div class="float-left ml-1">
-                                    <p class="m-0"><strong>Experiments</strong> <span class="text-muted">in the
+                                    <p class="m-0"><strong>Runs</strong> <span class="text-muted">in the
                                             database</span></p>
                                     <p class="text-small text-muted" id="staging_dbLocation">na</p>
                                 </div>
@@ -245,7 +245,7 @@
                                 <div class="badge background-primary float-left" id="staging_sampleCount">0</div>
                                 <div class="float-left ml-1">
                                     <p class="m-0"><strong>Samples</strong> <span class="text-muted">across all
-                                            experiments</span></p>
+                                            runs</span></p>
                                     <p class="text-small text-muted">unused text field</p>
                                 </div>
                                 <div class="clearfix"></div>
@@ -257,7 +257,7 @@
                                 <div class="float-left ml-1">
                                     <p class="m-0"><strong>Tagged</strong> <span class="text-muted">records in the
                                             queue</span></p>
-                                    <p class="text-small text-muted" id="staging_processCount">x experiments, y samples
+                                    <p class="text-small text-muted" id="staging_processCount">x runs, y samples
                                     </p>
                                 </div>
                                 <div class="clearfix"></div>
@@ -375,7 +375,7 @@
                                 <thead>
                                     <tr>
                                         <th>Sample Label</th>
-                                        <th>Experiment Name</th>
+                                        <th>Run Name</th>
                                         <th></th>
                                     </tr>
                                 </thead>
@@ -404,7 +404,7 @@
             </div>
 
             <!-- end of main section -->
-            <p class="credit">Built by <a href="https://www.willrowe.net">Will Rowe</a> as part of the <a href="https://artic.network/">ARTIC Network</a> project<br \> &copy 2020</p>
+            <p class="credit">Built by <a href="https://www.willrowe.net">Will Rowe</a> as part of the <a href="https://artic.network/">ARTIC Network</a> project<br \> &copy 2021</p>
         </section>
     </div>
 

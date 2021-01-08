@@ -20,7 +20,7 @@ func (herald *Herald) AnnounceSamples() error {
 		}
 	}
 
-	// iterate once over the queue and process all the experiments that need sequencing and basecalling
+	// iterate once over the queue and process all the runs that need sequencing and basecalling
 	for e := herald.announcementQueue.Front(); e != nil; e = e.Next() {
 
 		switch v := e.Value.(type) {
@@ -28,7 +28,7 @@ func (herald *Herald) AnnounceSamples() error {
 			return fmt.Errorf("unexpected type in queue: %T", v)
 		case *services.Sample:
 			continue
-		case *services.Experiment:
+		case *services.Run:
 
 			// get the tags in order
 			for _, tag := range v.Metadata.GetRequestOrder() {

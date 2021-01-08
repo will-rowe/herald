@@ -3,6 +3,8 @@ package services;
 
 import "google/protobuf/timestamp.proto";
 
+option go_package = ".;services";
+
 /*
     Comments are used to record a message history
 */
@@ -12,7 +14,7 @@ message Comment {
 }
 
 /*
-    Status is used to determine if experiments/samples have tagged processes, or if they have been announced via the message server
+    Status is used to determine if runs/samples have tagged processes, or if they have been announced via the message server
 */
 enum Status {
     UN_INITIALIZED = 0;
@@ -22,33 +24,33 @@ enum Status {
 }
 
 /*
-    HeraldData is the base type, used by both Experiment and Sample
+    HeraldData is the base type, used by both Run and Sample
 */
 message HeraldData {
     google.protobuf.Timestamp created = 1;
-    string label = 2;                            // the experiment or sample name
-    repeated Comment history = 3;                // describes the history of the experiment
+    string label = 2;                            // the run or sample name
+    repeated Comment history = 3;                // describes the history of the run
     Status status = 4;                           // describes if untagged/tagged/announced
     map<string, bool> tags = 5;                  // tagged services and their complete status (true=complete, false=incomplete)
     repeated string requestOrder = 6;            // the order to send requests to the tagged services
 }
 
 /*
-    Experiment is used to describe a Nanopore sequencing run
+    Run is used to describe a Nanopore sequencing run
 */
-message Experiment {
+message Run {
     HeraldData metadata = 1;                    // the base info
-    string outputDirectory = 2;                // where the experiment is stored
-    string fast5OutputDirectory = 3;          // where the experiment fast5 data is stored
-    string fastqOutputDirectory = 4;          // where the experiment fastq data is stored
+    string outputDirectory = 2;                // where the run is stored
+    string fast5OutputDirectory = 3;          // where the run fast5 data is stored
+    string fastqOutputDirectory = 4;          // where the run fastq data is stored
 
 }
 
 /*
-    Sample is used to describe a biological sample which is being sequenced as part of an Experiment
+    Sample is used to describe a biological sample which is being sequenced as part of a Run
 */
 message Sample {
     HeraldData metadata = 1;                   // the base info
-    string parentExperiment = 2;
+    string parentRun = 2;
     int32 barcode = 3;
 }

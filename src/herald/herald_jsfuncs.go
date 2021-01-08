@@ -7,11 +7,11 @@ func (herald *Herald) GetDbPath() string {
 	return herald.storeLocation
 }
 
-// GetExperimentCount returns the current number of experiments in storage
-func (herald *Herald) GetExperimentCount() int {
+// GetRunCount returns the current number of runs in storage
+func (herald *Herald) GetRunCount() int {
 	herald.Lock()
 	defer herald.Unlock()
-	return herald.experimentCount
+	return herald.runCount
 }
 
 // GetSampleCount returns the current number of samples in storage
@@ -71,20 +71,20 @@ func (herald *Herald) GetSampleCreation(iterator int) string {
 	return herald.sampleDetails[1][iterator]
 }
 
-// GetSampleExperiment is used by JS to collect a sample experiment name from the runtime slice of sample data
+// GetSampleRun is used by JS to collect a sample run name from the runtime slice of sample data
 // NOTE: this assumes the caller has already run GetSampleCount (or similar) to find the iterator range
 // TODO: add error on return too (will require re-write of JS function)
-func (herald *Herald) GetSampleExperiment(iterator int) string {
+func (herald *Herald) GetSampleRun(iterator int) string {
 	herald.Lock()
 	defer herald.Unlock()
 	return herald.sampleDetails[2][iterator]
 }
 
-// GetLabel is used by JS to collect an experiment name from the runtime slice of experiment names
-// NOTE: this assumes the caller has already run GetExperimentCount (or similar) to find the iterator range
+// GetLabel is used by JS to collect an run name from the runtime slice of run names
+// NOTE: this assumes the caller has already run GetRunCount (or similar) to find the iterator range
 // TODO: add error on return too (will require re-write of JS function)
 func (herald *Herald) GetLabel(iterator int) string {
 	herald.Lock()
 	defer herald.Unlock()
-	return herald.experimentLabels[iterator]
+	return herald.runLabels[iterator]
 }

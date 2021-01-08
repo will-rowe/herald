@@ -29,16 +29,16 @@ func TestHerald(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	// create and add an experiment
-	testExpName := "test experiment"
-	if err := tmp.CreateExperiment(testExpName, "/tmp", "/tmp/fast5_pass", "/tmp/fastq_pass", "", []string{"sequence", "basecall"}, false); err != nil {
+	// create and add an run
+	testExpName := "test run"
+	if err := tmp.AddRun(testExpName, "/tmp", "/tmp/fast5_pass", "/tmp/fastq_pass", "", []string{"sequence", "basecall"}, false); err != nil {
 		t.Fatal(err)
 	}
 
 	// check runtime info was updated
-	expCount := tmp.GetExperimentCount()
+	expCount := tmp.GetRunCount()
 	if expCount != 1 {
-		t.Fatal("herald experiment count not updated (should be 1)")
+		t.Fatal("herald run count not updated (should be 1)")
 	}
 	if storedName := tmp.GetLabel(0); storedName != testExpName {
 		t.Fatalf("stored label does not match that used during sample creation (%v vs %v)", storedName, testExpName)
@@ -69,9 +69,9 @@ func TestHerald(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	expCount2 := tmp.GetExperimentCount()
+	expCount2 := tmp.GetRunCount()
 	if expCount2 != 1 {
-		t.Fatal("herald experiment count not updated (should be 1)")
+		t.Fatal("herald run count not updated (should be 1)")
 	}
 	if storedName2 := tmp.GetLabel(0); storedName2 != testExpName {
 		t.Fatalf("stored label does not match that used during sample creation (%v vs %v)", storedName2, testExpName)

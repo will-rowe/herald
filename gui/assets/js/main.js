@@ -146,14 +146,12 @@ window.onclick = function(event) {
     }
 }
 
-// createExperimentModal
+// addRunModal
 // open on button click
-const createExperimentModal = document.getElementById('createExperimentModal')
-const createExperimentModalOpen = document.getElementById(
-    'createExperimentModalOpen'
-)
-createExperimentModalOpen.addEventListener('click', function() {
-    createExperimentModal.style.display = 'block'
+const addRunModal = document.getElementById('addRunModal')
+const addRunModalOpen = document.getElementById('addRunModalOpen')
+addRunModalOpen.addEventListener('click', function() {
+    addRunModal.style.display = 'block'
 })
 
 // addSampleModal
@@ -170,14 +168,14 @@ const sampleDetailsModal = document.getElementById('sampleDetailsModal')
 ////////////////////////////////////////////////////////////////////
 // CREATE EXPERIMENT FORM
 // get the form and prevent default action
-const createExperimentForm = document.getElementById('createExperimentForm')
-createExperimentForm.addEventListener('submit', handleForm)
+const addRunForm = document.getElementById('addRunForm')
+addRunForm.addEventListener('submit', handleForm)
 
-// historic experiment toggle (set true if an experiment is entered that already has fast5 data)
+// historic run toggle (set true if an run is entered that already has fast5 data)
 var historicExp = false
 
 // get some fields
-var expName = document.getElementById('formLabel_experimentName')
+var expName = document.getElementById('formLabel_runName')
 var expOutputLocation = document.getElementById('formLabel_outputLocation')
 var fieldset_outputFASTQlocation = document.getElementById(
     'fieldset_outputFASTQlocation'
@@ -191,10 +189,10 @@ var formLabel_outputFASTQlocation = document.getElementById(
 var formLabel_sequence = document.getElementById('formLabel_sequence')
 var formLabel_basecall = document.getElementById('formLabel_basecall')
 var formLabel_basecallLabel = document.getElementById('formLabel_basecallLabel')
-var msgDiv = document.getElementById('createExperimentValidationMessage')
+var msgDiv = document.getElementById('addRunValidationMessage')
 
 // reset func to clear the form changes
-function createExperimentFormReset() {
+function addRunFormReset() {
     historicExp = false
     fieldset_outputFASTQlocation.style.display = 'block'
     formLabel_outputFAST5location.value = ''
@@ -207,7 +205,7 @@ function createExperimentFormReset() {
 }
 
 // set up the validator
-experimentValidator = {
+runValidator = {
     validListenter: function(val) {},
     registerListener: function(listener) {
         this.validListenter = listener
@@ -231,13 +229,10 @@ experimentValidator = {
 }
 
 // the validator listener will adjust form values depending on user input
-experimentValidator.registerListener(async() => {
+runValidator.registerListener(async() => {
     // reset if user hasn't input both expName and expOutputLocation
-    if (
-        experimentValidator.expName === false ||
-        experimentValidator.expLoc === false
-    ) {
-        createExperimentFormReset()
+    if (runValidator.expName === false || runValidator.expLoc === false) {
+        addRunFormReset()
         return
     }
 
@@ -262,14 +257,14 @@ experimentValidator.registerListener(async() => {
         await checkDirExists(dirName)
     } catch (e) {
         msgDiv.innerHTML =
-            '<div class="alert background-warning"><i class="fas fa-exclamation-circle"></i> - No existing experiment directory found, this experiment will be tagged for sequencing</div>'
+            '<div class="alert background-warning"><i class="fas fa-exclamation-circle"></i> - No existing run directory found, this run will be tagged for sequencing</div>'
         return
     }
     try {
         await checkDirExists(fast5_dirName)
     } catch (e) {
         msgDiv.innerHTML =
-            '<div class="alert background-warning"><i class="fas fa-exclamation-circle"></i> - No <em>fast5_pass</em> directory found, this experiment will be tagged for sequencing</div>'
+            '<div class="alert background-warning"><i class="fas fa-exclamation-circle"></i> - No <em>fast5_pass</em> directory found, this run will be tagged for sequencing</div>'
         return
     }
     formLabel_sequence.checked = true
@@ -279,11 +274,11 @@ experimentValidator.registerListener(async() => {
         await checkDirExists(fastq_dirName)
     } catch (e) {
         msgDiv.innerHTML =
-            '<div class="alert background-warning"><i class="fas fa-exclamation-circle"></i> - No <em>fastq_pass</em> directory found, this experiment will be tagged for base calling (unless you uncheck the box below)</div>'
+            '<div class="alert background-warning"><i class="fas fa-exclamation-circle"></i> - No <em>fastq_pass</em> directory found, this run will be tagged for base calling (unless you uncheck the box below)</div>'
         return
     }
     msgDiv.innerHTML =
-        '<div class="alert background-success"><i class="fas fa-flask"></i> - <em>fast5_pass</em> and <em>fastq_pass</em> found for this experiment</div>'
+        '<div class="alert background-success"><i class="fas fa-flask"></i> - <em>fast5_pass</em> and <em>fastq_pass</em> found for this run</div>'
 
     // make sure the fastq path is shown (could be hidden if user has been toggling)
     fieldset_outputFASTQlocation.style.display = 'block'
@@ -294,20 +289,20 @@ experimentValidator.registerListener(async() => {
     formLabel_basecall.disabled = true
 })
 
-// add listener to the experimentName text box
+// add listener to the runName text box
 expName.addEventListener('change', async() => {
-    experimentValidator.expName = false
+    runValidator.expName = false
     if (expName.value.length === 0) {
         return
     }
 
     // currently Go checks the dir - could do it here instead though
-    experimentValidator.expName = true
+    runValidator.expName = true
 })
 
 // add listener to the output location text box so we can check it exists once a user has entered a location
 expOutputLocation.addEventListener('change', async() => {
-    experimentValidator.expLoc = false
+    runValidator.expLoc = false
     if (expOutputLocation.value.length === 0) {
         return
     }
@@ -317,7 +312,7 @@ expOutputLocation.addEventListener('change', async() => {
         printErrorMsg(e)
         return
     }
-    experimentValidator.expLoc = true
+    runValidator.expLoc = true
 })
 
 // show/hide the fastq_pass path depending on basecall checkbox
@@ -329,9 +324,9 @@ formLabel_basecall.addEventListener('click', async() => {
     }
 })
 
-// add an event listener to the createExperimentForm submit button
-createExperimentForm.addEventListener('submit', async() => {
-    console.log('creating experiment')
+// add an event listener to the addRunForm submit button
+addRunForm.addEventListener('submit', async() => {
+    console.log('creating run')
 
     // create sequence and basecall tags
     var tags = []
@@ -342,14 +337,14 @@ createExperimentForm.addEventListener('submit', async() => {
         tags.push('basecall')
     }
 
-    // create an experiment and add it to the store
+    // create an run and add it to the store
     try {
-        await createExperiment(
+        await addRun(
             expName.value,
             expOutputLocation.value,
             formLabel_outputFAST5location.value,
             formLabel_outputFASTQlocation.value,
-            document.getElementById('formLabel_experimentComment').value,
+            document.getElementById('formLabel_runComment').value,
             tags,
             historicExp
         )
@@ -359,11 +354,11 @@ createExperimentForm.addEventListener('submit', async() => {
     }
 
     // reset the form, refresh the page, close the modal and report success
-    createExperimentForm.reset()
-    createExperimentFormReset()
+    addRunForm.reset()
+    addRunFormReset()
     pageRefresh()
-    createExperimentModal.style.display = 'none'
-    printSuccessMsg('experiment created')
+    addRunModal.style.display = 'none'
+    printSuccessMsg('run created')
 })
 
 ////////////////////////////////////////////////////////////////////
@@ -372,13 +367,13 @@ createExperimentForm.addEventListener('submit', async() => {
 const addSampleForm = document.getElementById('addSampleForm')
 addSampleForm.addEventListener('submit', handleForm)
 
-// updateExperimentDropDown is a function to update the experiments in the sample submission form
-const expDropDown = document.getElementById('formLabel_sampleExperiment')
-const updateExperimentDropDown = async() => {
-    // get the current experiment count so that we can iterate over the experiments
-    var expCount = `${await window.getExperimentCount()}`
+// updateRunDropDown is a function to update the runs in the sample submission form
+const expDropDown = document.getElementById('formLabel_sampleRun')
+const updateRunDropDown = async() => {
+    // get the current run count so that we can iterate over the runs
+    var expCount = `${await window.getRunCount()}`
 
-    // if there are no experiments, leave the default blank option
+    // if there are no runs, leave the default blank option
     if (expCount === '0') {
         return
     }
@@ -388,7 +383,7 @@ const updateExperimentDropDown = async() => {
 
     // add each name to the drop down
     for (var i = 0; i < expCount; i++) {
-        var expName = `${await window.getExperimentName(i)}`
+        var expName = `${await window.getRunName(i)}`
         var newOpt = document.createElement('option')
         newOpt.text = expName
         expDropDown.options.add(newOpt)
@@ -415,7 +410,7 @@ addSampleForm.addEventListener('submit', async() => {
         // TODO: try reading form straight into protobuf and then send a serialised stream to Go
         await createSample(
             elements['formLabel_sampleLabel'].value,
-            elements['formLabel_sampleExperiment'].value,
+            elements['formLabel_sampleRun'].value,
             parseInt(elements['formLabel_sampleBarcode'].value, 10),
             elements['formLabel_sampleComment'].value,
             tags
@@ -430,7 +425,7 @@ addSampleForm.addEventListener('submit', async() => {
         .DataTable()
         .row.add([
             elements['formLabel_sampleLabel'].value,
-            elements['formLabel_sampleExperiment'].value
+            elements['formLabel_sampleRun'].value
         ])
         .draw(true)
 
@@ -513,10 +508,10 @@ const buildTable = async() => {
     for (var i = 0; i < sampleCount; i++) {
         var sampleLabel = `${await window.getSampleLabel(i)}`
             //var sampleCreation = `${await window.getSampleCreation(i)}`
-        var sampleExperiment = `${await window.getSampleExperiment(i)}`
+        var sampleRun = `${await window.getSampleRun(i)}`
 
         // create the table entry
-        table.row.add([sampleLabel, sampleExperiment]).draw(true)
+        table.row.add([sampleLabel, sampleRun]).draw(true)
     }
 }
 
@@ -593,8 +588,8 @@ const pageRefresh = async() => {
         return
     }
 
-    // update the experiment drop down
-    await updateExperimentDropDown()
+    // update the run drop down
+    await updateRunDropDown()
 
     // update the pie chart
     await updatePieChart()
@@ -620,8 +615,8 @@ const fullPageRender = async() => {
         return
     }
 
-    // update the experiment drop down
-    await updateExperimentDropDown()
+    // update the run drop down
+    await updateRunDropDown()
 
     // print the pie chart
     await updatePieChart()

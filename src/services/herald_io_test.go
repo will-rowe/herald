@@ -10,7 +10,7 @@ import (
 func TestProtobufSample(t *testing.T) {
 
 	// set up a basic sample
-	test := InitSample("testSample", "testExperiment", 1)
+	test := InitSample("testSample", "testRun", 1)
 
 	// marshal it
 	data, err := proto.Marshal(test)
@@ -31,11 +31,11 @@ func TestProtobufSample(t *testing.T) {
 	}
 }
 
-// TestProtobufExp tests the marshalling of an experiment
+// TestProtobufExp tests the marshalling of an run
 func TestProtobufExp(t *testing.T) {
 
-	// set up a basic experiment
-	test := InitExperiment("testExperiment", "", "", "")
+	// set up a basic run
+	test := InitRun("testRun", "", "", "")
 
 	// marshal it
 	data, err := proto.Marshal(test)
@@ -44,7 +44,7 @@ func TestProtobufExp(t *testing.T) {
 	}
 
 	// unmarshal it
-	newTest := &Experiment{}
+	newTest := &Run{}
 	err = proto.Unmarshal(data, newTest)
 	if err != nil {
 		t.Fatalf("unmarshaling error: %v", err)
@@ -56,11 +56,11 @@ func TestProtobufExp(t *testing.T) {
 	}
 }
 
-// TestTaggingExp tests the tagging of an experiment
+// TestTaggingExp tests the tagging of an run
 func TestTaggingExp(t *testing.T) {
 
 	// set up a basic sample
-	test := InitExperiment("testExperiment", "", "", "")
+	test := InitRun("testRun", "", "", "")
 
 	// check that tags are required to method call
 	if err := test.Metadata.AddTags(nil); err == nil {

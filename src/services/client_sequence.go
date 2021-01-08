@@ -10,14 +10,14 @@ import (
 )
 
 // SubmitSequencingProcess will send a sequencing request
-func SubmitSequencingProcess(experiment *Experiment, service *Service) error {
+func SubmitSequencingProcess(run *Run, service *Service) error {
 
 	// TODO: check if sequencing has already been done
 	// this is just a temp hack to test out the call back
-	if err := helpers.CheckDirExists(experiment.GetFast5OutputDirectory()); err == nil {
+	if err := helpers.CheckDirExists(run.GetFast5OutputDirectory()); err == nil {
 
 		// mark tag as complete
-		experiment.Metadata.GetTags()[service.name] = true
+		run.Metadata.GetTags()[service.name] = true
 		return fmt.Errorf("dummy message - found fast5 dir")
 	}
 

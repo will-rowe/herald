@@ -7,13 +7,14 @@ import (
 	toposort "github.com/philopon/go-toposort"
 )
 
-// InitRun will init an run struct with the minimum required values
-func InitRun(label, outputDir, fast5Dir, fastqDir string) *Run {
+// InitRun will init a run struct with the minimum required values
+func InitRun(owner *User, label, outputDir, fast5Dir, fastqDir string) *Run {
 
 	// create the run
 	run := &Run{
 		Metadata: &HeraldData{
 			Created:      ptypes.TimestampNow(),
+			Owner:        owner,
 			Label:        label,
 			History:      []*Comment{},
 			Status:       1,
@@ -33,24 +34,24 @@ func InitRun(label, outputDir, fast5Dir, fastqDir string) *Run {
 }
 
 // InitSample will init a sample struct with the minimum required values
-func InitSample(label, expLabel string, barcode int32) *Sample {
+func InitSample(sampleLabel, runLabel string, barcode int32) *Sample {
 
 	// create the sample
 	sample := &Sample{
 		Metadata: &HeraldData{
 			Created:      ptypes.TimestampNow(),
-			Label:        label,
+			Label:        sampleLabel,
 			History:      []*Comment{},
 			Status:       1,
 			Tags:         make(map[string]bool),
 			RequestOrder: []string{},
 		},
-		ParentRun: expLabel,
+		ParentRun: runLabel,
 		Barcode:   barcode,
 	}
 
 	// create the history
-	sample.Metadata.AddComment("run created.")
+	sample.Metadata.AddComment("sample created.")
 
 	// return pointer to the run
 	return sample

@@ -9,6 +9,7 @@ require (
 	github.com/hashicorp/go-version v1.2.0 // indirect
 	github.com/philopon/go-toposort v0.0.0-20170620085441-9be86dbd762f
 	github.com/prologic/bitcask v0.3.6-0.20200218000228-4d811cd2e622
+	github.com/spf13/viper v1.7.1
 	github.com/tcnksm/go-latest v0.0.0-20170313132115-e3007ae9052e // indirect
 	github.com/zserge/lorca v0.1.9
 	gitlab.com/pantomath-io/demo-grpc v0.0.0-20171010145848-6dd27f9b2ed4 // indirect

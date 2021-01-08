@@ -6,6 +6,8 @@ import (
 	"fmt"
 	"sync"
 
+	"github.com/spf13/viper"
+
 	"github.com/will-rowe/herald/src/services"
 	"github.com/will-rowe/herald/src/storage"
 )
@@ -15,6 +17,7 @@ type Herald struct {
 	sync.Mutex                         // to make the UI binding thread safe
 	store             *storage.Storage // the key-value store for the samples
 	announcementQueue *list.List       // a FIFO queue for announcements
+	user              services.User    // the user of the current Herald instance
 
 	// runtime count info for JS:
 	runCount            int // the number of runs currently in the store
@@ -32,6 +35,14 @@ type Herald struct {
 // InitHerald will initiate the Herald instance
 func InitHerald(storeLocation string) (*Herald, error) {
 
+	// load the config
+	viper.SetConfigName("herald.config") // name of config file (without extension)
+	viper.SetConfigType("json")          // REQUIRED if the config file does not have the extension in the name
+	viper.AddConfigPath(storeLocation)   // path to look for the config file in
+	if err := viper.ReadInConfig(); err != nil {
+		return nil, err
+	}
+
 	// load the store
 	var store *storage.Storage
 	var err error
@@ -43,6 +54,7 @@ func InitHerald(storeLocation string) (*Herald, error) {
 	heraldObj := &Herald{
 		store:             store,
 		announcementQueue: list.New(),
+		user:              services.User{Name: "Will Rowe", Email: "blam@blam"},
 		sampleDetails:     make([][]string, 3),
 		storeLocation:     storeLocation,
 	}
@@ -159,12 +171,12 @@ func (herald *Herald) GetRuntimeInfo() error {
 
 // AddRun creates an run record, updates the runtime info and adds the record to storage
 // TODO: this might be bypassed later and instead get JS to encode the form to protobuf directly
-func (herald *Herald) AddRun(expLabel, outDir, fast5Dir, fastqDir, comment string, tags []string, historicExp bool) error {
+func (herald *Herald) AddRun(runLabel, outDir, fast5Dir, fastqDir, comment string, tags []string, historicExp bool) error {
 	herald.Lock()
 	defer herald.Unlock()
 
 	// create the run
-	exp := services.InitRun(expLabel, outDir, fast5Dir, fastqDir)
+	exp := services.InitRun(&herald.user, runLabel, outDir, fast5Dir, fastqDir)
 
 	// add any comment
 	if len(comment) != 0 {
@@ -207,7 +219,7 @@ func (herald *Herald) AddRun(expLabel, outDir, fast5Dir, fastqDir, comment strin
 	}
 
 	// update the runtime info (grow the label slice, update counts, add to announcement queue etc.)
-	herald.runLabels = append(herald.runLabels, expLabel)
+	herald.runLabels = append(herald.runLabels, runLabel)
 	return herald.updateCounts(exp, true)
 }
 

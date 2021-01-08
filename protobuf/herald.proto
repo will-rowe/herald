@@ -24,15 +24,25 @@ enum Status {
 }
 
 /*
+    User is used to identify the owner of HeraldData and is required for announcements
+*/
+message User {
+    google.protobuf.Timestamp created = 1;
+    string name = 2;
+    string email = 3;
+}
+
+/*
     HeraldData is the base type, used by both Run and Sample
 */
 message HeraldData {
     google.protobuf.Timestamp created = 1;
-    string label = 2;                            // the run or sample name
-    repeated Comment history = 3;                // describes the history of the run
-    Status status = 4;                           // describes if untagged/tagged/announced
-    map<string, bool> tags = 5;                  // tagged services and their complete status (true=complete, false=incomplete)
-    repeated string requestOrder = 6;            // the order to send requests to the tagged services
+    User owner = 2;                              // the owner of this data
+    string label = 3;                            // the run or sample name
+    repeated Comment history = 4;                // describes the history of the run
+    Status status = 5;                           // describes if untagged/tagged/announced
+    map<string, bool> tags = 6;                  // tagged services and their complete status (true=complete, false=incomplete)
+    repeated string requestOrder = 7;            // the order to send requests to the tagged services
 }
 
 /*
@@ -40,9 +50,9 @@ message HeraldData {
 */
 message Run {
     HeraldData metadata = 1;                    // the base info
-    string outputDirectory = 2;                // where the run is stored
-    string fast5OutputDirectory = 3;          // where the run fast5 data is stored
-    string fastqOutputDirectory = 4;          // where the run fastq data is stored
+    string outputDirectory = 2;                 // where the run is stored
+    string fast5OutputDirectory = 3;            // where the run fast5 data is stored
+    string fastqOutputDirectory = 4;            // where the run fastq data is stored
 
 }
 

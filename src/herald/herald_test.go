@@ -1,7 +1,6 @@
 package herald
 
 import (
-	"os"
 	"testing"
 )
 
@@ -90,5 +89,5 @@ func TestHerald(t *testing.T) {
 	}
 
 	// clean up
-	os.RemoveAll("./tmp/")
+	//os.RemoveAll("./tmp/")
 }

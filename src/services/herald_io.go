@@ -8,13 +8,12 @@ import (
 )
 
 // InitRun will init a run struct with the minimum required values
-func InitRun(owner *User, label, outputDir, fast5Dir, fastqDir string) *Run {
+func InitRun(label, outputDir, fast5Dir, fastqDir string) *Run {
 
 	// create the run
 	run := &Run{
 		Metadata: &HeraldData{
 			Created:      ptypes.TimestampNow(),
-			Owner:        owner,
 			Label:        label,
 			History:      []*Comment{},
 			Status:       1,

@@ -1,23 +1,9 @@
 package herald
 
 import (
+	"os"
 	"testing"
 )
-
-// TestHeraldInit
-func TestHeraldInit(t *testing.T) {
-
-	// setup the storage
-	tmp, err := InitHerald("./tmp")
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	// close the storage
-	if err := tmp.Destroy(); err != nil {
-		t.Fatal(err)
-	}
-}
 
 // TestHerald
 func TestHerald(t *testing.T) {
@@ -28,7 +14,7 @@ func TestHerald(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	// create and add an run
+	// create and add a run
 	testExpName := "test run"
 	if err := tmp.AddRun(testExpName, "/tmp", "/tmp/fast5_pass", "/tmp/fastq_pass", "", []string{"sequence", "basecall"}, false); err != nil {
 		t.Fatal(err)
@@ -89,5 +75,5 @@ func TestHerald(t *testing.T) {
 	}
 
 	// clean up
-	//os.RemoveAll("./tmp/")
+	os.RemoveAll("./tmp/")
 }

@@ -7,6 +7,7 @@ require (
 	github.com/google/go-github v17.0.0+incompatible
 	github.com/google/go-querystring v1.0.0 // indirect
 	github.com/hashicorp/go-version v1.2.0 // indirect
+	github.com/mitchellh/go-homedir v1.1.0
 	github.com/philopon/go-toposort v0.0.0-20170620085441-9be86dbd762f
 	github.com/prologic/bitcask v0.3.6-0.20200218000228-4d811cd2e622
 	github.com/spf13/viper v1.7.1

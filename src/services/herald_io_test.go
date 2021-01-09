@@ -1,12 +1,32 @@
 package services
 
 import (
+	"os"
 	"testing"
 
 	"github.com/golang/protobuf/proto"
 )
 
-var user = User{Name: "Tony Stark", Email: "iam@ironman.com"}
+// TestConfig tests the loading of a config from file to memory
+func TestConfig(t *testing.T) {
+
+	// load a copy of the config
+	c, err := InitConfig(".")
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	// check the config
+	if c.GetFileformat() != DefaultConfigType {
+		t.Fatal("config not inited with default value")
+	}
+
+	// delete the config we made
+	if err := os.Remove(c.GetFilepath()); err != nil {
+		t.Fatal(err)
+	}
+
+}
 
 // TestProtobufSample tests the marshalling of a sample
 func TestProtobufSample(t *testing.T) {
@@ -37,7 +57,7 @@ func TestProtobufSample(t *testing.T) {
 func TestProtobufExp(t *testing.T) {
 
 	// set up a basic run
-	test := InitRun(&user, "testRun", "", "", "")
+	test := InitRun("testRun", "", "", "")
 
 	// marshal it
 	data, err := proto.Marshal(test)
@@ -62,7 +82,7 @@ func TestProtobufExp(t *testing.T) {
 func TestTaggingExp(t *testing.T) {
 
 	// set up a basic sample
-	test := InitRun(&user, "testRun", "", "", "")
+	test := InitRun("testRun", "", "", "")
 
 	// check that tags are required to method call
 	if err := test.Metadata.AddTags(nil); err == nil {

@@ -33,11 +33,21 @@ message User {
 }
 
 /*
+    Config is used to describe a Herald instance
+*/
+message Config {
+    google.protobuf.Timestamp created = 1;
+    string filepath = 2;                        // filepath to config
+    string fileformat = 3;                      // the fileformat of the config on disk
+    string version = 4;                         // version of Herald used   
+    User user = 5;                              // user details
+}
+
+/*
     HeraldData is the base type, used by both Run and Sample
 */
 message HeraldData {
     google.protobuf.Timestamp created = 1;
-    User owner = 2;                              // the owner of this data
     string label = 3;                            // the run or sample name
     repeated Comment history = 4;                // describes the history of the run
     Status status = 5;                           // describes if untagged/tagged/announced

@@ -6,8 +6,6 @@ import (
 	"fmt"
 	"sync"
 
-	"github.com/spf13/viper"
-
 	"github.com/will-rowe/herald/src/services"
 	"github.com/will-rowe/herald/src/storage"
 )
@@ -15,9 +13,9 @@ import (
 // Herald is the struct for holding runtime data
 type Herald struct {
 	sync.Mutex                         // to make the UI binding thread safe
+	config            *services.Config // a copy of the config being used by the current Herald instance
 	store             *storage.Storage // the key-value store for the samples
 	announcementQueue *list.List       // a FIFO queue for announcements
-	user              services.User    // the user of the current Herald instance
 
 	// runtime count info for JS:
 	runCount            int // the number of runs currently in the store
@@ -35,26 +33,23 @@ type Herald struct {
 // InitHerald will initiate the Herald instance
 func InitHerald(storeLocation string) (*Herald, error) {
 
-	// load the config
-	viper.SetConfigName("herald.config") // name of config file (without extension)
-	viper.SetConfigType("json")          // REQUIRED if the config file does not have the extension in the name
-	viper.AddConfigPath(storeLocation)   // path to look for the config file in
-	if err := viper.ReadInConfig(); err != nil {
+	// load a copy of the config
+	config, err := services.InitConfig(storeLocation)
+	if err != nil {
 		return nil, err
 	}
 
 	// load the store
 	var store *storage.Storage
-	var err error
 	if store, err = storage.OpenStorage(storeLocation); err != nil {
 		return nil, err
 	}
 
 	// get a new instance
 	heraldObj := &Herald{
+		config:            config,
 		store:             store,
 		announcementQueue: list.New(),
-		user:              services.User{Name: "Will Rowe", Email: "blam@blam"},
 		sampleDetails:     make([][]string, 3),
 		storeLocation:     storeLocation,
 	}
@@ -110,28 +105,28 @@ func (herald *Herald) GetRuntimeInfo() error {
 	herald.runLabels = make([]string, baselineExpCount)
 
 	// range over the runs in storage
-	expIterator := 0
+	runIterator := 0
 	for label := range herald.store.GetRunLabels() {
 
 		// get the full run from storage
-		exp, err := herald.store.GetRun(string(label))
+		run, err := herald.store.GetRun(string(label))
 		if err != nil {
 			return err
 		}
 
 		// update the relevant counts
-		if err := herald.updateCounts(exp, true); err != nil {
+		if err := herald.updateCounts(run, true); err != nil {
 			return err
 		}
 
 		// add the run label to the holder (for display in app)
-		herald.runLabels[expIterator] = exp.Metadata.GetLabel()
+		herald.runLabels[runIterator] = run.Metadata.GetLabel()
 
 		// increment the iterator
-		expIterator++
+		runIterator++
 	}
-	if (baselineExpCount != expIterator) || (baselineExpCount != herald.runCount) {
-		return fmt.Errorf("run mistmatch between db and in-memory store: %d vs %d", baselineExpCount, expIterator)
+	if (baselineExpCount != runIterator) || (baselineExpCount != herald.runCount) {
+		return fmt.Errorf("run mistmatch between db and in-memory store: %d vs %d", baselineExpCount, runIterator)
 	}
 
 	// setup the sample details holder
@@ -176,7 +171,7 @@ func (herald *Herald) AddRun(runLabel, outDir, fast5Dir, fastqDir, comment strin
 	defer herald.Unlock()
 
 	// create the run
-	exp := services.InitRun(&herald.user, runLabel, outDir, fast5Dir, fastqDir)
+	exp := services.InitRun(runLabel, outDir, fast5Dir, fastqDir)
 
 	// add any comment
 	if len(comment) != 0 {

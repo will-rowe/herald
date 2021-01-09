@@ -49,7 +49,7 @@
         </div>
     </div>
 
-    <!--CREATE EXPERIMENT MODAL-->
+    <!--ADD RUN MODAL-->
     <div id="addRunModal" class="modal">
         <div class="modal-content">
             <span class="modal-close">&times;</span>
@@ -158,6 +158,47 @@
         </div>
     </div>
 
+    <!--EDIT CONFIG MODAL-->
+    <div id="editConfigModal" class="modal">
+        <div class="modal-content">
+            <span class="modal-close">&times;</span>
+            <h1>Edit config</h1>
+            <div class="clearfix"></div>
+            <hr class="m-0 mb-2" />
+            <form id="editConfigForm">
+                <fieldset>
+                    <!--input-->
+                    <label class="formLabel" for="formLabel_userName">User name
+                        <i class="far fa-question-circle"><span class="tooltiptext">name of user</span></i>
+                    </label>
+                    <input type="text" placeholder="" id="formLabel_userName" required>
+                    <label class="formLabel" for="formLabel_emailAddress">Email address
+                        <i class="far fa-question-circle"><span class="tooltiptext">email address for
+                                notifications</span></i>
+                    </label>
+                    <input type="email" placeholder="" id="formLabel_emailAddress" required>
+                    <!--submit button-->
+                    <div class="clearfix"></div>
+                    <hr class="m-0 mb-2" />
+                    <input class="button" type="submit" value="Save">
+                </fieldset>
+            </form>
+        </div>
+    </div>
+
+    <!--VIEW CONFIG MODAL-->
+    <div id="viewConfigModal" class="modal">
+        <div class="modal-content">
+            <span class="modal-close">&times;</span>
+            <h1>Config</h1>
+            <div class="clearfix"></div>
+            <hr class="m-0 mb-2" />
+            <pre id=viewConfigModalContent></pre>
+            <div class="clearfix"></div>
+            <hr class="m-0 mb-2" />
+        </div>
+    </div>
+
     <!--NAVBAR-->
     <div class="navbar">
         <div class="row">
@@ -208,7 +249,7 @@
             <div class="row grid-responsive">
                 <div class="column page-heading">
                     <div class="large-card">
-                        <h1>Welcome to Herald</h1>
+                        <h1>Welcome, <span> <a id="welcome_username"></a></span></h1>
                         <p class="text-large">Get started by adding a run and then adding some samples to it.</p>
                         <button class="button" id="addRunModalOpen">add run</button>
                         <button class="button" id="addSampleModalOpen" disabled>add sample</button>
@@ -393,9 +434,11 @@
                 <div class="column ">
                     <div class="card">
                         <div class="card-title">
-                            <h3>Database settings</h3>
+                            <h3>Configure Herald</h3>
                         </div>
                         <div class="card-block">
+                            <a class="button" id="editConfigModalOpen">edit config</a>
+                            <a class="button" id="viewConfigModalOpen">view config</a>
                             <a class="button" id="wipeDatabase">wipe database</a>
                         </div>
                     </div>
@@ -403,7 +446,7 @@
             </div>
 
             <!-- end of main section -->
-            <p class="credit">Built by <a href="https://www.willrowe.net">Will Rowe</a> as part of the <a href="https://artic.network/">ARTIC Network</a> project<br \> &copy 2021</p>
+            <p class="credit">Built by <a href="https://github.com/will-rowe">Will Rowe</a> as part of the <a href="https://artic.network/">ARTIC Network</a> project<br \> &copy 2021</p>
         </section>
     </div>
 

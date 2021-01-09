@@ -3,6 +3,7 @@ module github.com/will-rowe/herald
 go 1.14
 
 require (
+	github.com/gogo/protobuf v1.2.1
 	github.com/golang/protobuf v1.4.1
 	github.com/google/go-github v17.0.0+incompatible
 	github.com/google/go-querystring v1.0.0 // indirect

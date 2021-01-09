@@ -79,6 +79,22 @@ func (herald *Herald) WipeStorage() error {
 	return nil
 }
 
+// EditConfig will edit the config file with the provided data.
+func (herald *Herald) EditConfig(userName, emailAddress string) error {
+	herald.Lock()
+	defer herald.Unlock()
+
+	// TODO:
+	// this is a bit hacky, I'd like to add some config methods
+	// and validation of inputs etc. but for now:
+	// update the in-memory config
+	herald.config.User.Name = userName
+	herald.config.User.Email = emailAddress
+
+	// write the in-memory config back to disk
+	return herald.config.Write()
+}
+
 // GetRuntimeInfo makes a pass of the run and sample stores before populating the Herald instance with data:
 // - how many samples are in the storage
 // - notes any samples with tags

@@ -1,5 +1,12 @@
 package herald
 
+// GetUser returns the name of the user from the config
+func (herald *Herald) GetUser() string {
+	herald.Lock()
+	defer herald.Unlock()
+	return herald.config.GetUser().GetName()
+}
+
 // GetDbPath returns the location of the storage on disk
 func (herald *Herald) GetDbPath() string {
 	herald.Lock()
@@ -40,6 +47,15 @@ func (herald *Herald) GetAnnouncementCount() int {
 	herald.Lock()
 	defer herald.Unlock()
 	return herald.announcementCount
+}
+
+// PrintConfigToJSONstring prints the current in-memory config to a JSON string
+func (herald *Herald) PrintConfigToJSONstring() string {
+	herald.Lock()
+	defer herald.Unlock()
+
+	// TODO: check for error
+	return herald.config.GetJSONDump()
 }
 
 // PrintSampleToJSONstring collects a sample from the database and returns a string of the sample protobuf data in JSON

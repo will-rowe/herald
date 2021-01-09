@@ -1,12 +1,14 @@
 package services
 
 import (
+	"bytes"
 	"encoding/json"
 	"fmt"
 	"os"
 	"path/filepath"
 	"strings"
 
+	"github.com/gogo/protobuf/jsonpb"
 	homedir "github.com/mitchellh/go-homedir"
 	"github.com/spf13/viper"
 
@@ -34,23 +36,38 @@ var (
 	DefaultConfig = &Config{
 		Filepath:   DefaultConfigPath,
 		Fileformat: DefaultConfigType,
-		User:       &User{Name: "will rowe"},
+		User:       &User{Name: "anonymous"},
 	}
 )
 
 // Write will write a Config to disk.
-func (x *Config) Write() error {
-	if len(x.GetFilepath()) == 0 {
+func (config *Config) Write() error {
+	if len(config.GetFilepath()) == 0 {
 		return ErrInvalidPath
 	}
-	fh, err := os.Create(x.GetFilepath())
+	fh, err := os.Create(config.GetFilepath())
 	defer fh.Close()
-	d, err := json.MarshalIndent(x, "", "\t")
+	d, err := json.MarshalIndent(config, "", "\t")
 	if err != nil {
 		return err
 	}
 	_, err = fh.Write(d)
 	return err
+}
+
+// GetJSONDump returns a string dump of the config in JSON
+func (config *Config) GetJSONDump() string {
+
+	// convert to JSON
+	buf := &bytes.Buffer{}
+	jsonMarshaller := jsonpb.Marshaler{
+		EnumsAsInts:  false, // Whether to render enum values as integers, as opposed to string values.
+		EmitDefaults: false, // Whether to render fields with zero values
+		Indent:       "\t",  // A string to indent each level by
+		OrigName:     false, // Whether to use the original (.proto) name for fields
+	}
+	jsonMarshaller.Marshal(buf, config)
+	return string(buf.Bytes())
 }
 
 // InitConfig reads in the config file

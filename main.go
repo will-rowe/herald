@@ -65,6 +65,7 @@ func main() {
 	ui.Bind("deleteSample", heraldObj.DeleteSample)
 	ui.Bind("announceSamples", heraldObj.AnnounceSamples)
 	ui.Bind("wipeStorage", heraldObj.WipeStorage)
+	ui.Bind("editConfig", heraldObj.EditConfig)
 	// counters
 	ui.Bind("getRunCount", heraldObj.GetRunCount)
 	ui.Bind("getSampleCount", heraldObj.GetSampleCount)
@@ -77,6 +78,7 @@ func main() {
 	ui.Bind("getSampleCreation", heraldObj.GetSampleCreation)
 	ui.Bind("getSampleRun", heraldObj.GetSampleRun)
 	ui.Bind("printSampleToJSONstring", heraldObj.PrintSampleToJSONstring)
+	ui.Bind("printConfigToJSONstring", heraldObj.PrintConfigToJSONstring)
 
 	// Bind helper functions to the UI
 	ui.Bind("checkDirExists", helpers.CheckDirExists)
@@ -91,6 +93,7 @@ func main() {
 		}
 
 		// print the db location and number of runs and samples in storage etc.
+		ui.Eval(fmt.Sprintf(`document.getElementById('welcome_username').innerHTML = '%v'`, heraldObj.GetUser()))
 		ui.Eval(fmt.Sprintf(`document.getElementById('staging_dbLocation').innerHTML = 'filepath: %v'`, heraldObj.GetDbPath()))
 		ui.Eval(fmt.Sprintf(`document.getElementById('staging_runCount').innerText = '%d'`, heraldObj.GetRunCount()))
 		ui.Eval(fmt.Sprintf(`document.getElementById('staging_sampleCount').innerText = '%d'`, heraldObj.GetSampleCount()))

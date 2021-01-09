@@ -162,11 +162,37 @@ addSampleModalOpen.addEventListener('click', function() {
     addSampleModal.style.display = 'block'
 })
 
+// editConfigModal
+// open on button click
+const editConfigModal = document.getElementById('editConfigModal')
+const editConfigModalOpen = document.getElementById('editConfigModalOpen')
+editConfigModalOpen.addEventListener('click', function() {
+    editConfigModal.style.display = 'block'
+})
+
+// getConfigJSONdump returns a stringified dump of the current config
+const getConfigJSONdump = async function() {
+    var configJSONdump = `${await window.printConfigToJSONstring()}`
+    return configJSONdump
+}
+
+// viewConfigModal
+const viewConfigModal = document.getElementById('viewConfigModal')
+const viewConfigModalOpen = document.getElementById('viewConfigModalOpen')
+const viewConfigModalContent = document.getElementById('viewConfigModalContent')
+viewConfigModalOpen.addEventListener('click', function() {
+    getConfigJSONdump().then(configDump => {
+        document.getElementById('viewConfigModalContent').innerHTML =
+            '<pre>' + configDump + '</pre>'
+        viewConfigModal.style.display = 'block'
+    })
+})
+
 // sampleDetailsModal
 const sampleDetailsModal = document.getElementById('sampleDetailsModal')
 
 ////////////////////////////////////////////////////////////////////
-// CREATE EXPERIMENT FORM
+// ADD RUN FORM
 // get the form and prevent default action
 const addRunForm = document.getElementById('addRunForm')
 addRunForm.addEventListener('submit', handleForm)
@@ -337,7 +363,7 @@ addRunForm.addEventListener('submit', async() => {
         tags.push('basecall')
     }
 
-    // create an run and add it to the store
+    // create a run and add it to the store
     try {
         await addRun(
             expName.value,
@@ -434,6 +460,35 @@ addSampleForm.addEventListener('submit', async() => {
     pageRefresh()
     addSampleModal.style.display = 'none'
     printSuccessMsg('sample added')
+})
+
+////////////////////////////////////////////////////////////////////
+// EDIT CONFIG FORM
+// get the form
+const configForm = document.getElementById('editConfigForm')
+configForm.addEventListener('submit', handleForm)
+
+// add an event listener to the editConfigForm submit button
+configForm.addEventListener('submit', async() => {
+    console.log('editing config')
+    var elements = configForm.elements
+
+    // edit the config via Go
+    try {
+        await editConfig(
+            elements['formLabel_userName'].value,
+            elements['formLabel_emailAddress'].value
+        )
+    } catch (e) {
+        printErrorMsg(e)
+        return
+    }
+
+    // reset the form, refresh the page and report success
+    configForm.reset()
+    pageRefresh()
+    editConfigModal.style.display = 'none'
+    printSuccessMsg('config updated')
 })
 
 ////////////////////////////////////////////////////////////////////

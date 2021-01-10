@@ -220,15 +220,18 @@ func (herald *Herald) AddRun(runLabel, outDir, fast5Dir, fastqDir, comment strin
 		}
 
 		// add the tags for sequencing and basecalling and mark them complete
-		if err := newRun.Metadata.AddTags([]string{"sequence", "basecall"}); err != nil {
-			return err
-		}
-		if err := newRun.Metadata.SetTag("sequence", true); err != nil {
-			return err
-		}
-		if err := newRun.Metadata.SetTag("basecall", true); err != nil {
-			return err
-		}
+		// TODO: this is a hack, make it smarter
+		/*
+			if err := newRun.Metadata.AddTags([]string{"sequence", "basecall"}); err != nil {
+				return err
+			}
+			if err := newRun.Metadata.SetTag("sequence", true); err != nil {
+				return err
+			}
+			if err := newRun.Metadata.SetTag("basecall", true); err != nil {
+				return err
+			}
+		*/
 	}
 
 	// check and update the tag status (all tags might now be set to complete)

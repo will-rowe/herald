@@ -301,7 +301,7 @@ type HeraldData struct {
 	Created      *timestamp.Timestamp `protobuf:"bytes,1,opt,name=created,proto3" json:"created,omitempty"`
 	Label        string               `protobuf:"bytes,3,opt,name=label,proto3" json:"label,omitempty"`                                                                                        // the run or sample name
 	History      []*Comment           `protobuf:"bytes,4,rep,name=history,proto3" json:"history,omitempty"`                                                                                    // describes the history of the run
-	Status       Status               `protobuf:"varint,5,opt,name=status,proto3,enum=services.Status" json:"status,omitempty"`                                                                // describes if untagged/tagged/announced
+	Status       Status               `protobuf:"varint,5,opt,name=status,proto3,enum=services.Status" json:"status,omitempty"`                                                                // describes if untagged, tagged with complete/incomplete services and if announced
 	Tags         map[string]bool      `protobuf:"bytes,6,rep,name=tags,proto3" json:"tags,omitempty" protobuf_key:"bytes,1,opt,name=key,proto3" protobuf_val:"varint,2,opt,name=value,proto3"` // tagged services and their complete status (true=complete, false=incomplete)
 	RequestOrder []string             `protobuf:"bytes,7,rep,name=requestOrder,proto3" json:"requestOrder,omitempty"`                                                                          // the order to send requests to the tagged services
 }

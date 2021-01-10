@@ -3,6 +3,7 @@ module github.com/will-rowe/herald
 go 1.14
 
 require (
+	github.com/aws/aws-sdk-go v1.36.23 // indirect
 	github.com/gogo/protobuf v1.2.1
 	github.com/golang/protobuf v1.4.1
 	github.com/google/go-github v17.0.0+incompatible
@@ -15,7 +16,7 @@ require (
 	github.com/tcnksm/go-latest v0.0.0-20170313132115-e3007ae9052e // indirect
 	github.com/zserge/lorca v0.1.9
 	gitlab.com/pantomath-io/demo-grpc v0.0.0-20171010145848-6dd27f9b2ed4 // indirect
-	golang.org/x/net v0.0.0-20200222125558-5a598a2470a0
+	golang.org/x/net v0.0.0-20201110031124-69a78807bb2b
 	golang.org/x/tools/gopls v0.3.3 // indirect
 	google.golang.org/grpc v1.27.1
 	google.golang.org/protobuf v1.25.0

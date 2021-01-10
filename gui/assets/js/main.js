@@ -216,6 +216,7 @@ var formLabel_outputFASTQlocation = document.getElementById(
 var formLabel_sequence = document.getElementById('formLabel_sequence')
 var formLabel_basecall = document.getElementById('formLabel_basecall')
 var formLabel_basecallLabel = document.getElementById('formLabel_basecallLabel')
+var formLabel_upload = document.getElementById('formLabel_upload')
 var msgDiv = document.getElementById('addRunValidationMessage')
 
 // reset func to clear the form changes
@@ -227,6 +228,7 @@ function addRunFormReset() {
     formLabel_outputFASTQlocation.value = ''
     formLabel_sequence.checked = true
     formLabel_basecall.checked = true
+    formLabel_upload.checked = false
     formLabel_basecallLabel.style.color = '#d3d3d3'
     formLabel_basecall.disabled = true
     msgDiv.innerHTML = ''
@@ -391,6 +393,9 @@ addRunForm.addEventListener('submit', async() => {
     }
     if (formLabel_basecall.checked === true) {
         tags.push('basecall')
+    }
+    if (formLabel_upload.checked === true) {
+        tags.push('upload')
     }
 
     // create a run and add it to the store

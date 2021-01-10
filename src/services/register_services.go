@@ -31,9 +31,8 @@ func init() {
 	//
 	registerService("sequence", nil, 7777, SubmitSequencingProcess)
 	registerService("basecall", nil, 7778, SubmitSequencingProcess)
-	registerService("pipelineA", []string{"sequence", "basecall"}, 7779, SubmitSequencingProcess)
-	//
-	//
+	registerService("upload", nil, 7779, SubmitUpload)
+	registerService("pipelineA", []string{"sequence", "basecall", "upload"}, 7780, SubmitSequencingProcess)
 	//
 }
 

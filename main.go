@@ -24,12 +24,12 @@ var dbLocation string
 
 // getTagsHTML returns the HTML needed to display all available services for sample tagging
 func getTagsHTML() string {
-	ServiceTagsHTML := "<label>Tags</label>"
+	ServiceTagsHTML := "<label>Service requests</label>"
 	for serviceName := range services.ServiceRegister {
 		if serviceName == "sequence" || serviceName == "basecall" {
 			continue
 		}
-		ServiceTagsHTML += fmt.Sprintf("<input type=\"checkbox\" id=\"formLabel_%v\" value=\"%v\"><label class=\"label-inline\" for=\"formLabel_%v\">%v</label><div class=\"clearfix\"></div>", serviceName, serviceName, serviceName, serviceName)
+		ServiceTagsHTML += fmt.Sprintf("<input type=\"checkbox\" id=\"formLabel_%v\" value=\"%v\"><label class=\"label-inline\" for=\"formLabel_%v\"> - %v</label><div class=\"clearfix\"></div>", serviceName, serviceName, serviceName, serviceName)
 	}
 	return ServiceTagsHTML
 }

@@ -51,6 +51,11 @@ func (herald *Herald) AnnounceSamples() error {
 			v.Metadata.SetStatus(services.Status_announced)
 
 			// dequeue the sample
+			v.Metadata.AddComment("run announced.")
+			v.Metadata.SetStatus(services.Status_announced)
+			if err := herald.updateRecord(v); err != nil {
+				return err
+			}
 			herald.announcementQueue.Remove(request)
 		}
 	}

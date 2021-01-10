@@ -1,0 +1,21 @@
+syntax = "proto3";
+package services;
+
+option go_package = ".;services";
+
+//
+message UploadSubmission {
+    string val1 = 1;
+}
+
+//
+message UploadSummary {
+    string val2 = 1;
+}
+
+// Upload service
+service Upload {
+
+    // RunUpload is an exposed function for the Upload service
+    rpc RunUpload(UploadSubmission) returns (UploadSummary) {}
+}

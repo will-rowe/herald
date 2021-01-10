@@ -619,12 +619,17 @@ function printTimeStamps() {
 // set up the empty pie chart
 var pieCanvas = document.getElementById('pieChart')
 var pieData = {
-    labels: ['Announcements Queued', 'Tagged Samples', 'Untagged Samples'],
+    labels: [
+        'Announcements Queued',
+        'Announcements Made',
+        'Completed (Samples + Runs)',
+        'Untagged (Samples + Runs)'
+    ],
     datasets: [{
         label: 'entry point',
-        data: [0, 0, 0],
-        backgroundColor: ['#35cebe', '#a0a0a0', '#dfdfdf'],
-        hoverBackgroundColor: ['#25beae', '#999999', '#cccccc']
+        data: [0, 0, 0, 0],
+        backgroundColor: ['#35cebe', '#a0a0a0', '#dfdfdf', '#333'],
+        hoverBackgroundColor: ['#25beae', '#999999', '#cccccc', '#333']
     }]
 }
 var pieOptions = {
@@ -641,14 +646,23 @@ var myPieChart = new Chart(pieCanvas, {
 // updatePieChart will refresh the pie chart with current data
 const updatePieChart = async() => {
     // get counts
-    var untaggedRecordCount = `${await window.getUntaggedCount('samples')}`
-    var taggedRecordCount = `${await window.getTaggedIncompleteCount('samples')}`
-    var announcementCount = `${await window.getAnnouncementQueueSize()}`
+    var announcementsQueued = `${await window.getAnnouncementQueueSize()}`
+    var announcementsMade = `${await window.getAnnouncementCount()}`
+    var taggedCompleteSampleCount = `${await window.getTaggedCompleteCount(
+    'samples'
+  )}`
+    var taggedCompleteRunCount = `${await window.getTaggedCompleteCount('runs')}`
+    var untaggedSampleCount = `${await window.getUntaggedCount('samples')}`
+    var untaggedRunCount = `${await window.getUntaggedCount('runs')}`
 
     // update the chart data
-    myPieChart.data.datasets[0].data[0] = announcementCount
-    myPieChart.data.datasets[0].data[1] = taggedRecordCount
-    myPieChart.data.datasets[0].data[2] = untaggedRecordCount
+    myPieChart.data.datasets[0].data[0] = announcementsQueued
+    myPieChart.data.datasets[0].data[1] = announcementsMade
+    myPieChart.data.datasets[0].data[2] =
+        parseInt(taggedCompleteSampleCount, 10) +
+        parseInt(taggedCompleteRunCount, 10)
+    myPieChart.data.datasets[0].data[3] =
+        parseInt(untaggedSampleCount, 10) + parseInt(untaggedRunCount, 10)
 
     // update the chart
     myPieChart.update()

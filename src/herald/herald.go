@@ -184,56 +184,64 @@ func (herald *Herald) GetRuntimeInfo() error {
 
 // AddRun creates an run record, updates the runtime info and adds the record to storage
 // TODO: this might be bypassed later and instead get JS to encode the form to protobuf directly
-func (herald *Herald) AddRun(runLabel, outDir, fast5Dir, fastqDir, comment string, tags []string, historicExp bool) error {
+func (herald *Herald) AddRun(runLabel, outDir, fast5Dir, fastqDir, comment string, tags []string, existingRun bool) error {
 	herald.Lock()
 	defer herald.Unlock()
 
 	// create the run
-	exp := services.InitRun(runLabel, outDir, fast5Dir, fastqDir)
+	newRun := services.InitRun(runLabel, outDir, fast5Dir, fastqDir)
 
 	// add any comment
 	if len(comment) != 0 {
-		if err := exp.Metadata.AddComment(comment); err != nil {
+		if err := newRun.Metadata.AddComment(comment); err != nil {
 			return err
 		}
 	}
 
 	// tag the run and update its status
 	if len(tags) != 0 {
-		if err := exp.Metadata.AddTags(tags); err != nil {
+		if err := newRun.Metadata.AddTags(tags); err != nil {
 			return err
 		}
 	}
 
-	// if it's an historic sample, update the sequence (and basecall) tags
-	if historicExp {
+	// if it's an existing run, sequencing and basecalling have been done so mark these as completed tags
+	//
+	// NOTE: this does not take into account existing runs that have not been basecalled or that request
+	// re-basecalling but this is not an option yet
+	//
+	if existingRun {
 
-		// update the sequencing service tag to complete
-		if err := exp.Metadata.SetTag("sequence", true); err != nil {
+		// add a comment to the history
+		if err := newRun.Metadata.AddComment("existing sample - fast5 and fastq found"); err != nil {
 			return err
 		}
 
-		// update basecall if necessary
-		if _, ok := exp.GetMetadata().GetTags()["basecall"]; ok {
-			if err := exp.Metadata.SetTag("basecall", true); err != nil {
-				return err
-			}
-		}
-
-		// check and update the status (all tags might now be set to complete)
-		if err := exp.Metadata.CheckStatus(); err != nil {
+		// add the tags for sequencing and basecalling and mark them complete
+		if err := newRun.Metadata.AddTags([]string{"sequence", "basecall"}); err != nil {
 			return err
 		}
+		if err := newRun.Metadata.SetTag("sequence", true); err != nil {
+			return err
+		}
+		if err := newRun.Metadata.SetTag("basecall", true); err != nil {
+			return err
+		}
+	}
+
+	// check and update the tag status (all tags might now be set to complete)
+	if err := newRun.Metadata.CheckStatus(); err != nil {
+		return err
 	}
 
 	// add the run to the store
-	if err := herald.store.AddRun(exp); err != nil {
+	if err := herald.store.AddRun(newRun); err != nil {
 		return err
 	}
 
 	// update the runtime info (grow the label slice, update counts, add to announcement queue etc.)
 	herald.runLabels = append(herald.runLabels, runLabel)
-	return herald.updateCounts(exp, true)
+	return herald.updateCounts(newRun, true)
 }
 
 // CreateSample creates a sample record, updates the runtime info and adds the record to storage

@@ -60,14 +60,13 @@
                 <fieldset>
                     <!--label-->
                     <label class="formLabel" for="formLabel_runName">Run name
-                        <i class="far fa-question-circle"><span class="tooltiptext">the name for the
-                                run</span></i>
+                        <i class="far fa-question-circle"><span class="tooltiptext">the name of the run</span></i>
                     </label>
-                    <input type="text" placeholder="a unique run name" id="formLabel_runName" required>
+                    <input type="text" placeholder="run_XXX" id="formLabel_runName" required>
                     <!--output location-->
                     <label class="formLabel" for="formLabel_outputLocation">Run location
                         <i class="far fa-question-circle"><span class="tooltiptext">directory where run data is
-                                stored</span></i>
+                                stored (don't include the run folder in this path)</span></i>
                     </label>
                     <input type="text" placeholder="/Users/me/data" id="formLabel_outputLocation" required>
                     <!--paths-->
@@ -99,7 +98,7 @@
                     <!--submit button-->
                     <div class="clearfix"></div>
                     <hr class="m-0 mb-2" />
-                    <input class="button" type="submit" value="Add run">
+                    <input id="addRunButton" class="button" type="submit" value="Add run" disabled>
                 </fieldset>
             </form>
         </div>
@@ -446,7 +445,7 @@
             </div>
 
             <!-- end of main section -->
-            <p class="credit">Built by <a href="https://github.com/will-rowe">Will Rowe</a> as part of the <a href="https://artic.network/">ARTIC Network</a> project<br \> &copy 2021</p>
+            <p class="credit">Built by <a href="https://github.com/will-rowe" target="_blank">Will Rowe</a> for the <a href="https://artic.network/" target="_blank">ARTIC Network</a>.<br \> &copy 2021</p>
         </section>
     </div>
 

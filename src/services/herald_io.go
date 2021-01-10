@@ -69,7 +69,7 @@ func (heraldData *HeraldData) AddComment(text string) error {
 	return nil
 }
 
-// AddTags is a method to tag an exeriment or sample with a service
+// AddTags is a method to tag a run or sample with a service
 func (heraldData *HeraldData) AddTags(tags []string) error {
 	if len(tags) == 0 {
 		return fmt.Errorf("no tags provided")

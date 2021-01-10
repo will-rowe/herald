@@ -131,9 +131,10 @@ announceSamplesButton.addEventListener('click', async() => {
 
 // add an event listener to wipeDatabase button
 wipeDatabase.addEventListener('click', async() => {
-    console.log('wiping storage')
+    console.log('wiping database')
 
-    // TODO: add a confirm prompt
+    // TODO: add a decent confirm prompt
+    confirm('confirm database wipe')
 
     // call the Go wipeStorage method
     try {
@@ -196,12 +197,12 @@ const sampleDetailsModal = document.getElementById('sampleDetailsModal')
 const addRunForm = document.getElementById('addRunForm')
 addRunForm.addEventListener('submit', handleForm)
 
-// historic run toggle (set true if an run is entered that already has fast5 data)
-var historicExp = false
+// existing run toggle (set true if a run is entered that already has fast5 data)
+var existingRun = false
 
 // get some fields
-var expName = document.getElementById('formLabel_runName')
-var expOutputLocation = document.getElementById('formLabel_outputLocation')
+var runName = document.getElementById('formLabel_runName')
+var runOutputLocation = document.getElementById('formLabel_outputLocation')
 var fieldset_outputFASTQlocation = document.getElementById(
     'fieldset_outputFASTQlocation'
 )
@@ -218,7 +219,8 @@ var msgDiv = document.getElementById('addRunValidationMessage')
 
 // reset func to clear the form changes
 function addRunFormReset() {
-    historicExp = false
+    document.getElementById('addRunButton').disabled = true
+    existingRun = false
     fieldset_outputFASTQlocation.style.display = 'block'
     formLabel_outputFAST5location.value = ''
     formLabel_outputFASTQlocation.value = ''
@@ -235,37 +237,37 @@ runValidator = {
     registerListener: function(listener) {
         this.validListenter = listener
     },
-    expNameInternal: false,
-    set expName(val) {
-        this.expNameInternal = val
+    runNameInternal: false,
+    set runName(val) {
+        this.runNameInternal = val
         this.validListenter(val)
     },
-    get expName() {
-        return this.expNameInternal
+    get runName() {
+        return this.runNameInternal
     },
-    expLocInternal: false,
-    set expLoc(val) {
-        this.expLocInternal = val
+    runLocInternal: false,
+    set runLoc(val) {
+        this.runLocInternal = val
         this.validListenter(val)
     },
-    get expLoc() {
-        return this.expLocInternal
+    get runLoc() {
+        return this.runLocInternal
     }
 }
 
 // the validator listener will adjust form values depending on user input
 runValidator.registerListener(async() => {
-    // reset if user hasn't input both expName and expOutputLocation
-    if (runValidator.expName === false || runValidator.expLoc === false) {
+    // reset if user hasn't input both runName and runOutputLocation
+    if (runValidator.runName === false || runValidator.runLoc === false) {
         addRunFormReset()
         return
     }
 
-    // remove spaces from expName
-    var expNameDespaced = expName.value.replace(/\s/g, '_')
+    // remove spaces from runName
+    var runNameDespaced = runName.value.replace(/\s/g, '_')
 
     // get expected dir names
-    var dirName = expOutputLocation.value + '/' + expNameDespaced
+    var dirName = runOutputLocation.value + '/' + runNameDespaced
     var fast5_dirName = dirName + '/fast5_pass'
     var fastq_dirName = dirName + '/fastq_pass'
 
@@ -273,71 +275,99 @@ runValidator.registerListener(async() => {
     formLabel_outputFAST5location.value = fast5_dirName
     formLabel_outputFASTQlocation.value = fastq_dirName
 
-    // allow user to change basecalling option
-    formLabel_basecall.disabled = false
-    formLabel_basecallLabel.style.color = ''
+    // NOTE:
+    // for now, I have removed all the basecalling / sequencing tagging in order to get this ready ASAP
+    // there is now a requirement for the run to be a existing one(ie.all data ready)
+    // future release will hopefully remove this constraint and enable more functionality
 
+    /* START RESTRICTED FORM */
     // check for dirs and print an alert
     try {
         await checkDirExists(dirName)
-    } catch (e) {
-        msgDiv.innerHTML =
-            '<div class="alert background-warning"><i class="fas fa-exclamation-circle"></i> - No existing run directory found, this run will be tagged for sequencing</div>'
-        return
-    }
-    try {
         await checkDirExists(fast5_dirName)
-    } catch (e) {
-        msgDiv.innerHTML =
-            '<div class="alert background-warning"><i class="fas fa-exclamation-circle"></i> - No <em>fast5_pass</em> directory found, this run will be tagged for sequencing</div>'
-        return
-    }
-    formLabel_sequence.checked = true
-    historicExp = true
-
-    try {
         await checkDirExists(fastq_dirName)
     } catch (e) {
         msgDiv.innerHTML =
-            '<div class="alert background-warning"><i class="fas fa-exclamation-circle"></i> - No <em>fastq_pass</em> directory found, this run will be tagged for base calling (unless you uncheck the box below)</div>'
+            '<div class="alert background-warning"><i class="fas fa-exclamation-circle"></i> - No existing run directory found, this is currently required</div>'
         return
     }
-    msgDiv.innerHTML =
-        '<div class="alert background-success"><i class="fas fa-flask"></i> - <em>fast5_pass</em> and <em>fastq_pass</em> found for this run</div>'
-
-    // make sure the fastq path is shown (could be hidden if user has been toggling)
     fieldset_outputFASTQlocation.style.display = 'block'
-
-    // disable basecalling option if fastq_pass exists
-    formLabel_basecallLabel.style.color = '#d3d3d3'
-    formLabel_basecall.checked = true
+    formLabel_sequence.checked = false
+    formLabel_basecall.checked = false
+    formLabel_sequence.disabled = true
     formLabel_basecall.disabled = true
+    existingRun = true
+    document.getElementById('addRunButton').disabled = false
+
+    /* // END RESTRICTED FORM */
+
+    /*
+// allow user to change basecalling option
+formLabel_basecall.disabled = false
+formLabel_basecallLabel.style.color = ''
+
+// check for dirs and print an alert
+try {
+    await checkDirExists(dirName)
+} catch (e) {
+    msgDiv.innerHTML =
+        '<div class="alert background-warning"><i class="fas fa-exclamation-circle"></i> - No existing run directory found, this run will be tagged for sequencing</div>'
+    return
+}
+try {
+    await checkDirExists(fast5_dirName)
+} catch (e) {
+    msgDiv.innerHTML =
+        '<div class="alert background-warning"><i class="fas fa-exclamation-circle"></i> - No <em>fast5_pass</em> directory found, this run will be tagged for sequencing</div>'
+    return
+}
+formLabel_sequence.checked = true
+existingRun = true
+
+try {
+    await checkDirExists(fastq_dirName)
+} catch (e) {
+    msgDiv.innerHTML =
+        '<div class="alert background-warning"><i class="fas fa-exclamation-circle"></i> - No <em>fastq_pass</em> directory found, this run will be tagged for base calling (unless you uncheck the box below)</div>'
+    return
+}
+msgDiv.innerHTML =
+    '<div class="alert background-success"><i class="fas fa-flask"></i> - <em>fast5_pass</em> and <em>fastq_pass</em> found for this run</div>'
+
+// make sure the fastq path is shown (could be hidden if user has been toggling)
+fieldset_outputFASTQlocation.style.display = 'block'
+
+// disable basecalling option if fastq_pass exists
+formLabel_basecallLabel.style.color = '#d3d3d3'
+formLabel_basecall.checked = true
+formLabel_basecall.disabled = true
+*/
 })
 
 // add listener to the runName text box
-expName.addEventListener('change', async() => {
-    runValidator.expName = false
-    if (expName.value.length === 0) {
+runName.addEventListener('change', async() => {
+    runValidator.runName = false
+    if (runName.value.length === 0) {
         return
     }
 
-    // currently Go checks the dir - could do it here instead though
-    runValidator.expName = true
+    // TODO: currently Go checks the dir - could do it here instead though
+    runValidator.runName = true
 })
 
 // add listener to the output location text box so we can check it exists once a user has entered a location
-expOutputLocation.addEventListener('change', async() => {
-    runValidator.expLoc = false
-    if (expOutputLocation.value.length === 0) {
+runOutputLocation.addEventListener('change', async() => {
+    runValidator.runLoc = false
+    if (runOutputLocation.value.length === 0) {
         return
     }
     try {
-        await checkDirExists(expOutputLocation.value)
+        await checkDirExists(runOutputLocation.value)
     } catch (e) {
         printErrorMsg(e)
         return
     }
-    runValidator.expLoc = true
+    runValidator.runLoc = true
 })
 
 // show/hide the fastq_pass path depending on basecall checkbox
@@ -365,13 +395,13 @@ addRunForm.addEventListener('submit', async() => {
     // create a run and add it to the store
     try {
         await addRun(
-            expName.value,
-            expOutputLocation.value,
+            runName.value,
+            runOutputLocation.value,
             formLabel_outputFAST5location.value,
             formLabel_outputFASTQlocation.value,
             document.getElementById('formLabel_runComment').value,
             tags,
-            historicExp
+            existingRun
         )
     } catch (e) {
         printErrorMsg(e)
@@ -408,9 +438,9 @@ const updateRunDropDown = async() => {
 
     // add each name to the drop down
     for (var i = 0; i < expCount; i++) {
-        var expName = `${await window.getRunName(i)}`
+        var runName = `${await window.getRunName(i)}`
         var newOpt = document.createElement('option')
-        newOpt.text = expName
+        newOpt.text = runName
         expDropDown.options.add(newOpt)
     }
 }

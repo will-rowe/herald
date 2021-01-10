@@ -8,7 +8,8 @@ import (
 
 // AnnounceSamples will processes the queues and submit service requests
 func (herald *Herald) AnnounceSamples() error {
-
+	herald.Lock()
+	defer herald.Unlock()
 	if herald.announcementQueue.Len() == 0 {
 		return fmt.Errorf("announcement queue is empty")
 	}
@@ -20,10 +21,9 @@ func (herald *Herald) AnnounceSamples() error {
 		}
 	}
 
-	// iterate once over the queue and process all the runs that need sequencing and basecalling
-	for e := herald.announcementQueue.Front(); e != nil; e = e.Next() {
-
-		switch v := e.Value.(type) {
+	// iterate once over the queue and process all the runs first
+	for request := herald.announcementQueue.Front(); request != nil; request = request.Next() {
+		switch v := request.Value.(type) {
 		default:
 			return fmt.Errorf("unexpected type in queue: %T", v)
 		case *services.Sample:
@@ -47,17 +47,19 @@ func (herald *Herald) AnnounceSamples() error {
 				}
 			}
 
+			// set the status to announced
+			v.Metadata.SetStatus(services.Status_announced)
+
 			// dequeue the sample
-			herald.announcementQueue.Remove(e)
+			herald.announcementQueue.Remove(request)
 		}
 	}
 
 	// process the remaining queue (should just be samples now)
-	for herald.announcementQueue.Len() > 0 {
+	for request := herald.announcementQueue.Front(); request != nil; request = request.Next() {
 
 		// grab the sample that is first in the queue
-		s := herald.announcementQueue.Front()
-		sample := s.Value.(*services.Sample)
+		sample := request.Value.(*services.Sample)
 
 		// get the tags in order
 		for _, tag := range sample.Metadata.GetRequestOrder() {
@@ -70,9 +72,17 @@ func (herald *Herald) AnnounceSamples() error {
 
 		// decide if it should be dequeued
 
-		// dequeue the sample
-		herald.announcementQueue.Remove(s)
+		// update the status of the sample and dequeue it
+		sample.Metadata.AddComment("sample announced.")
+		sample.Metadata.SetStatus(services.Status_announced)
+		if err := herald.updateRecord(sample); err != nil {
+			return err
+		}
+		herald.announcementQueue.Remove(request)
 	}
 
+	if herald.announcementQueue.Len() != 0 {
+		return fmt.Errorf("announcements sent but queue still contains %d requests", herald.announcementQueue.Len())
+	}
 	return nil
 }

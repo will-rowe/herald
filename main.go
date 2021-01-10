@@ -70,8 +70,10 @@ func main() {
 	// counters
 	ui.Bind("getRunCount", heraldObj.GetRunCount)
 	ui.Bind("getSampleCount", heraldObj.GetSampleCount)
-	ui.Bind("getUntaggedSampleCount", heraldObj.GetUntaggedRecordCount)
-	ui.Bind("getTaggedSampleCount", heraldObj.GetTaggedRecordCount)
+	ui.Bind("getUntaggedCount", heraldObj.GetUntaggedCount)
+	ui.Bind("getTaggedIncompleteCount", heraldObj.GetTaggedIncompleteCount)
+	ui.Bind("getTaggedCompleteCount", heraldObj.GetTaggedCompleteCount)
+	ui.Bind("getAnnouncementQueueSize", heraldObj.GetAnnouncementQueueSize)
 	ui.Bind("getAnnouncementCount", heraldObj.GetAnnouncementCount)
 	// table / modals / forms
 	ui.Bind("getRunName", heraldObj.GetLabel)
@@ -94,11 +96,12 @@ func main() {
 		}
 
 		// print the db location and number of runs and samples in storage etc.
-		ui.Eval(fmt.Sprintf(`document.getElementById('staging_dbLocation').innerHTML = 'filepath: %v'`, heraldObj.GetDbPath()))
 		ui.Eval(fmt.Sprintf(`document.getElementById('staging_runCount').innerText = '%d'`, heraldObj.GetRunCount()))
+		ui.Eval(fmt.Sprintf(`document.getElementById('staging_runRequests').innerHTML = '%d with completed service requests'`, heraldObj.GetTaggedCompleteCount("runs")))
 		ui.Eval(fmt.Sprintf(`document.getElementById('staging_sampleCount').innerText = '%d'`, heraldObj.GetSampleCount()))
-		ui.Eval(fmt.Sprintf(`document.getElementById('staging_taggedCount').innerText = '%d'`, heraldObj.GetTaggedRecordCount()))
-		ui.Eval(fmt.Sprintf(`document.getElementById('staging_processCount').innerText = '%d untagged'`, heraldObj.GetUntaggedRecordCount()))
+		ui.Eval(fmt.Sprintf(`document.getElementById('staging_sampleRequests').innerText = '%d with completed service requests'`, heraldObj.GetTaggedCompleteCount("samples")))
+		ui.Eval(fmt.Sprintf(`document.getElementById('stagingAnnouncementQueueCount').innerText = '%d'`, heraldObj.GetAnnouncementQueueSize()))
+		ui.Eval(fmt.Sprintf(`document.getElementById('stagingAnnouncementCount').innerText = '%d announcements made'`, heraldObj.GetAnnouncementCount()))
 
 		// enable the add sample button if there are runs to use
 		if heraldObj.GetRunCount() == 0 {
@@ -110,11 +113,11 @@ func main() {
 		// update the add sample form with the available processes for tagging
 		ui.Eval(fmt.Sprintf(`document.getElementById('sampleTags').innerHTML = '%v'`, ServiceTagsHTML))
 
-		// enable the announce button if there are tagged samples
-		if heraldObj.GetTaggedRecordCount() == 0 {
-			ui.Eval(`document.getElementById('staging_announce').disabled = true`)
+		// enable the announce button if there are tagged service requests for runs/samples in the queue
+		if heraldObj.GetAnnouncementQueueSize() == 0 {
+			ui.Eval(`document.getElementById('stagingAnnounce').disabled = true`)
 		} else {
-			ui.Eval(`document.getElementById('staging_announce').disabled = false`)
+			ui.Eval(`document.getElementById('stagingAnnounce').disabled = false`)
 		}
 
 		// check the network connection

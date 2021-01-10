@@ -69,6 +69,13 @@ func (heraldData *HeraldData) AddComment(text string) error {
 	return nil
 }
 
+// SetStatus updates the status.
+// TODO: do this better.
+func (heraldData *HeraldData) SetStatus(status Status) error {
+	heraldData.Status = status
+	return nil
+}
+
 // AddTags is a method to tag a run or sample with a service
 func (heraldData *HeraldData) AddTags(tags []string) error {
 	if len(tags) == 0 {
@@ -99,7 +106,7 @@ func (heraldData *HeraldData) AddTags(tags []string) error {
 	}
 
 	// update the status to "tagged"
-	heraldData.Status = 2
+	heraldData.SetStatus(Status_tagsIncomplete)
 
 	// generate new request order
 	return heraldData.createServiceDAG()
@@ -146,7 +153,7 @@ func (heraldData *HeraldData) CheckStatus() error {
 			}
 		}
 		// set status to untagged
-		heraldData.Status = 1
+		heraldData.SetStatus(Status_untagged)
 		return nil
 
 	// announced

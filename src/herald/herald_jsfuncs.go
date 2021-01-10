@@ -28,21 +28,53 @@ func (herald *Herald) GetSampleCount() int {
 	return herald.sampleCount
 }
 
-// GetUntaggedRecordCount returns the current number of samples in storage that are untagged
-func (herald *Herald) GetUntaggedRecordCount() int {
+// GetUntaggedCount returns the current number of runs/samples in storage that are untagged
+func (herald *Herald) GetUntaggedCount(descriptor string) int {
 	herald.Lock()
 	defer herald.Unlock()
-	return herald.untaggedRecordCount
+	switch descriptor {
+	case "runs":
+		return herald.untaggedCount[0]
+	case "samples":
+		return herald.untaggedCount[1]
+	}
+	return -1
 }
 
-// GetTaggedRecordCount returns the current number of samples in storage that are tagged with at least one process
-func (herald *Herald) GetTaggedRecordCount() int {
+// GetTaggedIncompleteCount returns the current number of runs/samples in storage that are tagged with incomplete service requests
+func (herald *Herald) GetTaggedIncompleteCount(descriptor string) int {
 	herald.Lock()
 	defer herald.Unlock()
-	return herald.taggedRecordCount
+	switch descriptor {
+	case "runs":
+		return herald.taggedIncompleteCount[0]
+	case "samples":
+		return herald.taggedIncompleteCount[1]
+	}
+	return -1
 }
 
-// GetAnnouncementCount returns the current number of samples that have been announced
+// GetTaggedCompleteCount returns the current number of runs/samples in storage that are tagged with complete service requests
+func (herald *Herald) GetTaggedCompleteCount(descriptor string) int {
+	herald.Lock()
+	defer herald.Unlock()
+	switch descriptor {
+	case "runs":
+		return herald.taggedCompleteCount[0]
+	case "samples":
+		return herald.taggedCompleteCount[1]
+	}
+	return -1
+}
+
+// GetAnnouncementQueueSize returns the current number of items in the announcment queue
+func (herald *Herald) GetAnnouncementQueueSize() int {
+	herald.Lock()
+	defer herald.Unlock()
+	return herald.announcementQueue.Len()
+}
+
+// GetAnnouncementCount returns the current number of announcements made
 func (herald *Herald) GetAnnouncementCount() int {
 	herald.Lock()
 	defer herald.Unlock()

@@ -274,7 +274,7 @@
                                 <div class="float-left ml-1">
                                     <p class="m-0"><strong>Runs</strong> <span class="text-muted">in the
                                             database</span></p>
-                                    <p class="text-small text-muted" id="staging_dbLocation">na</p>
+                                    <p class="text-small text-muted" id="staging_runRequests">na</p>
                                 </div>
                                 <div class="clearfix"></div>
                                 <hr class="m-0 mb-2" />
@@ -285,27 +285,27 @@
                                 <div class="float-left ml-1">
                                     <p class="m-0"><strong>Samples</strong> <span class="text-muted">across all
                                             runs</span></p>
-                                    <p class="text-small text-muted">unused text field</p>
+                                    <p class="text-small text-muted" id="staging_sampleRequests"></p>
                                 </div>
                                 <div class="clearfix"></div>
                                 <hr class="m-0 mb-2" />
                             </div>
                             <!--Queued announcements-->
                             <div class="mt-1">
-                                <div class="badge background-primary float-left" id="staging_taggedCount">0</div>
+                                <div class="badge background-primary float-left" id="stagingAnnouncementQueueCount">0
+                                </div>
                                 <div class="float-left ml-1">
-                                    <p class="m-0"><strong>Tagged</strong> <span class="text-muted">records in the
-                                            queue</span></p>
-                                    <p class="text-small text-muted" id="staging_processCount">x runs, y samples
-                                    </p>
+                                    <p class="m-0"><strong>Service requests</strong> <span class="text-muted"> in the
+                                            announcement queue</span></p>
+                                    <p class="text-small text-muted" id="stagingAnnouncementCount"></p>
                                 </div>
                                 <div class="clearfix"></div>
                                 <hr class="m-0 mb-2" />
                             </div>
                             <!--announce and unstage buttons-->
                             <div class="mt-1">
-                                <button class="button" id="staging_announce" disabled>announce</button>
-                                <button class="button button-outline" id="staging_unstage" disabled>unstage</button>
+                                <button class="button" id="stagingAnnounce" disabled>announce</button>
+                                <!--<button class="button button-outline" id="staging_unstage" disabled>unstage</button>-->
                             </div>
                         </div>
                     </div>
@@ -365,7 +365,7 @@
                 <div class="column column-50">
                     <div class="card">
                         <div class="card-title">
-                            <h2 class="float-left">Announcements</h2>
+                            <h2 class="float-left">Announcements (placeholder)</h2>
                             <div class="badge float-right">X In Progress</div>
                             <!--<div class="badge background-success float-right mr-1">5 Complete</div>-->
                             <div class="clearfix"></div>

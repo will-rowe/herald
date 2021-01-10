@@ -6,7 +6,9 @@ import "google/protobuf/timestamp.proto";
 option go_package = ".;services";
 
 /*
-    Comments are used to record a message history
+    Comments are used to record generic
+    text entries and to track the history
+    of HeraldData.
 */
 message Comment {
     google.protobuf.Timestamp timestamp = 1;
@@ -14,17 +16,20 @@ message Comment {
 }
 
 /*
-    Status is used to determine if runs/samples have tagged processes, or if they have been announced via the message server
+    Status is used to determine if runs/samples have 
+    tagged service requests and if they have been 
+    announced via the message server.
 */
 enum Status {
     UN_INITIALIZED = 0;
-    untagged = 1;
-    tagged = 2;
-    announced = 3;
+    untagged = 1;                               // data is not tagged with any service requests (either completed or incomplete)
+    tagsIncomplete = 2;                         // data is tagged with service requests, one or more of which are marked incomplete
+    tagsComplete = 3;                           // data is tagged with service requests, all of which are marked complete
+    announced = 4;                              // tagged service requests have been announced and we are waiting for completion notification
 }
 
 /*
-    User is used to identify the owner of HeraldData and is required for announcements
+    User is used to identify the owner of HeraldData.
 */
 message User {
     google.protobuf.Timestamp created = 1;
@@ -33,7 +38,7 @@ message User {
 }
 
 /*
-    Config is used to describe a Herald instance
+    Config is used to describe a Herald instance.
 */
 message Config {
     google.protobuf.Timestamp created = 1;
@@ -44,33 +49,36 @@ message Config {
 }
 
 /*
-    HeraldData is the base type, used by both Run and Sample
+    HeraldData is the base data type.
+    It is used by both Run and Sample.
 */
 message HeraldData {
     google.protobuf.Timestamp created = 1;
     string label = 3;                            // the run or sample name
     repeated Comment history = 4;                // describes the history of the run
-    Status status = 5;                           // describes if untagged/tagged/announced
+    Status status = 5;                           // describes if untagged, tagged with complete/incomplete services and if announced
     map<string, bool> tags = 6;                  // tagged services and their complete status (true=complete, false=incomplete)
     repeated string requestOrder = 7;            // the order to send requests to the tagged services
 }
 
 /*
-    Run is used to describe a Nanopore sequencing run
+    Run is used to describe a Nanopore
+    sequencing run.
 */
 message Run {
-    HeraldData metadata = 1;                    // the base info
+    HeraldData metadata = 1;
     string outputDirectory = 2;                 // where the run is stored
     string fast5OutputDirectory = 3;            // where the run fast5 data is stored
     string fastqOutputDirectory = 4;            // where the run fastq data is stored
-
 }
 
 /*
-    Sample is used to describe a biological sample which is being sequenced as part of a Run
+    Sample is used to describe a biological
+    sample which is being sequenced as part 
+    of a Run.
 */
 message Sample {
-    HeraldData metadata = 1;                   // the base info
-    string parentRun = 2;
+    HeraldData metadata = 1;
+    string parentRun = 2;                       // the label of the parent run, used to perform lookups
     int32 barcode = 3;
 }

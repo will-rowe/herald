@@ -27,14 +27,17 @@ const (
 const _ = proto.ProtoPackageIsVersion4
 
 //
-//Status is used to determine if runs/samples have tagged processes, or if they have been announced via the message server
+//Status is used to determine if runs/samples have
+//tagged service requests and if they have been
+//announced via the message server.
 type Status int32
 
 const (
 	Status_UN_INITIALIZED Status = 0
-	Status_untagged       Status = 1
-	Status_tagged         Status = 2
-	Status_announced      Status = 3
+	Status_untagged       Status = 1 // data is not tagged with any service requests (either completed or incomplete)
+	Status_tagsIncomplete Status = 2 // data is tagged with service requests, one or more of which are marked incomplete
+	Status_tagsComplete   Status = 3 // data is tagged with service requests, all of which are marked complete
+	Status_announced      Status = 4 // tagged service requests have been announced and we are waiting for completion notification
 )
 
 // Enum value maps for Status.
@@ -42,14 +45,16 @@ var (
 	Status_name = map[int32]string{
 		0: "UN_INITIALIZED",
 		1: "untagged",
-		2: "tagged",
-		3: "announced",
+		2: "tagsIncomplete",
+		3: "tagsComplete",
+		4: "announced",
 	}
 	Status_value = map[string]int32{
 		"UN_INITIALIZED": 0,
 		"untagged":       1,
-		"tagged":         2,
-		"announced":      3,
+		"tagsIncomplete": 2,
+		"tagsComplete":   3,
+		"announced":      4,
 	}
 )
 
@@ -81,7 +86,9 @@ func (Status) EnumDescriptor() ([]byte, []int) {
 }
 
 //
-//Comments are used to record a message history
+//Comments are used to record generic
+//text entries and to track the history
+//of HeraldData.
 type Comment struct {
 	state         protoimpl.MessageState
 	sizeCache     protoimpl.SizeCache
@@ -138,7 +145,7 @@ func (x *Comment) GetText() string {
 }
 
 //
-//User is used to identify the owner of HeraldData and is required for announcements
+//User is used to identify the owner of HeraldData.
 type User struct {
 	state         protoimpl.MessageState
 	sizeCache     protoimpl.SizeCache
@@ -203,7 +210,7 @@ func (x *User) GetEmail() string {
 }
 
 //
-//Config is used to describe a Herald instance
+//Config is used to describe a Herald instance.
 type Config struct {
 	state         protoimpl.MessageState
 	sizeCache     protoimpl.SizeCache
@@ -284,7 +291,8 @@ func (x *Config) GetUser() *User {
 }
 
 //
-//HeraldData is the base type, used by both Run and Sample
+//HeraldData is the base data type.
+//It is used by both Run and Sample.
 type HeraldData struct {
 	state         protoimpl.MessageState
 	sizeCache     protoimpl.SizeCache
@@ -373,13 +381,14 @@ func (x *HeraldData) GetRequestOrder() []string {
 }
 
 //
-//Run is used to describe a Nanopore sequencing run
+//Run is used to describe a Nanopore
+//sequencing run.
 type Run struct {
 	state         protoimpl.MessageState
 	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
 
-	Metadata             *HeraldData `protobuf:"bytes,1,opt,name=metadata,proto3" json:"metadata,omitempty"`                         // the base info
+	Metadata             *HeraldData `protobuf:"bytes,1,opt,name=metadata,proto3" json:"metadata,omitempty"`
 	OutputDirectory      string      `protobuf:"bytes,2,opt,name=outputDirectory,proto3" json:"outputDirectory,omitempty"`           // where the run is stored
 	Fast5OutputDirectory string      `protobuf:"bytes,3,opt,name=fast5OutputDirectory,proto3" json:"fast5OutputDirectory,omitempty"` // where the run fast5 data is stored
 	FastqOutputDirectory string      `protobuf:"bytes,4,opt,name=fastqOutputDirectory,proto3" json:"fastqOutputDirectory,omitempty"` // where the run fastq data is stored
@@ -446,14 +455,16 @@ func (x *Run) GetFastqOutputDirectory() string {
 }
 
 //
-//Sample is used to describe a biological sample which is being sequenced as part of a Run
+//Sample is used to describe a biological
+//sample which is being sequenced as part
+//of a Run.
 type Sample struct {
 	state         protoimpl.MessageState
 	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
 
-	Metadata  *HeraldData `protobuf:"bytes,1,opt,name=metadata,proto3" json:"metadata,omitempty"` // the base info
-	ParentRun string      `protobuf:"bytes,2,opt,name=parentRun,proto3" json:"parentRun,omitempty"`
+	Metadata  *HeraldData `protobuf:"bytes,1,opt,name=metadata,proto3" json:"metadata,omitempty"`
+	ParentRun string      `protobuf:"bytes,2,opt,name=parentRun,proto3" json:"parentRun,omitempty"` // the label of the parent run, used to perform lookups
 	Barcode   int32       `protobuf:"varint,3,opt,name=barcode,proto3" json:"barcode,omitempty"`
 }
 
@@ -580,13 +591,14 @@ var file_herald_proto_rawDesc = []byte{
 	0x12, 0x1c, 0x0a, 0x09, 0x70, 0x61, 0x72, 0x65, 0x6e, 0x74, 0x52, 0x75, 0x6e, 0x18, 0x02, 0x20,
 	0x01, 0x28, 0x09, 0x52, 0x09, 0x70, 0x61, 0x72, 0x65, 0x6e, 0x74, 0x52, 0x75, 0x6e, 0x12, 0x18,
 	0x0a, 0x07, 0x62, 0x61, 0x72, 0x63, 0x6f, 0x64, 0x65, 0x18, 0x03, 0x20, 0x01, 0x28, 0x05, 0x52,
-	0x07, 0x62, 0x61, 0x72, 0x63, 0x6f, 0x64, 0x65, 0x2a, 0x45, 0x0a, 0x06, 0x53, 0x74, 0x61, 0x74,
+	0x07, 0x62, 0x61, 0x72, 0x63, 0x6f, 0x64, 0x65, 0x2a, 0x5f, 0x0a, 0x06, 0x53, 0x74, 0x61, 0x74,
 	0x75, 0x73, 0x12, 0x12, 0x0a, 0x0e, 0x55, 0x4e, 0x5f, 0x49, 0x4e, 0x49, 0x54, 0x49, 0x41, 0x4c,
 	0x49, 0x5a, 0x45, 0x44, 0x10, 0x00, 0x12, 0x0c, 0x0a, 0x08, 0x75, 0x6e, 0x74, 0x61, 0x67, 0x67,
-	0x65, 0x64, 0x10, 0x01, 0x12, 0x0a, 0x0a, 0x06, 0x74, 0x61, 0x67, 0x67, 0x65, 0x64, 0x10, 0x02,
-	0x12, 0x0d, 0x0a, 0x09, 0x61, 0x6e, 0x6e, 0x6f, 0x75, 0x6e, 0x63, 0x65, 0x64, 0x10, 0x03, 0x42,
-	0x0c, 0x5a, 0x0a, 0x2e, 0x3b, 0x73, 0x65, 0x72, 0x76, 0x69, 0x63, 0x65, 0x73, 0x62, 0x06, 0x70,
-	0x72, 0x6f, 0x74, 0x6f, 0x33,
+	0x65, 0x64, 0x10, 0x01, 0x12, 0x12, 0x0a, 0x0e, 0x74, 0x61, 0x67, 0x73, 0x49, 0x6e, 0x63, 0x6f,
+	0x6d, 0x70, 0x6c, 0x65, 0x74, 0x65, 0x10, 0x02, 0x12, 0x10, 0x0a, 0x0c, 0x74, 0x61, 0x67, 0x73,
+	0x43, 0x6f, 0x6d, 0x70, 0x6c, 0x65, 0x74, 0x65, 0x10, 0x03, 0x12, 0x0d, 0x0a, 0x09, 0x61, 0x6e,
+	0x6e, 0x6f, 0x75, 0x6e, 0x63, 0x65, 0x64, 0x10, 0x04, 0x42, 0x0c, 0x5a, 0x0a, 0x2e, 0x3b, 0x73,
+	0x65, 0x72, 0x76, 0x69, 0x63, 0x65, 0x73, 0x62, 0x06, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x33,
 }
 
 var (

@@ -18,11 +18,12 @@ type Herald struct {
 	announcementQueue *list.List       // a FIFO queue for announcements
 
 	// runtime count info for JS:
-	runCount            int // the number of runs currently in the store
-	sampleCount         int // the number of samples currently in the store
-	untaggedRecordCount int // the number of samples in the store that are untagged
-	taggedRecordCount   int // the number of samples in the store that are tagged with at least one process
-	announcementCount   int // the number of samples in the store that have been announced
+	runCount              int    // the number of runs currently in the store
+	sampleCount           int    // the number of samples currently in the store
+	untaggedCount         [2]int // the number of runs ([0]) and samples ([1]) in the store that are untagged
+	taggedIncompleteCount [2]int // the number of runs ([0]) and samples ([1]) in the store that are tagged with at least one incomplete service requests
+	taggedCompleteCount   [2]int // the number of runs ([0]) and samples ([1]) in the store that are tagged with completed service requests
+	announcementCount     int    // the number of announcements made
 
 	// easy access label holders for JS
 	sampleDetails [][]string // used to store all the sample labels, creation dates and corresponding run in memory (for JS to access)
@@ -108,19 +109,20 @@ func (herald *Herald) GetRuntimeInfo() error {
 	// reset the runtime data
 	herald.runCount = 0
 	herald.sampleCount = 0
-	herald.untaggedRecordCount = 0
-	herald.taggedRecordCount = 0
+	herald.untaggedCount = [2]int{0, 0}
+	herald.taggedIncompleteCount = [2]int{0, 0}
+	herald.taggedCompleteCount = [2]int{0, 0}
 	herald.announcementCount = 0
 
 	// get the run and sample counts from the store
-	baselineExpCount := herald.store.GetNumRuns()
+	baselineRunCount := herald.store.GetNumRuns()
 	baselineSampleCount := herald.store.GetNumSamples()
 
 	// restart the queue
 	herald.announcementQueue.Init()
 
 	// create run label holder
-	herald.runLabels = make([]string, baselineExpCount)
+	herald.runLabels = make([]string, baselineRunCount)
 
 	// range over the runs in storage
 	runIterator := 0
@@ -143,8 +145,8 @@ func (herald *Herald) GetRuntimeInfo() error {
 		// increment the iterator
 		runIterator++
 	}
-	if (baselineExpCount != runIterator) || (baselineExpCount != herald.runCount) {
-		return fmt.Errorf("run mistmatch between db and in-memory store: %d vs %d", baselineExpCount, runIterator)
+	if (baselineRunCount != runIterator) || (baselineRunCount != herald.runCount) {
+		return fmt.Errorf("run mistmatch between db and in-memory store: %d vs %d", baselineRunCount, runIterator)
 	}
 
 	// setup the sample details holder
@@ -251,16 +253,16 @@ func (herald *Herald) CreateSample(label string, runName string, barcode int32, 
 	defer herald.Unlock()
 
 	// get the run from storage
-	exp, err := herald.store.GetRun(runName)
+	run, err := herald.store.GetRun(runName)
 	if err != nil {
 		return err
 	}
 
 	// TODO: copy the tag history over from the run to the samples (sequence and basecall)?
-	//tags = append(exp.Metadata.GetRequestOrder(), tags...)
+	//tags = append(run.Metadata.GetRequestOrder(), tags...)
 
 	// create the sample
-	sample := services.InitSample(label, exp.Metadata.GetLabel(), barcode)
+	sample := services.InitSample(label, run.Metadata.GetLabel(), barcode)
 	if len(comment) != 0 {
 		if err := sample.Metadata.AddComment(comment); err != nil {
 			return err
@@ -306,12 +308,37 @@ func (herald *Herald) DeleteSample(sampleLabel string) error {
 	return herald.updateCounts(sample, false)
 }
 
-// updateCounts takes an element and a bool to indicate if it is being added (true) or removed (false)
+// updateRecord will replace an old record with a new one, if it exists
+// in storage.
+func (herald *Herald) updateRecord(record interface{}) error {
+	switch record.(type) {
+	case *services.Run:
+		if err := herald.store.DeleteRun(record.(*services.Run).Metadata.GetLabel()); err != nil {
+			return err
+		}
+		if err := herald.store.AddRun(record.(*services.Run)); err != nil {
+			return err
+		}
+	case *services.Sample:
+		if err := herald.store.DeleteSample(record.(*services.Sample).Metadata.GetLabel()); err != nil {
+			return err
+		}
+		if err := herald.store.AddSample(record.(*services.Sample)); err != nil {
+			return err
+		}
+
+	default:
+		return fmt.Errorf("unsupported record type provided to updateRecord: %T", record)
+	}
+	return nil
+}
+
+// updateCounts takes a record and a bool to indicate if it is being added (true) or removed (false)
 // from the storage.
-// it will check the provided element is either a run or sample
+// it will check the provided record is either a run or sample
 // it will then increment/decrement the appropriate counters.
 // it will also add/remove it from the queue if needed.
-func (herald *Herald) updateCounts(element interface{}, add bool) error {
+func (herald *Herald) updateCounts(record interface{}, add bool) error {
 	value := -1
 	if add {
 		value = 1
@@ -319,12 +346,15 @@ func (herald *Herald) updateCounts(element interface{}, add bool) error {
 
 	// check for run or sample
 	var status string
-	switch element.(type) {
+	index := -1
+	switch record.(type) {
 	case *services.Run:
-		status = element.(*services.Run).Metadata.GetStatus().String()
+		status = record.(*services.Run).Metadata.GetStatus().String()
+		index = 0
 		herald.runCount += value
 	case *services.Sample:
-		status = element.(*services.Sample).Metadata.GetStatus().String()
+		status = record.(*services.Sample).Metadata.GetStatus().String()
+		index = 1
 		herald.sampleCount += value
 	default:
 		return fmt.Errorf("unsupported type provided to updateCounts")
@@ -334,20 +364,25 @@ func (herald *Herald) updateCounts(element interface{}, add bool) error {
 	switch status {
 
 	case "untagged":
-		herald.untaggedRecordCount += value
+		herald.untaggedCount[index] += value
 		return nil
 
-	case "tagged":
-		herald.taggedRecordCount += value
+	case "tagsIncomplete":
+		herald.taggedIncompleteCount[index] += value
 
-		// handle the queue
+		// add to the queue for announcing
 		if add {
-			herald.announcementQueue.PushBack(element)
+			herald.announcementQueue.PushBack(record)
 		} else {
-			herald.announcementQueue.Remove(&list.Element{Value: element})
+			herald.announcementQueue.Remove(&list.Element{Value: record})
 		}
 		return nil
 
+	case "tagsComplete":
+		herald.taggedCompleteCount[index] += value
+		return nil
+
+	// this means they have been announced, but may not be completed yet
 	case "announced":
 		herald.announcementCount += value
 		return nil

@@ -105,7 +105,7 @@ window.addEventListener('offline', () =>
 // BUTTONS
 // get the buttons that control the app
 const refreshPage = document.getElementById('refreshPage')
-const announceSamplesButton = document.getElementById('staging_announce')
+const announceButton = document.getElementById('stagingAnnounce')
 const wipeDatabase = document.getElementById('wipeDatabase')
 
 // add an event listener to the refreshPage button
@@ -115,8 +115,8 @@ refreshPage.addEventListener('click', async() => {
     printSuccessMsg('refreshed the app')
 })
 
-// add an event listener to the staging_announce button
-announceSamplesButton.addEventListener('click', async() => {
+// add an event listener to the stagingAnnounce button
+announceButton.addEventListener('click', async() => {
     console.log('announcing samples')
 
     // call the Go announceSamples method
@@ -126,7 +126,8 @@ announceSamplesButton.addEventListener('click', async() => {
         printErrorMsg(e)
         return
     }
-    console.log('announced')
+    pageRefresh()
+    printSuccessMsg('announcements sent')
 })
 
 // add an event listener to wipeDatabase button
@@ -447,7 +448,7 @@ const updateRunDropDown = async() => {
 
 // add an event listener to the addSampleForm submit button
 addSampleForm.addEventListener('submit', async() => {
-    console.log('adding sample to storage')
+    console.log('creating sample')
 
     var elements = addSampleForm.elements
 
@@ -618,7 +619,7 @@ function printTimeStamps() {
 // set up the empty pie chart
 var pieCanvas = document.getElementById('pieChart')
 var pieData = {
-    labels: ['Announcements Made', 'Tagged Samples', 'Untagged Samples'],
+    labels: ['Announcements Queued', 'Tagged Samples', 'Untagged Samples'],
     datasets: [{
         label: 'entry point',
         data: [0, 0, 0],
@@ -640,9 +641,9 @@ var myPieChart = new Chart(pieCanvas, {
 // updatePieChart will refresh the pie chart with current data
 const updatePieChart = async() => {
     // get counts
-    var untaggedRecordCount = `${await window.getUntaggedSampleCount()}`
-    var taggedRecordCount = `${await window.getTaggedSampleCount()}`
-    var announcementCount = `${await window.getAnnouncementCount()}`
+    var untaggedRecordCount = `${await window.getUntaggedCount('samples')}`
+    var taggedRecordCount = `${await window.getTaggedIncompleteCount('samples')}`
+    var announcementCount = `${await window.getAnnouncementQueueSize()}`
 
     // update the chart data
     myPieChart.data.datasets[0].data[0] = announcementCount

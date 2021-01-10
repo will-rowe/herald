@@ -13,6 +13,24 @@ function handleForm(event) {
     event.preventDefault()
 }
 
+// getUser returns the username from the config
+const getUser = async function() {
+    var user = `${await window.getUser()}`
+    return user
+}
+
+// getConfigJSONdump returns a stringified dump of the current config
+const getConfigJSONdump = async function() {
+    var configJSONdump = `${await window.printConfigToJSONstring()}`
+    return configJSONdump
+}
+
+// getSampleJSONdump returns a stringified protobuf dump of a sample from the storage
+const getSampleJSONdump = async function(sampleLabel) {
+    var sampleJSONdump = `${await window.printSampleToJSONstring(sampleLabel)}`
+    return sampleJSONdump
+}
+
 ////////////////////////////////////////////////////////////////////
 // MESSAGES
 // printErrorMsg
@@ -56,7 +74,7 @@ function printUpdateMsg(msg, link) {
     })
 }
 
-// updatStatus will print status icon and check time
+// updateStatus will print status icon and check time
 function updateStatus(id, active) {
     var today = new Date()
     var time =
@@ -93,7 +111,6 @@ const wipeDatabase = document.getElementById('wipeDatabase')
 // add an event listener to the refreshPage button
 refreshPage.addEventListener('click', async() => {
     console.log('refreshing the app')
-
     pageRefresh()
     printSuccessMsg('refreshed the app')
 })
@@ -133,18 +150,6 @@ wipeDatabase.addEventListener('click', async() => {
 
 ////////////////////////////////////////////////////////////////////
 // MODALS
-// modal closing
-var modalClosers = document.getElementsByClassName('modal-close')
-for (let i = 0; i < modalClosers.length; i++) {
-    modalClosers[i].addEventListener('click', function() {
-        modalClosers[i].closest('.modal').style.display = 'none'
-    })
-}
-window.onclick = function(event) {
-    if (event.target.className == 'modal') {
-        event.target.style.display = 'none'
-    }
-}
 
 // addRunModal
 // open on button click
@@ -169,12 +174,6 @@ const editConfigModalOpen = document.getElementById('editConfigModalOpen')
 editConfigModalOpen.addEventListener('click', function() {
     editConfigModal.style.display = 'block'
 })
-
-// getConfigJSONdump returns a stringified dump of the current config
-const getConfigJSONdump = async function() {
-    var configJSONdump = `${await window.printConfigToJSONstring()}`
-    return configJSONdump
-}
 
 // viewConfigModal
 const viewConfigModal = document.getElementById('viewConfigModal')
@@ -388,7 +387,7 @@ addRunForm.addEventListener('submit', async() => {
 })
 
 ////////////////////////////////////////////////////////////////////
-// SAMPLE SUBMISSION FORM
+// ADD SAMPLE FORM
 // get the form
 const addSampleForm = document.getElementById('addSampleForm')
 addSampleForm.addEventListener('submit', handleForm)
@@ -483,12 +482,11 @@ configForm.addEventListener('submit', async() => {
         printErrorMsg(e)
         return
     }
+    printSuccessMsg('config updated')
 
-    // reset the form, refresh the page and report success
+    // reset the form and refresh the page - the page loader will hide the modal now config edited
     configForm.reset()
     pageRefresh()
-    editConfigModal.style.display = 'none'
-    printSuccessMsg('config updated')
 })
 
 ////////////////////////////////////////////////////////////////////
@@ -503,12 +501,6 @@ var table = $('#sampleTable').DataTable({
         defaultContent: '<button class="button button-outline">Manage</button>'
     }]
 })
-
-// getSampleJSONdump returns a stringified protobuf dump of a sample from the storage
-const getSampleJSONdump = async function(sampleLabel) {
-    var sampleJSONdump = `${await window.printSampleToJSONstring(sampleLabel)}`
-    return sampleJSONdump
-}
 
 // set up the manage button
 $('#sampleTable tbody').on('click', 'button', function() {
@@ -631,6 +623,9 @@ const updatePieChart = async() => {
     myPieChart.update()
 }
 
+////////////////////////////////////////////////////////////////////
+// PAGE SETUP
+
 // pageRefresh will refresh the Herald runtime info in Go and then freshen up the page (does not rebuild the table)
 const pageRefresh = async() => {
     console.log('refreshing runtime info and re-rendering the page')
@@ -642,6 +637,32 @@ const pageRefresh = async() => {
         printErrorMsg(e)
         return
     }
+
+    // config check
+    // TODO: just checking user field as this is req field during config edits
+    // it works but might be better to have a Go func to check config valid
+    getUser().then(user => {
+        if (user === '') {
+            // no config, make the user set one up via the form
+            editConfigModal.style.display = 'block'
+        } else {
+            editConfigModal.style.display = 'none'
+            document.getElementById('welcome_username').innerHTML = user
+
+            // enable all modals
+            var modalClosers = document.getElementsByClassName('modal-close')
+            for (let i = 0; i < modalClosers.length; i++) {
+                modalClosers[i].addEventListener('click', function() {
+                    modalClosers[i].closest('.modal').style.display = 'none'
+                })
+            }
+            window.onclick = function(event) {
+                if (event.target.className == 'modal') {
+                    event.target.style.display = 'none'
+                }
+            }
+        }
+    })
 
     // update the run drop down
     await updateRunDropDown()
@@ -657,32 +678,8 @@ const pageRefresh = async() => {
     printTimeStamps()
 }
 
-// fullPageRender will insert various bits of runtime info from JS and Go into the app
-// TODO: this is virtually the same as pageRefresh - so just combine and add flag?
+// fullPageRender does a page refresh AND rebuilds the table from the database
 const fullPageRender = async() => {
-    console.log('starting Go Herald instance and rendering the page')
-
-    // load the Go Herald instance and populate the page data
-    try {
-        await loadRuntimeInfo()
-    } catch (e) {
-        printErrorMsg(e)
-        return
-    }
-
-    // update the run drop down
-    await updateRunDropDown()
-
-    // print the pie chart
-    await updatePieChart()
-
-    // check the minKNOW status TODO: do this in Go via routine
-    var minknowStatus = `${await checkAPIstatus()}`
-    updateStatus('status_minknow', minknowStatus)
-
-    // print the table
+    await pageRefresh()
     await buildTable()
-
-    // print a new timestamp
-    printTimeStamps()
 }

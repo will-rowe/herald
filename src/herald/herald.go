@@ -88,8 +88,10 @@ func (herald *Herald) EditConfig(userName, emailAddress string) error {
 	// this is a bit hacky, I'd like to add some config methods
 	// and validation of inputs etc. but for now:
 	// update the in-memory config
-	herald.config.User.Name = userName
-	herald.config.User.Email = emailAddress
+	herald.config.User = &services.User{
+		Name:  userName,
+		Email: emailAddress,
+	}
 
 	// write the in-memory config back to disk
 	return herald.config.Write()

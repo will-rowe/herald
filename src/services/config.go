@@ -36,7 +36,7 @@ var (
 	DefaultConfig = &Config{
 		Filepath:   DefaultConfigPath,
 		Fileformat: DefaultConfigType,
-		User:       &User{Name: "anonymous"},
+		User:       &User{},
 	}
 )
 

@@ -89,15 +89,20 @@ func TestTaggingExp(t *testing.T) {
 		t.Fatal("AddTags method did not return error when called with no tags")
 	}
 
-	// tag it with an unrecognised tag
-	if err := test.Metadata.AddTags([]string{"bogus"}); err == nil {
-		t.Fatal("AddTags method did not return error when called with unrecognised tag")
-	}
+	/*
+		Removing this test for now - tagging does not check for validity anymore as the only tags herald is applying is from the valid list, so invalid ones should not be added
+		I need to think if this is safe enough.
 
-	// tag it with recognised tags
-	if err := test.Metadata.AddTags([]string{"pipelineA", "basecall", "sequence"}); err != nil {
-		t.Fatalf("AddTags method returned error when called with recognised tags (sequence, basecall, pipelineA): %v", err)
-	}
+		// tag it with an unrecognised tag
+		if err := test.Metadata.AddTags([]string{"bogus"}); err == nil {
+			t.Fatal("AddTags method did not return error when called with unrecognised tag")
+		}
+
+		// tag it with recognised tags
+		if err := test.Metadata.AddTags([]string{"pipelineA", "basecall", "sequence"}); err != nil {
+			t.Fatalf("AddTags method returned error when called with recognised tags (sequence, basecall, pipelineA): %v", err)
+		}
+	*/
 
 	/*
 		// check ordering

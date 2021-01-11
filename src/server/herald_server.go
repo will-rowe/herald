@@ -27,6 +27,8 @@ type HeraldServer struct {
 // provided filepath.
 func Start(logFilePath string) {
 
+	// open the log
+	// TODO: look at rolling log: https://github.com/natefinch/lumberjack
 	f, err := os.OpenFile(logFilePath, os.O_RDWR|os.O_CREATE|os.O_APPEND, 0666)
 	if err != nil {
 		panic(fmt.Sprintf("error opening file: %v", err))

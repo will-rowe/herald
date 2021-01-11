@@ -16,7 +16,7 @@ import (
 	"github.com/will-rowe/herald/src/helpers"
 	"github.com/will-rowe/herald/src/herald"
 	"github.com/will-rowe/herald/src/minknow"
-	"github.com/will-rowe/herald/src/server"
+	"github.com/will-rowe/herald/src/services"
 )
 
 // dbLocation is where the db is stored - it is set at compile time to be platform specific
@@ -25,7 +25,7 @@ var dbLocation string
 // getSampleServiceTagsHTML returns the HTML needed to display all available services for sample tagging
 func getServiceTagsHTML(recordType string) string {
 	ServiceTagsHTML := "<label>Service requests</label>"
-	for serviceName, service := range server.ServiceRegister {
+	for serviceName, service := range services.ServiceRegister {
 		if recordType == service.GetRecordType() {
 			ServiceTagsHTML += fmt.Sprintf("<input type=\"checkbox\" id=\"formLabel_%v\" value=\"%v\"><label class=\"label-inline\" for=\"formLabel_%v\"> - %v</label><div class=\"clearfix\"></div>", serviceName, serviceName, serviceName, serviceName)
 		}
@@ -55,7 +55,7 @@ func main() {
 	defer heraldObj.Destroy()
 
 	// start up the gRPC server to handle background service requests
-	heraldServer, err := server.New(server.SetLog(heraldObj.GetServerLogfile()))
+	heraldServer, err := services.NewServer(services.SetLog(heraldObj.GetServerLogfile()))
 	if err != nil {
 		log.Fatal(err)
 	}

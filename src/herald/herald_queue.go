@@ -4,7 +4,7 @@ import (
 	"fmt"
 
 	"github.com/will-rowe/herald/src/records"
-	"github.com/will-rowe/herald/src/server"
+	"github.com/will-rowe/herald/src/services"
 )
 
 // AnnounceSamples will processes the queues and submit service requests
@@ -17,7 +17,7 @@ func (herald *Herald) AnnounceSamples() error {
 
 	// check service providers are available
 	// TODO: this should be done by the Herald server which manages the services, not the announcement queue
-	for _, service := range server.ServiceRegister {
+	for _, service := range services.ServiceRegister {
 		if err := service.CheckAccess(); err != nil {
 			return err
 		}
@@ -41,7 +41,7 @@ func (herald *Herald) AnnounceSamples() error {
 
 				// TODO: double dipping here - change the recieving method to do this
 				// get the service details
-				service := server.ServiceRegister[tag]
+				service := services.ServiceRegister[tag]
 
 				// run the service request
 				if err := service.SendRequest(v); err != nil {
@@ -83,7 +83,7 @@ func (herald *Herald) AnnounceSamples() error {
 
 			// TODO: double dipping here - change the recieving method to do this
 			// get the service details
-			service := server.ServiceRegister[tag]
+			service := services.ServiceRegister[tag]
 
 			// run the service request
 			if err := service.SendRequest(sample); err != nil {

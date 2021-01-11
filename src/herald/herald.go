@@ -8,17 +8,17 @@ import (
 
 	"github.com/will-rowe/herald/src/config"
 	"github.com/will-rowe/herald/src/records"
-	"github.com/will-rowe/herald/src/server"
+	"github.com/will-rowe/herald/src/services"
 	"github.com/will-rowe/herald/src/storage"
 )
 
 // Herald is the struct for holding runtime data
 type Herald struct {
-	sync.Mutex                             // to make the UI binding thread safe
-	server            *server.HeraldServer // the Herald server for managing service requests
-	config            *config.Config       // a copy of the config being used by the current Herald instance
-	store             *storage.Storage     // the key-value store for the samples
-	announcementQueue *list.List           // a FIFO queue for announcements
+	sync.Mutex                               // to make the UI binding thread safe
+	server            *services.HeraldServer // the Herald server for managing service requests
+	config            *config.Config         // a copy of the config being used by the current Herald instance
+	store             *storage.Storage       // the key-value store for the samples
+	announcementQueue *list.List             // a FIFO queue for announcements
 
 	// runtime count info for JS:
 	runCount              int    // the number of runs currently in the store

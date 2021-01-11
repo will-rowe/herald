@@ -1,4 +1,4 @@
-package server
+package services
 
 import (
 	"fmt"
@@ -160,7 +160,7 @@ func (heraldData *HeraldData) createServiceDAG() error {
 	for _, serviceName := range serviceList {
 
 		// ignore services with no dependencies
-		service := server.ServiceRegister[serviceName]
+		service := ServiceRegister[serviceName]
 		if len(service.GetDeps()) == 0 {
 			continue
 		}

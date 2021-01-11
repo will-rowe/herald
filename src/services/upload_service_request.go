@@ -1,4 +1,4 @@
-package server
+package services
 
 import (
 	"context"
@@ -7,19 +7,19 @@ import (
 	grpc "google.golang.org/grpc"
 
 	"github.com/will-rowe/herald/src/records"
-	"github.com/will-rowe/herald/src/services"
 )
 
-// SubmitMinionPipeline will send a pipeline request
-func SubmitMinionPipeline(heraldRecord interface{}, service *Service) error {
+// SubmitUpload will request a data upload
+// using the
+func SubmitUpload(heraldRecord interface{}, service *Service) error {
 
 	// assert we have a Sample, not a Run
-	var sample *records.Sample
+	var run *records.Run
 	switch heraldRecord.(type) {
-	case *records.Run:
-		return fmt.Errorf("can't submit Run in pipeline request, need a Sample")
 	case *records.Sample:
-		sample = heraldRecord.(*records.Sample)
+		return fmt.Errorf("can't submit Sample in data upload request, need a Run")
+	case *records.Run:
+		run = heraldRecord.(*records.Run)
 	default:
 		return fmt.Errorf("unsupported Herald record type")
 	}
@@ -34,27 +34,21 @@ func SubmitMinionPipeline(heraldRecord interface{}, service *Service) error {
 
 	// instantiate a client connection, on the TCP port the server is bound to
 	var conn *grpc.ClientConn
-	conn, err := grpc.Dial(fmt.Sprintf(":%d", DefaultTCPport), grpc.WithInsecure())
+	conn, err := grpc.Dial(fmt.Sprintf(":%d", service.port), grpc.WithInsecure())
 	if err != nil {
 		return fmt.Errorf("did not connect to Herald server: %s", err)
 	}
 	defer conn.Close()
-	c := services.NewHeraldClient(conn)
-
-	// form the request
-	request := &services.MinionPipelineRequest{
-		Pipeline: sample.GetMetadata().Label,
-		Param1:   "here you go",
-	}
+	c := NewHeraldClient(conn)
 
 	// send the request and collect the response
-	response, err := c.SubmitMinionPipeline(context.Background(), request)
+	response, err := c.SubmitUpload(context.Background(), &UploadRequest{Val1: run.GetFastqOutputDirectory()})
 	if err != nil {
 		return fmt.Errorf("could not run upload: %s", err)
 	}
 
 	// process the response
-	//fmt.Printf("Response from server: %s", response.Val)
+	fmt.Printf("Response from server: %s", response.Val2)
 
-	return fmt.Errorf("Response from server: %s", response.Val)
+	return fmt.Errorf("Response from server: %s", response.Val2)
 }

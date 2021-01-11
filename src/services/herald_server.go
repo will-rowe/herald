@@ -1,5 +1,5 @@
-// Package server is the gRPC server implementation used in the background of a Herald instance and manages the service requests.
-package server
+// Package services is the gRPC server implementation used in the background of a Herald instance and manages the service requests.
+package services
 
 import (
 	"fmt"
@@ -7,7 +7,6 @@ import (
 	"net"
 	"os"
 
-	"github.com/will-rowe/herald/src/services"
 	grpc "google.golang.org/grpc"
 )
 
@@ -16,22 +15,22 @@ import (
 // services.
 const DefaultTCPport = 7779
 
-// HeraldServer represents the gRPC server
+// Server represents the gRPC server
 // that is used by Herald to orchestrate
 // services during runtime.
-type HeraldServer struct {
+type Server struct {
 	logFile *os.File
 	tcpPort int
 }
 
 // Option is a wrapper struct used to pass functional
 // options to the HeraldServer constructor.
-type Option func(x *HeraldServer) error
+type Option func(x *Server) error
 
 // SetLog will set the log file for a server
 // and open it for writing
 func SetLog(logFile string) Option {
-	return func(x *HeraldServer) error {
+	return func(x *Server) error {
 		return x.setLog(logFile)
 	}
 }
@@ -39,13 +38,13 @@ func SetLog(logFile string) Option {
 // SetPort will set the TCP port for a
 // server.
 func SetPort(port int) Option {
-	return func(x *HeraldServer) error {
+	return func(x *Server) error {
 		return x.setPort(port)
 	}
 }
 
 // Start the HeraldServer.
-func (x *HeraldServer) Start() {
+func (x *Server) Start() {
 	log.Println("starting herald server")
 	lis, err := net.Listen("tcp", fmt.Sprintf(":%d", x.tcpPort))
 	if err != nil {
@@ -56,7 +55,7 @@ func (x *HeraldServer) Start() {
 	grpcServer := grpc.NewServer()
 
 	// attach the service
-	services.RegisterHeraldServer(grpcServer, x)
+	RegisterHeraldServer(grpcServer, x)
 
 	// start the server
 	if err := grpcServer.Serve(lis); err != nil {
@@ -65,16 +64,16 @@ func (x *HeraldServer) Start() {
 }
 
 // Stop the HeraldServer.
-func (x *HeraldServer) Stop() {
+func (x *Server) Stop() {
 	log.Println("stopping herald server")
 	x.logFile.Close()
 }
 
-// New will return a HeraldServer.
-func New(options ...Option) (*HeraldServer, error) {
+// NewServer will return a HeraldServer.
+func NewServer(options ...Option) (*Server, error) {
 
 	// create the server
-	x := &HeraldServer{
+	x := &Server{
 		tcpPort: DefaultTCPport,
 	}
 
@@ -89,7 +88,7 @@ func New(options ...Option) (*HeraldServer, error) {
 }
 
 // setLog.
-func (x *HeraldServer) setLog(logFile string) error {
+func (x *Server) setLog(logFile string) error {
 
 	// TODO: look at rolling log: https://github.com/natefinch/lumberjack
 	f, err := os.OpenFile(logFile, os.O_RDWR|os.O_CREATE|os.O_APPEND, 0666)
@@ -102,7 +101,7 @@ func (x *HeraldServer) setLog(logFile string) error {
 }
 
 // setPort.
-func (x *HeraldServer) setPort(port int) error {
+func (x *Server) setPort(port int) error {
 	x.tcpPort = port
 	return nil
 }

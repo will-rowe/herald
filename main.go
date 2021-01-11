@@ -16,20 +16,19 @@ import (
 	"github.com/will-rowe/herald/src/helpers"
 	"github.com/will-rowe/herald/src/herald"
 	"github.com/will-rowe/herald/src/minknow"
-	"github.com/will-rowe/herald/src/services"
+	"github.com/will-rowe/herald/src/server"
 )
 
 // dbLocation is where the db is stored - it is set at compile time to be platform specific
 var dbLocation string
 
-// getTagsHTML returns the HTML needed to display all available services for sample tagging
-func getTagsHTML() string {
+// getSampleServiceTagsHTML returns the HTML needed to display all available services for sample tagging
+func getServiceTagsHTML(recordType string) string {
 	ServiceTagsHTML := "<label>Service requests</label>"
-	for serviceName := range services.ServiceRegister {
-		if serviceName == "sequence" || serviceName == "basecall" {
-			continue
+	for serviceName, service := range server.ServiceRegister {
+		if recordType == service.GetRecordType() {
+			ServiceTagsHTML += fmt.Sprintf("<input type=\"checkbox\" id=\"formLabel_%v\" value=\"%v\"><label class=\"label-inline\" for=\"formLabel_%v\"> - %v</label><div class=\"clearfix\"></div>", serviceName, serviceName, serviceName, serviceName)
 		}
-		ServiceTagsHTML += fmt.Sprintf("<input type=\"checkbox\" id=\"formLabel_%v\" value=\"%v\"><label class=\"label-inline\" for=\"formLabel_%v\"> - %v</label><div class=\"clearfix\"></div>", serviceName, serviceName, serviceName, serviceName)
 	}
 	return ServiceTagsHTML
 }
@@ -37,7 +36,7 @@ func getTagsHTML() string {
 // main is the app entrypoint
 func main() {
 
-	// setup the UI
+	// setup lorca
 	args := []string{}
 	if runtime.GOOS == "linux" {
 		args = append(args, "--class=Lorca")
@@ -48,15 +47,18 @@ func main() {
 	}
 	defer ui.Close()
 
-	// get the available processes for tagging
-	ServiceTagsHTML := getTagsHTML()
-
 	// create the HERALD
 	var heraldObj *herald.Herald
 	if heraldObj, err = herald.InitHerald(dbLocation); err != nil {
 		ui.Eval(fmt.Sprintf(`console.log('failed to init herald: %v')`, err))
 	}
 	defer heraldObj.Destroy()
+
+	// start up the gRPC server to handle background service requests
+	go server.Start()
+
+	// get the available services for tagging samples
+	SampleServiceTagsHTML := getServiceTagsHTML("sample")
 
 	// Bind HERALD methods to the UI
 	// buttons
@@ -110,8 +112,8 @@ func main() {
 			ui.Eval(`document.getElementById('addSampleModalOpen').disabled = false`)
 		}
 
-		// update the add sample form with the available processes for tagging
-		ui.Eval(fmt.Sprintf(`document.getElementById('sampleTags').innerHTML = '%v'`, ServiceTagsHTML))
+		// update the add sample form with the available services for tagging
+		ui.Eval(fmt.Sprintf(`document.getElementById('sampleTags').innerHTML = '%v'`, SampleServiceTagsHTML))
 
 		// enable the announce button if there are tagged service requests for runs/samples in the queue
 		if heraldObj.GetAnnouncementQueueSize() == 0 {

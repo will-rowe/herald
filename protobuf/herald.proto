@@ -49,6 +49,15 @@ message Config {
 }
 
 /*
+    RecordType is used for differentiating between
+    Herald Record types.
+*/
+enum RecordType {
+    run = 0;
+    sample = 1;
+}
+
+/*
     HeraldData is the base data type.
     It is used by both Run and Sample.
 */

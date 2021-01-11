@@ -86,6 +86,55 @@ func (Status) EnumDescriptor() ([]byte, []int) {
 }
 
 //
+//RecordType is used for differentiating between
+//Herald Record types.
+type RecordType int32
+
+const (
+	RecordType_run    RecordType = 0
+	RecordType_sample RecordType = 1
+)
+
+// Enum value maps for RecordType.
+var (
+	RecordType_name = map[int32]string{
+		0: "run",
+		1: "sample",
+	}
+	RecordType_value = map[string]int32{
+		"run":    0,
+		"sample": 1,
+	}
+)
+
+func (x RecordType) Enum() *RecordType {
+	p := new(RecordType)
+	*p = x
+	return p
+}
+
+func (x RecordType) String() string {
+	return protoimpl.X.EnumStringOf(x.Descriptor(), protoreflect.EnumNumber(x))
+}
+
+func (RecordType) Descriptor() protoreflect.EnumDescriptor {
+	return file_herald_proto_enumTypes[1].Descriptor()
+}
+
+func (RecordType) Type() protoreflect.EnumType {
+	return &file_herald_proto_enumTypes[1]
+}
+
+func (x RecordType) Number() protoreflect.EnumNumber {
+	return protoreflect.EnumNumber(x)
+}
+
+// Deprecated: Use RecordType.Descriptor instead.
+func (RecordType) EnumDescriptor() ([]byte, []int) {
+	return file_herald_proto_rawDescGZIP(), []int{1}
+}
+
+//
 //Comments are used to record generic
 //text entries and to track the history
 //of HeraldData.
@@ -597,8 +646,11 @@ var file_herald_proto_rawDesc = []byte{
 	0x65, 0x64, 0x10, 0x01, 0x12, 0x12, 0x0a, 0x0e, 0x74, 0x61, 0x67, 0x73, 0x49, 0x6e, 0x63, 0x6f,
 	0x6d, 0x70, 0x6c, 0x65, 0x74, 0x65, 0x10, 0x02, 0x12, 0x10, 0x0a, 0x0c, 0x74, 0x61, 0x67, 0x73,
 	0x43, 0x6f, 0x6d, 0x70, 0x6c, 0x65, 0x74, 0x65, 0x10, 0x03, 0x12, 0x0d, 0x0a, 0x09, 0x61, 0x6e,
-	0x6e, 0x6f, 0x75, 0x6e, 0x63, 0x65, 0x64, 0x10, 0x04, 0x42, 0x0c, 0x5a, 0x0a, 0x2e, 0x3b, 0x73,
-	0x65, 0x72, 0x76, 0x69, 0x63, 0x65, 0x73, 0x62, 0x06, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x33,
+	0x6e, 0x6f, 0x75, 0x6e, 0x63, 0x65, 0x64, 0x10, 0x04, 0x2a, 0x21, 0x0a, 0x0a, 0x52, 0x65, 0x63,
+	0x6f, 0x72, 0x64, 0x54, 0x79, 0x70, 0x65, 0x12, 0x07, 0x0a, 0x03, 0x72, 0x75, 0x6e, 0x10, 0x00,
+	0x12, 0x0a, 0x0a, 0x06, 0x73, 0x61, 0x6d, 0x70, 0x6c, 0x65, 0x10, 0x01, 0x42, 0x0c, 0x5a, 0x0a,
+	0x2e, 0x3b, 0x73, 0x65, 0x72, 0x76, 0x69, 0x63, 0x65, 0x73, 0x62, 0x06, 0x70, 0x72, 0x6f, 0x74,
+	0x6f, 0x33,
 }
 
 var (
@@ -613,30 +665,31 @@ func file_herald_proto_rawDescGZIP() []byte {
 	return file_herald_proto_rawDescData
 }
 
-var file_herald_proto_enumTypes = make([]protoimpl.EnumInfo, 1)
+var file_herald_proto_enumTypes = make([]protoimpl.EnumInfo, 2)
 var file_herald_proto_msgTypes = make([]protoimpl.MessageInfo, 7)
 var file_herald_proto_goTypes = []interface{}{
 	(Status)(0),                 // 0: services.Status
-	(*Comment)(nil),             // 1: services.Comment
-	(*User)(nil),                // 2: services.User
-	(*Config)(nil),              // 3: services.Config
-	(*HeraldData)(nil),          // 4: services.HeraldData
-	(*Run)(nil),                 // 5: services.Run
-	(*Sample)(nil),              // 6: services.Sample
-	nil,                         // 7: services.HeraldData.TagsEntry
-	(*timestamp.Timestamp)(nil), // 8: google.protobuf.Timestamp
+	(RecordType)(0),             // 1: services.RecordType
+	(*Comment)(nil),             // 2: services.Comment
+	(*User)(nil),                // 3: services.User
+	(*Config)(nil),              // 4: services.Config
+	(*HeraldData)(nil),          // 5: services.HeraldData
+	(*Run)(nil),                 // 6: services.Run
+	(*Sample)(nil),              // 7: services.Sample
+	nil,                         // 8: services.HeraldData.TagsEntry
+	(*timestamp.Timestamp)(nil), // 9: google.protobuf.Timestamp
 }
 var file_herald_proto_depIdxs = []int32{
-	8,  // 0: services.Comment.timestamp:type_name -> google.protobuf.Timestamp
-	8,  // 1: services.User.created:type_name -> google.protobuf.Timestamp
-	8,  // 2: services.Config.created:type_name -> google.protobuf.Timestamp
-	2,  // 3: services.Config.user:type_name -> services.User
-	8,  // 4: services.HeraldData.created:type_name -> google.protobuf.Timestamp
-	1,  // 5: services.HeraldData.history:type_name -> services.Comment
+	9,  // 0: services.Comment.timestamp:type_name -> google.protobuf.Timestamp
+	9,  // 1: services.User.created:type_name -> google.protobuf.Timestamp
+	9,  // 2: services.Config.created:type_name -> google.protobuf.Timestamp
+	3,  // 3: services.Config.user:type_name -> services.User
+	9,  // 4: services.HeraldData.created:type_name -> google.protobuf.Timestamp
+	2,  // 5: services.HeraldData.history:type_name -> services.Comment
 	0,  // 6: services.HeraldData.status:type_name -> services.Status
-	7,  // 7: services.HeraldData.tags:type_name -> services.HeraldData.TagsEntry
-	4,  // 8: services.Run.metadata:type_name -> services.HeraldData
-	4,  // 9: services.Sample.metadata:type_name -> services.HeraldData
+	8,  // 7: services.HeraldData.tags:type_name -> services.HeraldData.TagsEntry
+	5,  // 8: services.Run.metadata:type_name -> services.HeraldData
+	5,  // 9: services.Sample.metadata:type_name -> services.HeraldData
 	10, // [10:10] is the sub-list for method output_type
 	10, // [10:10] is the sub-list for method input_type
 	10, // [10:10] is the sub-list for extension type_name
@@ -728,7 +781,7 @@ func file_herald_proto_init() {
 		File: protoimpl.DescBuilder{
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: file_herald_proto_rawDesc,
-			NumEnums:      1,
+			NumEnums:      2,
 			NumMessages:   7,
 			NumExtensions: 0,
 			NumServices:   0,

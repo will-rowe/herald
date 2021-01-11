@@ -3,6 +3,7 @@ package herald
 import (
 	"fmt"
 
+	"github.com/will-rowe/herald/src/server"
 	"github.com/will-rowe/herald/src/services"
 )
 
@@ -15,7 +16,8 @@ func (herald *Herald) AnnounceSamples() error {
 	}
 
 	// check service providers are available
-	for _, service := range services.ServiceRegister {
+	// TODO: this should be done by the Herald server which manages the services, not the announcement queue
+	for _, service := range server.ServiceRegister {
 		if err := service.CheckAccess(); err != nil {
 			return err
 		}
@@ -29,17 +31,17 @@ func (herald *Herald) AnnounceSamples() error {
 		case *services.Sample:
 			continue
 		case *services.Run:
-
-			// get the tags in order
-			for _, tag := range v.Metadata.GetRequestOrder() {
+			// make the service requests
+			for tag, complete := range v.Metadata.GetTags() {
 
 				// check it's not been completed already
-				if complete := v.Metadata.GetTags()[tag]; complete {
+				if complete {
 					continue
 				}
 
+				// TODO: double dipping here - change the recieving method to do this
 				// get the service details
-				service := services.ServiceRegister[tag]
+				service := server.ServiceRegister[tag]
 
 				// run the service request
 				if err := service.SendRequest(v); err != nil {
@@ -66,16 +68,28 @@ func (herald *Herald) AnnounceSamples() error {
 		// grab the sample that is first in the queue
 		sample := request.Value.(*services.Sample)
 
-		// get the tags in order
-		for _, tag := range sample.Metadata.GetRequestOrder() {
-			_ = tag
-		}
-
+		// TODO:
 		// evalute the sample
-
 		// update fields and propogate to linked data
-
 		// decide if it should be dequeued
+
+		// make the service requests
+		for tag, complete := range sample.Metadata.GetTags() {
+
+			// check it's not been completed already
+			if complete {
+				continue
+			}
+
+			// TODO: double dipping here - change the recieving method to do this
+			// get the service details
+			service := server.ServiceRegister[tag]
+
+			// run the service request
+			if err := service.SendRequest(sample); err != nil {
+				return err
+			}
+		}
 
 		// update the status of the sample and dequeue it
 		sample.Metadata.AddComment("sample announced.")

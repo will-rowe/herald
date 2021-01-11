@@ -4,7 +4,6 @@ import (
 	"fmt"
 
 	"github.com/golang/protobuf/ptypes"
-	toposort "github.com/philopon/go-toposort"
 )
 
 // InitRun will init a run struct with the minimum required values
@@ -88,12 +87,6 @@ func (heraldData *HeraldData) AddTags(tags []string) error {
 	// range over the tags to be added
 	for _, serviceName := range tags {
 
-		// check the tag is a recognised service
-		_, ok := ServiceRegister[serviceName]
-		if !ok {
-			return fmt.Errorf("unrecognised service name: %v", serviceName)
-		}
-
 		// make sure this data has not already been tagged with this service
 		for existingTag := range heraldData.Tags {
 			if existingTag == serviceName {
@@ -107,18 +100,11 @@ func (heraldData *HeraldData) AddTags(tags []string) error {
 
 	// update the status to "tagged"
 	heraldData.SetStatus(Status_tagsIncomplete)
-
-	// generate new request order
-	return heraldData.createServiceDAG()
+	return nil
 }
 
 // SetTag is a method to set a tag either true or false (complete or incomplete)
 func (heraldData *HeraldData) SetTag(serviceName string, value bool) error {
-
-	// check the tag is a recognised service
-	if _, ok := ServiceRegister[serviceName]; !ok {
-		return fmt.Errorf("unrecognised service name: %v", serviceName)
-	}
 
 	// check the data has this tag and set it
 	if _, ok := heraldData.Tags[serviceName]; !ok {
@@ -164,48 +150,4 @@ func (heraldData *HeraldData) CheckStatus() error {
 	default:
 		return fmt.Errorf("unknown status: %d", status)
 	}
-}
-
-// createServiceDAG creates a linear ordering of services that accounts for service dependencies
-func (heraldData *HeraldData) createServiceDAG() error {
-
-	// reset requestOrder
-	heraldData.RequestOrder = []string{}
-
-	// transfer service names from map to slice
-	serviceList := make([]string, len(heraldData.Tags))
-	numServices := 0
-	for serviceName := range heraldData.GetTags() {
-		serviceList[numServices] = serviceName
-		numServices++
-	}
-
-	// create a dag
-	dag := toposort.NewGraph(numServices)
-
-	// create the nodes
-	dag.AddNodes(serviceList...)
-
-	// loop through input list and create edges
-	for _, serviceName := range serviceList {
-
-		// ignore services with no dependencies
-		service := ServiceRegister[serviceName]
-		if len(service.GetDeps()) == 0 {
-			continue
-		}
-
-		// loop over the depencies and draw edges
-		for _, dependencyName := range service.GetDeps() {
-			dag.AddEdge(dependencyName, serviceName)
-		}
-	}
-
-	// sort the graph and check for cycles
-	result, ok := dag.Toposort()
-	if !ok {
-		return fmt.Errorf("service dependency cycle detected")
-	}
-	heraldData.RequestOrder = result
-	return nil
 }

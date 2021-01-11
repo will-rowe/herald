@@ -18,7 +18,7 @@ import (
 var (
 
 	// DefaultConfigName is the default config file name.
-	DefaultConfigName = "herald"
+	DefaultConfigName = "herald-config"
 
 	// DefaultConfigType of file for the config file.
 	DefaultConfigType = "json"
@@ -29,6 +29,9 @@ var (
 	// DefaultConfigPath for the config file.
 	DefaultConfigPath = fmt.Sprintf("%s/%s.%s", DefaultConfigDir, DefaultConfigName, DefaultConfigType)
 
+	// DefaultServerlog file path.
+	DefaultServerlog = fmt.Sprintf("%s/herald-server.log", DefaultConfigDir)
+
 	// ErrInvalidPath is used when the config file path is bad or doesn't exist.
 	ErrInvalidPath = fmt.Errorf("invalid config filepath")
 
@@ -37,6 +40,7 @@ var (
 		Filepath:   DefaultConfigPath,
 		Fileformat: DefaultConfigType,
 		User:       &User{},
+		Serverlog:  DefaultServerlog,
 	}
 )
 
@@ -102,7 +106,7 @@ func InitConfig(configDir string) (*Config, error) {
 
 	// if the config file doesn't exist, create a default one
 	if exists := helpers.CheckFileExists(fmt.Sprintf("%s/%s.%s", absConfigDir, DefaultConfigName, DefaultConfigType)); !exists {
-		if err := generateDefault(fmt.Sprintf("%s/%s.%s", absConfigDir, DefaultConfigName, DefaultConfigType)); err != nil {
+		if err := generateDefault(absConfigDir); err != nil {
 			return nil, err
 		}
 	}
@@ -122,11 +126,12 @@ func InitConfig(configDir string) (*Config, error) {
 // generateDefault will generate the default
 // config on disk. If no filePath provided,
 // it will use the DefaultConfigPath.
-func generateDefault(filePath string) error {
+func generateDefault(path string) error {
 
 	// use a default directory if non provided
-	if len(filePath) != 0 {
-		DefaultConfig.Filepath = filePath
+	if len(path) != 0 {
+		DefaultConfig.Filepath = fmt.Sprintf("%s/%s.%s", path, DefaultConfigName, DefaultConfigType)
+		DefaultConfig.Serverlog = fmt.Sprintf("%s/herald-server.log", path)
 	}
 
 	// write the default config to disk

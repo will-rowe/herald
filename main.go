@@ -55,10 +55,7 @@ func main() {
 	defer heraldObj.Destroy()
 
 	// start up the gRPC server to handle background service requests
-	go server.Start()
-
-	// get the available services for tagging samples
-	SampleServiceTagsHTML := getServiceTagsHTML("sample")
+	go server.Start(heraldObj.GetServerLogfile())
 
 	// Bind HERALD methods to the UI
 	// buttons
@@ -113,7 +110,7 @@ func main() {
 		}
 
 		// update the add sample form with the available services for tagging
-		ui.Eval(fmt.Sprintf(`document.getElementById('sampleTags').innerHTML = '%v'`, SampleServiceTagsHTML))
+		ui.Eval(fmt.Sprintf(`document.getElementById('sampleTags').innerHTML = '%v'`, getServiceTagsHTML("sample")))
 
 		// enable the announce button if there are tagged service requests for runs/samples in the queue
 		if heraldObj.GetAnnouncementQueueSize() == 0 {

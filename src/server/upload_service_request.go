@@ -38,7 +38,7 @@ func SubmitUpload(heraldRecord interface{}, service *Service) error {
 		return fmt.Errorf("did not connect to Herald server: %s", err)
 	}
 	defer conn.Close()
-	c := services.NewUploadClient(conn)
+	c := services.NewHeraldClient(conn)
 
 	// send the request and collect the response
 	response, err := c.SubmitUpload(context.Background(), &services.UploadRequest{Val1: run.GetFastqOutputDirectory()})

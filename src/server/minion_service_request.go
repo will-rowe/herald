@@ -38,7 +38,7 @@ func SubmitMinionPipeline(heraldRecord interface{}, service *Service) error {
 		return fmt.Errorf("did not connect to Herald server: %s", err)
 	}
 	defer conn.Close()
-	c := services.NewUploadClient(conn)
+	c := services.NewHeraldClient(conn)
 
 	// form the request
 	request := &services.MinionPipelineRequest{

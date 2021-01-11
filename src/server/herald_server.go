@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"log"
 	"net"
+	"os"
 
 	"github.com/will-rowe/herald/src/services"
 	grpc "google.golang.org/grpc"
@@ -20,13 +21,23 @@ type HeraldServer struct {
 
 // Start will start a gRPC server,
 // attach the service and then waits
-// for connection and handles requests/
-func Start() {
+// for connection and handles
+// requests.
+// It will write to a log at the
+// provided filepath.
+func Start(logFilePath string) {
+
+	f, err := os.OpenFile(logFilePath, os.O_RDWR|os.O_CREATE|os.O_APPEND, 0666)
+	if err != nil {
+		panic(fmt.Sprintf("error opening file: %v", err))
+	}
+	defer f.Close()
+	log.SetOutput(f)
 
 	log.Println("starting herald server")
 	lis, err := net.Listen("tcp", fmt.Sprintf(":%d", TCPport))
 	if err != nil {
-		log.Printf("failed to listen: %v", err)
+		log.Printf("server failed to listen: %v", err)
 	}
 
 	// create a server instance
@@ -36,11 +47,11 @@ func Start() {
 	grpcServer := grpc.NewServer()
 
 	// attach the service
-	services.RegisterUploadServer(grpcServer, &heraldServer)
+	services.RegisterHeraldServer(grpcServer, &heraldServer)
 
 	// start the server
 	if err := grpcServer.Serve(lis); err != nil {
-		log.Printf("failed to serve: %s", err)
+		log.Printf("server failed to serve: %s", err)
 	}
 
 }

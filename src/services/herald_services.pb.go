@@ -246,7 +246,7 @@ var file_herald_services_proto_rawDesc = []byte{
 	0x09, 0x52, 0x06, 0x70, 0x61, 0x72, 0x61, 0x6d, 0x31, 0x22, 0x2a, 0x0a, 0x16, 0x4d, 0x69, 0x6e,
 	0x69, 0x6f, 0x6e, 0x50, 0x69, 0x70, 0x65, 0x6c, 0x69, 0x6e, 0x65, 0x52, 0x65, 0x73, 0x70, 0x6f,
 	0x6e, 0x73, 0x65, 0x12, 0x10, 0x0a, 0x03, 0x76, 0x61, 0x6c, 0x18, 0x01, 0x20, 0x01, 0x28, 0x09,
-	0x52, 0x03, 0x76, 0x61, 0x6c, 0x32, 0xaa, 0x01, 0x0a, 0x06, 0x55, 0x70, 0x6c, 0x6f, 0x61, 0x64,
+	0x52, 0x03, 0x76, 0x61, 0x6c, 0x32, 0xaa, 0x01, 0x0a, 0x06, 0x48, 0x65, 0x72, 0x61, 0x6c, 0x64,
 	0x12, 0x43, 0x0a, 0x0c, 0x53, 0x75, 0x62, 0x6d, 0x69, 0x74, 0x55, 0x70, 0x6c, 0x6f, 0x61, 0x64,
 	0x12, 0x17, 0x2e, 0x73, 0x65, 0x72, 0x76, 0x69, 0x63, 0x65, 0x73, 0x2e, 0x55, 0x70, 0x6c, 0x6f,
 	0x61, 0x64, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x1a, 0x18, 0x2e, 0x73, 0x65, 0x72, 0x76,
@@ -281,10 +281,10 @@ var file_herald_services_proto_goTypes = []interface{}{
 	(*MinionPipelineResponse)(nil), // 3: services.MinionPipelineResponse
 }
 var file_herald_services_proto_depIdxs = []int32{
-	0, // 0: services.Upload.SubmitUpload:input_type -> services.UploadRequest
-	2, // 1: services.Upload.SubmitMinionPipeline:input_type -> services.MinionPipelineRequest
-	1, // 2: services.Upload.SubmitUpload:output_type -> services.UploadResponse
-	3, // 3: services.Upload.SubmitMinionPipeline:output_type -> services.MinionPipelineResponse
+	0, // 0: services.Herald.SubmitUpload:input_type -> services.UploadRequest
+	2, // 1: services.Herald.SubmitMinionPipeline:input_type -> services.MinionPipelineRequest
+	1, // 2: services.Herald.SubmitUpload:output_type -> services.UploadResponse
+	3, // 3: services.Herald.SubmitMinionPipeline:output_type -> services.MinionPipelineResponse
 	2, // [2:4] is the sub-list for method output_type
 	0, // [0:2] is the sub-list for method input_type
 	0, // [0:0] is the sub-list for extension type_name
@@ -375,112 +375,112 @@ var _ grpc.ClientConnInterface
 // is compatible with the grpc package it is being compiled against.
 const _ = grpc.SupportPackageIsVersion6
 
-// UploadClient is the client API for Upload service.
+// HeraldClient is the client API for Herald service.
 //
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://godoc.org/google.golang.org/grpc#ClientConn.NewStream.
-type UploadClient interface {
+type HeraldClient interface {
 	// SubmitUpload is an exposed function for the Upload service
 	SubmitUpload(ctx context.Context, in *UploadRequest, opts ...grpc.CallOption) (*UploadResponse, error)
 	// SubmitMinionPipeline will submit a minion pipeline request to CLIMB
 	SubmitMinionPipeline(ctx context.Context, in *MinionPipelineRequest, opts ...grpc.CallOption) (*MinionPipelineResponse, error)
 }
 
-type uploadClient struct {
+type heraldClient struct {
 	cc grpc.ClientConnInterface
 }
 
-func NewUploadClient(cc grpc.ClientConnInterface) UploadClient {
-	return &uploadClient{cc}
+func NewHeraldClient(cc grpc.ClientConnInterface) HeraldClient {
+	return &heraldClient{cc}
 }
 
-func (c *uploadClient) SubmitUpload(ctx context.Context, in *UploadRequest, opts ...grpc.CallOption) (*UploadResponse, error) {
+func (c *heraldClient) SubmitUpload(ctx context.Context, in *UploadRequest, opts ...grpc.CallOption) (*UploadResponse, error) {
 	out := new(UploadResponse)
-	err := c.cc.Invoke(ctx, "/services.Upload/SubmitUpload", in, out, opts...)
+	err := c.cc.Invoke(ctx, "/services.Herald/SubmitUpload", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
 	return out, nil
 }
 
-func (c *uploadClient) SubmitMinionPipeline(ctx context.Context, in *MinionPipelineRequest, opts ...grpc.CallOption) (*MinionPipelineResponse, error) {
+func (c *heraldClient) SubmitMinionPipeline(ctx context.Context, in *MinionPipelineRequest, opts ...grpc.CallOption) (*MinionPipelineResponse, error) {
 	out := new(MinionPipelineResponse)
-	err := c.cc.Invoke(ctx, "/services.Upload/SubmitMinionPipeline", in, out, opts...)
+	err := c.cc.Invoke(ctx, "/services.Herald/SubmitMinionPipeline", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
 	return out, nil
 }
 
-// UploadServer is the server API for Upload service.
-type UploadServer interface {
+// HeraldServer is the server API for Herald service.
+type HeraldServer interface {
 	// SubmitUpload is an exposed function for the Upload service
 	SubmitUpload(context.Context, *UploadRequest) (*UploadResponse, error)
 	// SubmitMinionPipeline will submit a minion pipeline request to CLIMB
 	SubmitMinionPipeline(context.Context, *MinionPipelineRequest) (*MinionPipelineResponse, error)
 }
 
-// UnimplementedUploadServer can be embedded to have forward compatible implementations.
-type UnimplementedUploadServer struct {
+// UnimplementedHeraldServer can be embedded to have forward compatible implementations.
+type UnimplementedHeraldServer struct {
 }
 
-func (*UnimplementedUploadServer) SubmitUpload(context.Context, *UploadRequest) (*UploadResponse, error) {
+func (*UnimplementedHeraldServer) SubmitUpload(context.Context, *UploadRequest) (*UploadResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method SubmitUpload not implemented")
 }
-func (*UnimplementedUploadServer) SubmitMinionPipeline(context.Context, *MinionPipelineRequest) (*MinionPipelineResponse, error) {
+func (*UnimplementedHeraldServer) SubmitMinionPipeline(context.Context, *MinionPipelineRequest) (*MinionPipelineResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method SubmitMinionPipeline not implemented")
 }
 
-func RegisterUploadServer(s *grpc.Server, srv UploadServer) {
-	s.RegisterService(&_Upload_serviceDesc, srv)
+func RegisterHeraldServer(s *grpc.Server, srv HeraldServer) {
+	s.RegisterService(&_Herald_serviceDesc, srv)
 }
 
-func _Upload_SubmitUpload_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+func _Herald_SubmitUpload_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(UploadRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(UploadServer).SubmitUpload(ctx, in)
+		return srv.(HeraldServer).SubmitUpload(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/services.Upload/SubmitUpload",
+		FullMethod: "/services.Herald/SubmitUpload",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(UploadServer).SubmitUpload(ctx, req.(*UploadRequest))
+		return srv.(HeraldServer).SubmitUpload(ctx, req.(*UploadRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
 
-func _Upload_SubmitMinionPipeline_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+func _Herald_SubmitMinionPipeline_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(MinionPipelineRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(UploadServer).SubmitMinionPipeline(ctx, in)
+		return srv.(HeraldServer).SubmitMinionPipeline(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/services.Upload/SubmitMinionPipeline",
+		FullMethod: "/services.Herald/SubmitMinionPipeline",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(UploadServer).SubmitMinionPipeline(ctx, req.(*MinionPipelineRequest))
+		return srv.(HeraldServer).SubmitMinionPipeline(ctx, req.(*MinionPipelineRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
 
-var _Upload_serviceDesc = grpc.ServiceDesc{
-	ServiceName: "services.Upload",
-	HandlerType: (*UploadServer)(nil),
+var _Herald_serviceDesc = grpc.ServiceDesc{
+	ServiceName: "services.Herald",
+	HandlerType: (*HeraldServer)(nil),
 	Methods: []grpc.MethodDesc{
 		{
 			MethodName: "SubmitUpload",
-			Handler:    _Upload_SubmitUpload_Handler,
+			Handler:    _Herald_SubmitUpload_Handler,
 		},
 		{
 			MethodName: "SubmitMinionPipeline",
-			Handler:    _Upload_SubmitMinionPipeline_Handler,
+			Handler:    _Herald_SubmitMinionPipeline_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

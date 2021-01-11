@@ -24,8 +24,8 @@ message MinionPipelineResponse {
     string val = 1;
 }
 
-// Upload service
-service Upload {
+// Herald service
+service Herald {
 
     // SubmitUpload is an exposed function for the Upload service
     rpc SubmitUpload(UploadRequest) returns (UploadResponse) {}

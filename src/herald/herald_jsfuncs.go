@@ -7,6 +7,13 @@ func (herald *Herald) GetUser() string {
 	return herald.config.GetUser().GetName()
 }
 
+// GetServerLogfile returns the location of the server logfile
+func (herald *Herald) GetServerLogfile() string {
+	herald.Lock()
+	defer herald.Unlock()
+	return herald.config.GetServerlog()
+}
+
 // GetDbPath returns the location of the storage on disk
 func (herald *Herald) GetDbPath() string {
 	herald.Lock()

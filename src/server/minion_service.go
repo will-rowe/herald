@@ -11,7 +11,7 @@ import (
 // SubmitMinionPipeline recieves a MinionPipelineRequest,
 // checks and sends it to CLIMB, then returns
 // a PipelineResponse.
-func (heraldServer *HeraldServer) SubmitMinionPipeline(ctx context.Context, submission *services.MinionPipelineRequest) (*services.MinionPipelineResponse, error) {
+func (x *HeraldServer) SubmitMinionPipeline(ctx context.Context, submission *services.MinionPipelineRequest) (*services.MinionPipelineResponse, error) {
 	log.Printf("received pipeline submission request")
 	if submission.GetPipeline() == "" {
 		return nil, fmt.Errorf("no pipeline label sent")

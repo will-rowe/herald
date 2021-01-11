@@ -20,10 +20,10 @@ func init() {
 	// create the service definitions
 	//
 	// Run services
-	registerService(services.RecordType_run, "upload", nil, TCPport, SubmitUpload)
+	registerService(services.RecordType_run, "upload", nil, DefaultTCPport, SubmitUpload)
 	//
 	// Sample services
-	registerService(services.RecordType_sample, "minion pipeline", nil, TCPport, SubmitMinionPipeline)
+	registerService(services.RecordType_sample, "minion pipeline", nil, DefaultTCPport, SubmitMinionPipeline)
 	//
 	//
 	//registerService(RecordType_sample, "pipelineA", []string{"sequence", "basecall", "upload"}, 7780, SubmitSequencingProcess)

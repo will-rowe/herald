@@ -55,7 +55,11 @@ func main() {
 	defer heraldObj.Destroy()
 
 	// start up the gRPC server to handle background service requests
-	go server.Start(heraldObj.GetServerLogfile())
+	heraldServer, err := server.New(server.SetLog(heraldObj.GetServerLogfile()))
+	if err != nil {
+		log.Fatal(err)
+	}
+	go heraldServer.Start()
 
 	// Bind HERALD methods to the UI
 	// buttons

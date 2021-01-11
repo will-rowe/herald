@@ -33,7 +33,7 @@ func SubmitMinionPipeline(heraldRecord interface{}, service *Service) error {
 
 	// instantiate a client connection, on the TCP port the server is bound to
 	var conn *grpc.ClientConn
-	conn, err := grpc.Dial(fmt.Sprintf(":%d", TCPport), grpc.WithInsecure())
+	conn, err := grpc.Dial(fmt.Sprintf(":%d", DefaultTCPport), grpc.WithInsecure())
 	if err != nil {
 		return fmt.Errorf("did not connect to Herald server: %s", err)
 	}

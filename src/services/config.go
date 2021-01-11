@@ -13,6 +13,7 @@ import (
 	"github.com/spf13/viper"
 
 	"github.com/will-rowe/herald/src/helpers"
+	"github.com/will-rowe/herald/src/version"
 )
 
 var (
@@ -40,6 +41,7 @@ var (
 		Filepath:   DefaultConfigPath,
 		Fileformat: DefaultConfigType,
 		User:       &User{},
+		Version:    version.VERSION,
 		Serverlog:  DefaultServerlog,
 	}
 )

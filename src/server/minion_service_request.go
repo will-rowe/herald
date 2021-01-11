@@ -6,6 +6,7 @@ import (
 
 	grpc "google.golang.org/grpc"
 
+	"github.com/will-rowe/herald/src/records"
 	"github.com/will-rowe/herald/src/services"
 )
 
@@ -13,12 +14,12 @@ import (
 func SubmitMinionPipeline(heraldRecord interface{}, service *Service) error {
 
 	// assert we have a Sample, not a Run
-	var sample *services.Sample
+	var sample *records.Sample
 	switch heraldRecord.(type) {
-	case *services.Run:
+	case *records.Run:
 		return fmt.Errorf("can't submit Run in pipeline request, need a Sample")
-	case *services.Sample:
-		sample = heraldRecord.(*services.Sample)
+	case *records.Sample:
+		sample = heraldRecord.(*records.Sample)
 	default:
 		return fmt.Errorf("unsupported Herald record type")
 	}

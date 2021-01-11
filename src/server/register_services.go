@@ -5,7 +5,7 @@ import (
 
 	"google.golang.org/grpc"
 
-	"github.com/will-rowe/herald/src/services"
+	"github.com/will-rowe/herald/src/records"
 )
 
 // init is where we create the services
@@ -20,10 +20,10 @@ func init() {
 	// create the service definitions
 	//
 	// Run services
-	registerService(services.RecordType_run, "upload", nil, DefaultTCPport, SubmitUpload)
+	registerService(records.RecordType_run, "upload", nil, DefaultTCPport, SubmitUpload)
 	//
 	// Sample services
-	registerService(services.RecordType_sample, "minion pipeline", nil, DefaultTCPport, SubmitMinionPipeline)
+	registerService(records.RecordType_sample, "minion pipeline", nil, DefaultTCPport, SubmitMinionPipeline)
 	//
 	//
 	//registerService(RecordType_sample, "pipelineA", []string{"sequence", "basecall", "upload"}, 7780, SubmitSequencingProcess)
@@ -31,7 +31,7 @@ func init() {
 
 // Service is holds the information needed by Herald to send messages to a service provider
 type Service struct {
-	recordType      services.RecordType                                    // the type of Herald record this service operates on (sun or rample)
+	recordType      records.RecordType                                     // the type of Herald record this service operates on (sun or rample)
 	name            string                                                 // name of the service
 	dependsOn       []string                                               // the other services that should have completed prior to this one being contacted
 	port            int                                                    // the gRPC port the service is accepting requests on
@@ -76,13 +76,13 @@ func (service *Service) SendRequest(heraldRecord interface{}) error {
 
 // registerService will register a service to the
 // Herald runtime.
-func registerService(recordType services.RecordType, sName string, sDependsOn []string, sPort int, sFunc func(heraldRecord interface{}, service *Service) error) {
+func registerService(recordType records.RecordType, sName string, sDependsOn []string, sPort int, sFunc func(heraldRecord interface{}, service *Service) error) {
 
 	// check the record type is either sample or run
 	switch recordType {
-	case services.RecordType_run:
+	case records.RecordType_run:
 		break
-	case services.RecordType_sample:
+	case records.RecordType_sample:
 		break
 	default:
 		panic(fmt.Sprintf("unsupported record type: %v", recordType))

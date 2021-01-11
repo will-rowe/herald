@@ -1,0 +1,27 @@
+syntax = "proto3";
+package config;
+
+import "google/protobuf/timestamp.proto";
+
+option go_package = "./config;config";
+
+/*
+    User is used to identify the owner of HeraldData.
+*/
+message User {
+    google.protobuf.Timestamp created = 1;
+    string name = 2;
+    string email = 3;
+}
+
+/*
+    Config is used to describe a Herald instance.
+*/
+message Config {
+    google.protobuf.Timestamp created = 1;
+    string filepath = 2;                        // filepath to config
+    string fileformat = 3;                      // the fileformat of the config on disk
+    string version = 4;                         // version of Herald used   
+    User user = 5;                              // user details
+    string serverlog = 6;                       // filepath to logfile
+}

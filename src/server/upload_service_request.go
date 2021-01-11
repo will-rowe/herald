@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 
+	"github.com/will-rowe/herald/src/records"
 	"github.com/will-rowe/herald/src/services"
 	grpc "google.golang.org/grpc"
 )
@@ -13,12 +14,12 @@ import (
 func SubmitUpload(heraldRecord interface{}, service *Service) error {
 
 	// assert we have a Sample, not a Run
-	var run *services.Run
+	var run *records.Run
 	switch heraldRecord.(type) {
-	case *services.Sample:
+	case *records.Sample:
 		return fmt.Errorf("can't submit Sample in data upload request, need a Run")
-	case *services.Run:
-		run = heraldRecord.(*services.Run)
+	case *records.Run:
+		run = heraldRecord.(*records.Run)
 	default:
 		return fmt.Errorf("unsupported Herald record type")
 	}

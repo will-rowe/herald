@@ -9,7 +9,7 @@ import (
 	"github.com/golang/protobuf/proto"
 	"github.com/prologic/bitcask"
 
-	"github.com/will-rowe/herald/src/services"
+	"github.com/will-rowe/herald/src/records"
 )
 
 // dbMaxEntries is used to cap the number of db elements that can be added
@@ -107,7 +107,7 @@ func (storage *Storage) DeleteRun(runName string) error {
 }
 
 // AddSample is a method to marshal a sample and store it
-func (storage *Storage) AddSample(sample *services.Sample) error {
+func (storage *Storage) AddSample(sample *records.Sample) error {
 
 	// check the DB limit hasn't been reached
 	if storage.sampleDB.Len() == dbMaxEntries {
@@ -133,7 +133,7 @@ func (storage *Storage) AddSample(sample *services.Sample) error {
 }
 
 // AddRun is a method to marshal an run and store it
-func (storage *Storage) AddRun(run *services.Run) error {
+func (storage *Storage) AddRun(run *records.Run) error {
 
 	// check the DB limit hasn't been reached
 	if storage.runDB.Len() == dbMaxEntries {
@@ -159,7 +159,7 @@ func (storage *Storage) AddRun(run *services.Run) error {
 }
 
 // GetSample is a method to retrieve a sample from storage and unmarshal it to a struct
-func (storage *Storage) GetSample(sampleLabel string) (*services.Sample, error) {
+func (storage *Storage) GetSample(sampleLabel string) (*records.Sample, error) {
 
 	// get the sample from the bit cask
 	dbData, err := storage.sampleDB.Get([]byte(sampleLabel))
@@ -168,7 +168,7 @@ func (storage *Storage) GetSample(sampleLabel string) (*services.Sample, error) 
 	}
 
 	// unmarshal the sample
-	sample := &services.Sample{}
+	sample := &records.Sample{}
 	if err := proto.Unmarshal(dbData, sample); err != nil {
 		return nil, err
 	}
@@ -176,7 +176,7 @@ func (storage *Storage) GetSample(sampleLabel string) (*services.Sample, error) 
 }
 
 // GetRun is a method to retrieve an run from storage and unmarshal it to a struct
-func (storage *Storage) GetRun(runName string) (*services.Run, error) {
+func (storage *Storage) GetRun(runName string) (*records.Run, error) {
 
 	// get the run from the bit cask
 	dbData, err := storage.runDB.Get([]byte(runName))
@@ -185,7 +185,7 @@ func (storage *Storage) GetRun(runName string) (*services.Run, error) {
 	}
 
 	// unmarshal the sample
-	exp := &services.Run{}
+	exp := &records.Run{}
 	if err := proto.Unmarshal(dbData, exp); err != nil {
 		return nil, err
 	}
@@ -202,7 +202,7 @@ func (storage *Storage) GetSampleProtoDump(sampleLabel string) (string, error) {
 	}
 
 	// unmarshal the sample
-	sample := &services.Sample{}
+	sample := &records.Sample{}
 	if err := proto.Unmarshal(dbData, sample); err != nil {
 		return "", err
 	}
@@ -220,7 +220,7 @@ func (storage *Storage) GetSampleJSONDump(sampleLabel string) (string, error) {
 	}
 
 	// unmarshal the sample
-	sample := &services.Sample{}
+	sample := &records.Sample{}
 	if err := proto.Unmarshal(dbData, sample); err != nil {
 		return "", err
 	}

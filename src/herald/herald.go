@@ -6,8 +6,9 @@ import (
 	"fmt"
 	"sync"
 
+	"github.com/will-rowe/herald/src/config"
+	"github.com/will-rowe/herald/src/records"
 	"github.com/will-rowe/herald/src/server"
-	"github.com/will-rowe/herald/src/services"
 	"github.com/will-rowe/herald/src/storage"
 )
 
@@ -15,7 +16,7 @@ import (
 type Herald struct {
 	sync.Mutex                             // to make the UI binding thread safe
 	server            *server.HeraldServer // the Herald server for managing service requests
-	config            *services.Config     // a copy of the config being used by the current Herald instance
+	config            *config.Config       // a copy of the config being used by the current Herald instance
 	store             *storage.Storage     // the key-value store for the samples
 	announcementQueue *list.List           // a FIFO queue for announcements
 
@@ -37,7 +38,7 @@ type Herald struct {
 func InitHerald(storeLocation string) (*Herald, error) {
 
 	// load a copy of the config
-	config, err := services.InitConfig(storeLocation)
+	config, err := config.InitConfig(storeLocation)
 	if err != nil {
 		return nil, err
 	}
@@ -91,7 +92,7 @@ func (herald *Herald) EditConfig(userName, emailAddress string) error {
 	// this is a bit hacky, I'd like to add some config methods
 	// and validation of inputs etc. but for now:
 	// update the in-memory config
-	herald.config.User = &services.User{
+	herald.config.User = &config.User{
 		Name:  userName,
 		Email: emailAddress,
 	}
@@ -193,7 +194,7 @@ func (herald *Herald) AddRun(runLabel, outDir, fast5Dir, fastqDir, comment strin
 	defer herald.Unlock()
 
 	// create the run
-	newRun := services.InitRun(runLabel, outDir, fast5Dir, fastqDir)
+	newRun := records.InitRun(runLabel, outDir, fast5Dir, fastqDir)
 
 	// add any comment
 	if len(comment) != 0 {
@@ -267,7 +268,7 @@ func (herald *Herald) CreateSample(label string, runName string, barcode int32, 
 	//tags = append(run.Metadata.GetRequestOrder(), tags...)
 
 	// create the sample
-	sample := services.InitSample(label, run.Metadata.GetLabel(), barcode)
+	sample := records.InitSample(label, run.Metadata.GetLabel(), barcode)
 	if len(comment) != 0 {
 		if err := sample.Metadata.AddComment(comment); err != nil {
 			return err
@@ -317,18 +318,18 @@ func (herald *Herald) DeleteSample(sampleLabel string) error {
 // in storage.
 func (herald *Herald) updateRecord(record interface{}) error {
 	switch record.(type) {
-	case *services.Run:
-		if err := herald.store.DeleteRun(record.(*services.Run).Metadata.GetLabel()); err != nil {
+	case *records.Run:
+		if err := herald.store.DeleteRun(record.(*records.Run).Metadata.GetLabel()); err != nil {
 			return err
 		}
-		if err := herald.store.AddRun(record.(*services.Run)); err != nil {
+		if err := herald.store.AddRun(record.(*records.Run)); err != nil {
 			return err
 		}
-	case *services.Sample:
-		if err := herald.store.DeleteSample(record.(*services.Sample).Metadata.GetLabel()); err != nil {
+	case *records.Sample:
+		if err := herald.store.DeleteSample(record.(*records.Sample).Metadata.GetLabel()); err != nil {
 			return err
 		}
-		if err := herald.store.AddSample(record.(*services.Sample)); err != nil {
+		if err := herald.store.AddSample(record.(*records.Sample)); err != nil {
 			return err
 		}
 
@@ -353,12 +354,12 @@ func (herald *Herald) updateCounts(record interface{}, add bool) error {
 	var status string
 	index := -1
 	switch record.(type) {
-	case *services.Run:
-		status = record.(*services.Run).Metadata.GetStatus().String()
+	case *records.Run:
+		status = record.(*records.Run).Metadata.GetStatus().String()
 		index = 0
 		herald.runCount += value
-	case *services.Sample:
-		status = record.(*services.Sample).Metadata.GetStatus().String()
+	case *records.Sample:
+		status = record.(*records.Sample).Metadata.GetStatus().String()
 		index = 1
 		herald.sampleCount += value
 	default:

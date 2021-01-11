@@ -3,8 +3,8 @@ package herald
 import (
 	"fmt"
 
+	"github.com/will-rowe/herald/src/records"
 	"github.com/will-rowe/herald/src/server"
-	"github.com/will-rowe/herald/src/services"
 )
 
 // AnnounceSamples will processes the queues and submit service requests
@@ -28,9 +28,9 @@ func (herald *Herald) AnnounceSamples() error {
 		switch v := request.Value.(type) {
 		default:
 			return fmt.Errorf("unexpected type in queue: %T", v)
-		case *services.Sample:
+		case *records.Sample:
 			continue
-		case *services.Run:
+		case *records.Run:
 			// make the service requests
 			for tag, complete := range v.Metadata.GetTags() {
 
@@ -50,11 +50,11 @@ func (herald *Herald) AnnounceSamples() error {
 			}
 
 			// set the status to announced
-			v.Metadata.SetStatus(services.Status_announced)
+			v.Metadata.SetStatus(records.Status_announced)
 
 			// dequeue the sample
 			v.Metadata.AddComment("run announced.")
-			v.Metadata.SetStatus(services.Status_announced)
+			v.Metadata.SetStatus(records.Status_announced)
 			if err := herald.updateRecord(v); err != nil {
 				return err
 			}
@@ -66,7 +66,7 @@ func (herald *Herald) AnnounceSamples() error {
 	for request := herald.announcementQueue.Front(); request != nil; request = request.Next() {
 
 		// grab the sample that is first in the queue
-		sample := request.Value.(*services.Sample)
+		sample := request.Value.(*records.Sample)
 
 		// TODO:
 		// evalute the sample
@@ -93,7 +93,7 @@ func (herald *Herald) AnnounceSamples() error {
 
 		// update the status of the sample and dequeue it
 		sample.Metadata.AddComment("sample announced.")
-		sample.Metadata.SetStatus(services.Status_announced)
+		sample.Metadata.SetStatus(records.Status_announced)
 		if err := herald.updateRecord(sample); err != nil {
 			return err
 		}

@@ -13,6 +13,24 @@ function handleForm(event) {
     event.preventDefault()
 }
 
+// getUser returns the username from the config
+const getUser = async function() {
+    var user = `${await window.getUser()}`
+    return user
+}
+
+// getConfigJSONdump returns a stringified dump of the current config
+const getConfigJSONdump = async function() {
+    var configJSONdump = `${await window.printConfigToJSONstring()}`
+    return configJSONdump
+}
+
+// getSampleJSONdump returns a stringified protobuf dump of a sample from the storage
+const getSampleJSONdump = async function(sampleLabel) {
+    var sampleJSONdump = `${await window.printSampleToJSONstring(sampleLabel)}`
+    return sampleJSONdump
+}
+
 ////////////////////////////////////////////////////////////////////
 // MESSAGES
 // printErrorMsg
@@ -56,7 +74,7 @@ function printUpdateMsg(msg, link) {
     })
 }
 
-// updatStatus will print status icon and check time
+// updateStatus will print status icon and check time
 function updateStatus(id, active) {
     var today = new Date()
     var time =
@@ -87,19 +105,18 @@ window.addEventListener('offline', () =>
 // BUTTONS
 // get the buttons that control the app
 const refreshPage = document.getElementById('refreshPage')
-const announceSamplesButton = document.getElementById('staging_announce')
+const announceButton = document.getElementById('stagingAnnounce')
 const wipeDatabase = document.getElementById('wipeDatabase')
 
 // add an event listener to the refreshPage button
 refreshPage.addEventListener('click', async() => {
     console.log('refreshing the app')
-
     pageRefresh()
     printSuccessMsg('refreshed the app')
 })
 
-// add an event listener to the staging_announce button
-announceSamplesButton.addEventListener('click', async() => {
+// add an event listener to the stagingAnnounce button
+announceButton.addEventListener('click', async() => {
     console.log('announcing samples')
 
     // call the Go announceSamples method
@@ -109,14 +126,16 @@ announceSamplesButton.addEventListener('click', async() => {
         printErrorMsg(e)
         return
     }
-    console.log('announced')
+    pageRefresh()
+    printSuccessMsg('announcements sent')
 })
 
 // add an event listener to wipeDatabase button
 wipeDatabase.addEventListener('click', async() => {
-    console.log('wiping storage')
+    console.log('wiping database')
 
-    // TODO: add a confirm prompt
+    // TODO: add a decent confirm prompt
+    confirm('confirm database wipe')
 
     // call the Go wipeStorage method
     try {
@@ -133,27 +152,13 @@ wipeDatabase.addEventListener('click', async() => {
 
 ////////////////////////////////////////////////////////////////////
 // MODALS
-// modal closing
-var modalClosers = document.getElementsByClassName('modal-close')
-for (let i = 0; i < modalClosers.length; i++) {
-    modalClosers[i].addEventListener('click', function() {
-        modalClosers[i].closest('.modal').style.display = 'none'
-    })
-}
-window.onclick = function(event) {
-    if (event.target.className == 'modal') {
-        event.target.style.display = 'none'
-    }
-}
 
-// createExperimentModal
+// addRunModal
 // open on button click
-const createExperimentModal = document.getElementById('createExperimentModal')
-const createExperimentModalOpen = document.getElementById(
-    'createExperimentModalOpen'
-)
-createExperimentModalOpen.addEventListener('click', function() {
-    createExperimentModal.style.display = 'block'
+const addRunModal = document.getElementById('addRunModal')
+const addRunModalOpen = document.getElementById('addRunModalOpen')
+addRunModalOpen.addEventListener('click', function() {
+    addRunModal.style.display = 'block'
 })
 
 // addSampleModal
@@ -164,21 +169,41 @@ addSampleModalOpen.addEventListener('click', function() {
     addSampleModal.style.display = 'block'
 })
 
+// editConfigModal
+// open on button click
+const editConfigModal = document.getElementById('editConfigModal')
+const editConfigModalOpen = document.getElementById('editConfigModalOpen')
+editConfigModalOpen.addEventListener('click', function() {
+    editConfigModal.style.display = 'block'
+})
+
+// viewConfigModal
+const viewConfigModal = document.getElementById('viewConfigModal')
+const viewConfigModalOpen = document.getElementById('viewConfigModalOpen')
+const viewConfigModalContent = document.getElementById('viewConfigModalContent')
+viewConfigModalOpen.addEventListener('click', function() {
+    getConfigJSONdump().then(configDump => {
+        document.getElementById('viewConfigModalContent').innerHTML =
+            '<pre>' + configDump + '</pre>'
+        viewConfigModal.style.display = 'block'
+    })
+})
+
 // sampleDetailsModal
 const sampleDetailsModal = document.getElementById('sampleDetailsModal')
 
 ////////////////////////////////////////////////////////////////////
-// CREATE EXPERIMENT FORM
+// ADD RUN FORM
 // get the form and prevent default action
-const createExperimentForm = document.getElementById('createExperimentForm')
-createExperimentForm.addEventListener('submit', handleForm)
+const addRunForm = document.getElementById('addRunForm')
+addRunForm.addEventListener('submit', handleForm)
 
-// historic experiment toggle (set true if an experiment is entered that already has fast5 data)
-var historicExp = false
+// existing run toggle (set true if a run is entered that already has fast5 data)
+var existingRun = false
 
 // get some fields
-var expName = document.getElementById('formLabel_experimentName')
-var expOutputLocation = document.getElementById('formLabel_outputLocation')
+var runName = document.getElementById('formLabel_runName')
+var runOutputLocation = document.getElementById('formLabel_outputLocation')
 var fieldset_outputFASTQlocation = document.getElementById(
     'fieldset_outputFASTQlocation'
 )
@@ -191,61 +216,61 @@ var formLabel_outputFASTQlocation = document.getElementById(
 var formLabel_sequence = document.getElementById('formLabel_sequence')
 var formLabel_basecall = document.getElementById('formLabel_basecall')
 var formLabel_basecallLabel = document.getElementById('formLabel_basecallLabel')
-var msgDiv = document.getElementById('createExperimentValidationMessage')
+var formLabel_upload = document.getElementById('formLabel_upload')
+var msgDiv = document.getElementById('addRunValidationMessage')
 
 // reset func to clear the form changes
-function createExperimentFormReset() {
-    historicExp = false
+function addRunFormReset() {
+    document.getElementById('addRunButton').disabled = true
+    existingRun = false
     fieldset_outputFASTQlocation.style.display = 'block'
     formLabel_outputFAST5location.value = ''
     formLabel_outputFASTQlocation.value = ''
     formLabel_sequence.checked = true
     formLabel_basecall.checked = true
+    formLabel_upload.checked = false
     formLabel_basecallLabel.style.color = '#d3d3d3'
     formLabel_basecall.disabled = true
     msgDiv.innerHTML = ''
 }
 
 // set up the validator
-experimentValidator = {
+runValidator = {
     validListenter: function(val) {},
     registerListener: function(listener) {
         this.validListenter = listener
     },
-    expNameInternal: false,
-    set expName(val) {
-        this.expNameInternal = val
+    runNameInternal: false,
+    set runName(val) {
+        this.runNameInternal = val
         this.validListenter(val)
     },
-    get expName() {
-        return this.expNameInternal
+    get runName() {
+        return this.runNameInternal
     },
-    expLocInternal: false,
-    set expLoc(val) {
-        this.expLocInternal = val
+    runLocInternal: false,
+    set runLoc(val) {
+        this.runLocInternal = val
         this.validListenter(val)
     },
-    get expLoc() {
-        return this.expLocInternal
+    get runLoc() {
+        return this.runLocInternal
     }
 }
 
 // the validator listener will adjust form values depending on user input
-experimentValidator.registerListener(async() => {
-    // reset if user hasn't input both expName and expOutputLocation
-    if (
-        experimentValidator.expName === false ||
-        experimentValidator.expLoc === false
-    ) {
-        createExperimentFormReset()
+runValidator.registerListener(async() => {
+    // reset if user hasn't input both runName and runOutputLocation
+    if (runValidator.runName === false || runValidator.runLoc === false) {
+        addRunFormReset()
         return
     }
 
-    // remove spaces from expName
-    var expNameDespaced = expName.value.replace(/\s/g, '_')
+    // remove spaces from runName
+    var runNameDespaced = runName.value.replace(/\s/g, '_')
 
     // get expected dir names
-    var dirName = expOutputLocation.value + '/' + expNameDespaced
+    var dirName = runOutputLocation.value + '/' + runNameDespaced
     var fast5_dirName = dirName + '/fast5_pass'
     var fastq_dirName = dirName + '/fastq_pass'
 
@@ -253,71 +278,99 @@ experimentValidator.registerListener(async() => {
     formLabel_outputFAST5location.value = fast5_dirName
     formLabel_outputFASTQlocation.value = fastq_dirName
 
-    // allow user to change basecalling option
-    formLabel_basecall.disabled = false
-    formLabel_basecallLabel.style.color = ''
+    // NOTE:
+    // for now, I have removed all the basecalling / sequencing tagging in order to get this ready ASAP
+    // there is now a requirement for the run to be a existing one(ie.all data ready)
+    // future release will hopefully remove this constraint and enable more functionality
 
+    /* START RESTRICTED FORM */
     // check for dirs and print an alert
     try {
         await checkDirExists(dirName)
-    } catch (e) {
-        msgDiv.innerHTML =
-            '<div class="alert background-warning"><i class="fas fa-exclamation-circle"></i> - No existing experiment directory found, this experiment will be tagged for sequencing</div>'
-        return
-    }
-    try {
         await checkDirExists(fast5_dirName)
-    } catch (e) {
-        msgDiv.innerHTML =
-            '<div class="alert background-warning"><i class="fas fa-exclamation-circle"></i> - No <em>fast5_pass</em> directory found, this experiment will be tagged for sequencing</div>'
-        return
-    }
-    formLabel_sequence.checked = true
-    historicExp = true
-
-    try {
         await checkDirExists(fastq_dirName)
     } catch (e) {
         msgDiv.innerHTML =
-            '<div class="alert background-warning"><i class="fas fa-exclamation-circle"></i> - No <em>fastq_pass</em> directory found, this experiment will be tagged for base calling (unless you uncheck the box below)</div>'
+            '<div class="alert background-warning"><i class="fas fa-exclamation-circle"></i> - No existing run directory found, this is currently required</div>'
         return
     }
-    msgDiv.innerHTML =
-        '<div class="alert background-success"><i class="fas fa-flask"></i> - <em>fast5_pass</em> and <em>fastq_pass</em> found for this experiment</div>'
-
-    // make sure the fastq path is shown (could be hidden if user has been toggling)
     fieldset_outputFASTQlocation.style.display = 'block'
-
-    // disable basecalling option if fastq_pass exists
-    formLabel_basecallLabel.style.color = '#d3d3d3'
-    formLabel_basecall.checked = true
+    formLabel_sequence.checked = false
+    formLabel_basecall.checked = false
+    formLabel_sequence.disabled = true
     formLabel_basecall.disabled = true
+    existingRun = true
+    document.getElementById('addRunButton').disabled = false
+
+    /* // END RESTRICTED FORM */
+
+    /*
+// allow user to change basecalling option
+formLabel_basecall.disabled = false
+formLabel_basecallLabel.style.color = ''
+
+// check for dirs and print an alert
+try {
+    await checkDirExists(dirName)
+} catch (e) {
+    msgDiv.innerHTML =
+        '<div class="alert background-warning"><i class="fas fa-exclamation-circle"></i> - No existing run directory found, this run will be tagged for sequencing</div>'
+    return
+}
+try {
+    await checkDirExists(fast5_dirName)
+} catch (e) {
+    msgDiv.innerHTML =
+        '<div class="alert background-warning"><i class="fas fa-exclamation-circle"></i> - No <em>fast5_pass</em> directory found, this run will be tagged for sequencing</div>'
+    return
+}
+formLabel_sequence.checked = true
+existingRun = true
+
+try {
+    await checkDirExists(fastq_dirName)
+} catch (e) {
+    msgDiv.innerHTML =
+        '<div class="alert background-warning"><i class="fas fa-exclamation-circle"></i> - No <em>fastq_pass</em> directory found, this run will be tagged for base calling (unless you uncheck the box below)</div>'
+    return
+}
+msgDiv.innerHTML =
+    '<div class="alert background-success"><i class="fas fa-flask"></i> - <em>fast5_pass</em> and <em>fastq_pass</em> found for this run</div>'
+
+// make sure the fastq path is shown (could be hidden if user has been toggling)
+fieldset_outputFASTQlocation.style.display = 'block'
+
+// disable basecalling option if fastq_pass exists
+formLabel_basecallLabel.style.color = '#d3d3d3'
+formLabel_basecall.checked = true
+formLabel_basecall.disabled = true
+*/
 })
 
-// add listener to the experimentName text box
-expName.addEventListener('change', async() => {
-    experimentValidator.expName = false
-    if (expName.value.length === 0) {
+// add listener to the runName text box
+runName.addEventListener('change', async() => {
+    runValidator.runName = false
+    if (runName.value.length === 0) {
         return
     }
 
-    // currently Go checks the dir - could do it here instead though
-    experimentValidator.expName = true
+    // TODO: currently Go checks the dir - could do it here instead though
+    runValidator.runName = true
 })
 
 // add listener to the output location text box so we can check it exists once a user has entered a location
-expOutputLocation.addEventListener('change', async() => {
-    experimentValidator.expLoc = false
-    if (expOutputLocation.value.length === 0) {
+runOutputLocation.addEventListener('change', async() => {
+    runValidator.runLoc = false
+    if (runOutputLocation.value.length === 0) {
         return
     }
     try {
-        await checkDirExists(expOutputLocation.value)
+        await checkDirExists(runOutputLocation.value)
     } catch (e) {
         printErrorMsg(e)
         return
     }
-    experimentValidator.expLoc = true
+    runValidator.runLoc = true
 })
 
 // show/hide the fastq_pass path depending on basecall checkbox
@@ -329,9 +382,9 @@ formLabel_basecall.addEventListener('click', async() => {
     }
 })
 
-// add an event listener to the createExperimentForm submit button
-createExperimentForm.addEventListener('submit', async() => {
-    console.log('creating experiment')
+// add an event listener to the addRunForm submit button
+addRunForm.addEventListener('submit', async() => {
+    console.log('creating run')
 
     // create sequence and basecall tags
     var tags = []
@@ -341,17 +394,20 @@ createExperimentForm.addEventListener('submit', async() => {
     if (formLabel_basecall.checked === true) {
         tags.push('basecall')
     }
+    if (formLabel_upload.checked === true) {
+        tags.push('upload')
+    }
 
-    // create an experiment and add it to the store
+    // create a run and add it to the store
     try {
-        await createExperiment(
-            expName.value,
-            expOutputLocation.value,
+        await addRun(
+            runName.value,
+            runOutputLocation.value,
             formLabel_outputFAST5location.value,
             formLabel_outputFASTQlocation.value,
-            document.getElementById('formLabel_experimentComment').value,
+            document.getElementById('formLabel_runComment').value,
             tags,
-            historicExp
+            existingRun
         )
     } catch (e) {
         printErrorMsg(e)
@@ -359,26 +415,26 @@ createExperimentForm.addEventListener('submit', async() => {
     }
 
     // reset the form, refresh the page, close the modal and report success
-    createExperimentForm.reset()
-    createExperimentFormReset()
+    addRunForm.reset()
+    addRunFormReset()
     pageRefresh()
-    createExperimentModal.style.display = 'none'
-    printSuccessMsg('experiment created')
+    addRunModal.style.display = 'none'
+    printSuccessMsg('run created')
 })
 
 ////////////////////////////////////////////////////////////////////
-// SAMPLE SUBMISSION FORM
+// ADD SAMPLE FORM
 // get the form
 const addSampleForm = document.getElementById('addSampleForm')
 addSampleForm.addEventListener('submit', handleForm)
 
-// updateExperimentDropDown is a function to update the experiments in the sample submission form
-const expDropDown = document.getElementById('formLabel_sampleExperiment')
-const updateExperimentDropDown = async() => {
-    // get the current experiment count so that we can iterate over the experiments
-    var expCount = `${await window.getExperimentCount()}`
+// updateRunDropDown is a function to update the runs in the sample submission form
+const expDropDown = document.getElementById('formLabel_sampleRun')
+const updateRunDropDown = async() => {
+    // get the current run count so that we can iterate over the runs
+    var expCount = `${await window.getRunCount()}`
 
-    // if there are no experiments, leave the default blank option
+    // if there are no runs, leave the default blank option
     if (expCount === '0') {
         return
     }
@@ -388,16 +444,16 @@ const updateExperimentDropDown = async() => {
 
     // add each name to the drop down
     for (var i = 0; i < expCount; i++) {
-        var expName = `${await window.getExperimentName(i)}`
+        var runName = `${await window.getRunName(i)}`
         var newOpt = document.createElement('option')
-        newOpt.text = expName
+        newOpt.text = runName
         expDropDown.options.add(newOpt)
     }
 }
 
 // add an event listener to the addSampleForm submit button
 addSampleForm.addEventListener('submit', async() => {
-    console.log('adding sample to storage')
+    console.log('creating sample')
 
     var elements = addSampleForm.elements
 
@@ -415,7 +471,7 @@ addSampleForm.addEventListener('submit', async() => {
         // TODO: try reading form straight into protobuf and then send a serialised stream to Go
         await createSample(
             elements['formLabel_sampleLabel'].value,
-            elements['formLabel_sampleExperiment'].value,
+            elements['formLabel_sampleRun'].value,
             parseInt(elements['formLabel_sampleBarcode'].value, 10),
             elements['formLabel_sampleComment'].value,
             tags
@@ -430,7 +486,7 @@ addSampleForm.addEventListener('submit', async() => {
         .DataTable()
         .row.add([
             elements['formLabel_sampleLabel'].value,
-            elements['formLabel_sampleExperiment'].value
+            elements['formLabel_sampleRun'].value
         ])
         .draw(true)
 
@@ -439,6 +495,34 @@ addSampleForm.addEventListener('submit', async() => {
     pageRefresh()
     addSampleModal.style.display = 'none'
     printSuccessMsg('sample added')
+})
+
+////////////////////////////////////////////////////////////////////
+// EDIT CONFIG FORM
+// get the form
+const configForm = document.getElementById('editConfigForm')
+configForm.addEventListener('submit', handleForm)
+
+// add an event listener to the editConfigForm submit button
+configForm.addEventListener('submit', async() => {
+    console.log('editing config')
+    var elements = configForm.elements
+
+    // edit the config via Go
+    try {
+        await editConfig(
+            elements['formLabel_userName'].value,
+            elements['formLabel_emailAddress'].value
+        )
+    } catch (e) {
+        printErrorMsg(e)
+        return
+    }
+    printSuccessMsg('config updated')
+
+    // reset the form and refresh the page - the page loader will hide the modal now config edited
+    configForm.reset()
+    pageRefresh()
 })
 
 ////////////////////////////////////////////////////////////////////
@@ -453,12 +537,6 @@ var table = $('#sampleTable').DataTable({
         defaultContent: '<button class="button button-outline">Manage</button>'
     }]
 })
-
-// getSampleJSONdump returns a stringified protobuf dump of a sample from the storage
-const getSampleJSONdump = async function(sampleLabel) {
-    var sampleJSONdump = `${await window.printSampleToJSONstring(sampleLabel)}`
-    return sampleJSONdump
-}
 
 // set up the manage button
 $('#sampleTable tbody').on('click', 'button', function() {
@@ -513,10 +591,10 @@ const buildTable = async() => {
     for (var i = 0; i < sampleCount; i++) {
         var sampleLabel = `${await window.getSampleLabel(i)}`
             //var sampleCreation = `${await window.getSampleCreation(i)}`
-        var sampleExperiment = `${await window.getSampleExperiment(i)}`
+        var sampleRun = `${await window.getSampleRun(i)}`
 
         // create the table entry
-        table.row.add([sampleLabel, sampleExperiment]).draw(true)
+        table.row.add([sampleLabel, sampleRun]).draw(true)
     }
 }
 
@@ -546,12 +624,17 @@ function printTimeStamps() {
 // set up the empty pie chart
 var pieCanvas = document.getElementById('pieChart')
 var pieData = {
-    labels: ['Announcements Made', 'Tagged Samples', 'Untagged Samples'],
+    labels: [
+        'Announcements Queued',
+        'Announcements Made',
+        'Completed (Samples + Runs)',
+        'Untagged (Samples + Runs)'
+    ],
     datasets: [{
         label: 'entry point',
-        data: [0, 0, 0],
-        backgroundColor: ['#35cebe', '#a0a0a0', '#dfdfdf'],
-        hoverBackgroundColor: ['#25beae', '#999999', '#cccccc']
+        data: [0, 0, 0, 0],
+        backgroundColor: ['#35cebe', '#a0a0a0', '#dfdfdf', '#333'],
+        hoverBackgroundColor: ['#25beae', '#999999', '#cccccc', '#333']
     }]
 }
 var pieOptions = {
@@ -568,18 +651,30 @@ var myPieChart = new Chart(pieCanvas, {
 // updatePieChart will refresh the pie chart with current data
 const updatePieChart = async() => {
     // get counts
-    var untaggedRecordCount = `${await window.getUntaggedSampleCount()}`
-    var taggedRecordCount = `${await window.getTaggedSampleCount()}`
-    var announcementCount = `${await window.getAnnouncementCount()}`
+    var announcementsQueued = `${await window.getAnnouncementQueueSize()}`
+    var announcementsMade = `${await window.getAnnouncementCount()}`
+    var taggedCompleteSampleCount = `${await window.getTaggedCompleteCount(
+    'samples'
+  )}`
+    var taggedCompleteRunCount = `${await window.getTaggedCompleteCount('runs')}`
+    var untaggedSampleCount = `${await window.getUntaggedCount('samples')}`
+    var untaggedRunCount = `${await window.getUntaggedCount('runs')}`
 
     // update the chart data
-    myPieChart.data.datasets[0].data[0] = announcementCount
-    myPieChart.data.datasets[0].data[1] = taggedRecordCount
-    myPieChart.data.datasets[0].data[2] = untaggedRecordCount
+    myPieChart.data.datasets[0].data[0] = announcementsQueued
+    myPieChart.data.datasets[0].data[1] = announcementsMade
+    myPieChart.data.datasets[0].data[2] =
+        parseInt(taggedCompleteSampleCount, 10) +
+        parseInt(taggedCompleteRunCount, 10)
+    myPieChart.data.datasets[0].data[3] =
+        parseInt(untaggedSampleCount, 10) + parseInt(untaggedRunCount, 10)
 
     // update the chart
     myPieChart.update()
 }
+
+////////////////////////////////////////////////////////////////////
+// PAGE SETUP
 
 // pageRefresh will refresh the Herald runtime info in Go and then freshen up the page (does not rebuild the table)
 const pageRefresh = async() => {
@@ -593,8 +688,34 @@ const pageRefresh = async() => {
         return
     }
 
-    // update the experiment drop down
-    await updateExperimentDropDown()
+    // config check
+    // TODO: just checking user field as this is req field during config edits
+    // it works but might be better to have a Go func to check config valid
+    getUser().then(user => {
+        if (user === '') {
+            // no config, make the user set one up via the form
+            editConfigModal.style.display = 'block'
+        } else {
+            editConfigModal.style.display = 'none'
+            document.getElementById('welcome_username').innerHTML = user
+
+            // enable all modals
+            var modalClosers = document.getElementsByClassName('modal-close')
+            for (let i = 0; i < modalClosers.length; i++) {
+                modalClosers[i].addEventListener('click', function() {
+                    modalClosers[i].closest('.modal').style.display = 'none'
+                })
+            }
+            window.onclick = function(event) {
+                if (event.target.className == 'modal') {
+                    event.target.style.display = 'none'
+                }
+            }
+        }
+    })
+
+    // update the run drop down
+    await updateRunDropDown()
 
     // update the pie chart
     await updatePieChart()
@@ -607,32 +728,8 @@ const pageRefresh = async() => {
     printTimeStamps()
 }
 
-// fullPageRender will insert various bits of runtime info from JS and Go into the app
-// TODO: this is virtually the same as pageRefresh - so just combine and add flag?
+// fullPageRender does a page refresh AND rebuilds the table from the database
 const fullPageRender = async() => {
-    console.log('starting Go Herald instance and rendering the page')
-
-    // load the Go Herald instance and populate the page data
-    try {
-        await loadRuntimeInfo()
-    } catch (e) {
-        printErrorMsg(e)
-        return
-    }
-
-    // update the experiment drop down
-    await updateExperimentDropDown()
-
-    // print the pie chart
-    await updatePieChart()
-
-    // check the minKNOW status TODO: do this in Go via routine
-    var minknowStatus = `${await checkAPIstatus()}`
-    updateStatus('status_minknow', minknowStatus)
-
-    // print the table
+    await pageRefresh()
     await buildTable()
-
-    // print a new timestamp
-    printTimeStamps()
 }

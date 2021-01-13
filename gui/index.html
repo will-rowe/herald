@@ -49,46 +49,26 @@
         </div>
     </div>
 
-    <!--CREATE EXPERIMENT MODAL-->
-    <div id="createExperimentModal" class="modal">
+    <!--ADD RUN MODAL-->
+    <div id="addRunModal" class="modal">
         <div class="modal-content">
             <span class="modal-close">&times;</span>
-            <h1>Create an experiment</h1>
+            <h1>Add a run</h1>
             <div class="clearfix"></div>
             <hr class="m-0 mb-2" />
-            <form id="createExperimentForm">
+            <form id="addRunForm">
                 <fieldset>
                     <!--label-->
-                    <label class="formLabel" for="formLabel_experimentName">Experiment name
-                        <i class="far fa-question-circle"><span class="tooltiptext">the name for the
-                                experiment</span></i>
+                    <label class="formLabel" for="formLabel_runName">Run name
+                        <i class="far fa-question-circle"><span class="tooltiptext">the name of the run</span></i>
                     </label>
-                    <input type="text" placeholder="a unique experiment name" id="formLabel_experimentName" required>
+                    <input type="text" placeholder="run_XXX" id="formLabel_runName" required>
                     <!--output location-->
-                    <label class="formLabel" for="formLabel_outputLocation">Output location
-                        <i class="far fa-question-circle"><span class="tooltiptext">directory where experiment is
-                                stored</span></i>
+                    <label class="formLabel" for="formLabel_outputLocation">Run location
+                        <i class="far fa-question-circle"><span class="tooltiptext">directory where run data is
+                                stored (don't include the run folder in this path)</span></i>
                     </label>
                     <input type="text" placeholder="/Users/me/data" id="formLabel_outputLocation" required>
-                    <!--comment box-->
-                    <label class="formLabel" for="formLabel_experimentComment">Comment</label>
-                    <textarea placeholder="insert any additional information" id="formLabel_experimentComment"></textarea>
-                    <div class="clearfix"></div>
-                    <!--validation output-->
-                    <div id="createExperimentValidationMessage"></div>
-                    <!--settings-->
-                    <label class="formLabel">Tags
-                        <i class="far fa-question-circle"><span class="tooltiptext">tag this experiment with services to
-                                run</span></i>
-                    </label>
-                    <label class="label-inline" for="formLabel_sequence" id="formLabel_sequenceLabel" style="color: #d3d3d3;"> - Sequence:
-                    </label>
-                    <input type="checkbox" id="formLabel_sequence" checked disabled>
-                    <div class="clearfix"></div>
-                    <label class="label-inline" for="formLabel_basecall" id="formLabel_basecallLabel" style="color: #d3d3d3;"> - Basecall:
-                    </label>
-                    <input type="checkbox" id="formLabel_basecall" checked disabled>
-                    <div class="clearfix"></div>
                     <!--paths-->
                     <label class="formLabel" for="formLabel_outputFAST5location">FAST5 data:</label>
                     <input type="text" id="formLabel_outputFAST5location" style="background: #d3d3d3;" readonly>
@@ -96,11 +76,34 @@
                         <label class="formLabel" for="formLabel_outputFASTQlocation">FASTQ data:</label>
                         <input type="text" id="formLabel_outputFASTQlocation" style="background: #d3d3d3;" readonly>
                     </fieldset>
+                    <!--validation output-->
+                    <div id="addRunValidationMessage"></div>
+                    <!--settings-->
+                    <label class="formLabel">Service requests
+                        <i class="far fa-question-circle"><span class="tooltiptext">tag this run with services
+                                requests</span></i>
+                    </label>
+                    <input type="checkbox" id="formLabel_sequence" checked disabled>
+                    <label class="label-inline" for="formLabel_sequence" id="formLabel_sequenceLabel" style="color: #d3d3d3;"> - sequence
+                    </label>
+                    <div class="clearfix"></div>
+                    <input type="checkbox" id="formLabel_basecall" checked disabled>
+                    <label class="label-inline" for="formLabel_basecall" id="formLabel_basecallLabel" style="color: #d3d3d3;"> - basecall
+                    </label>
+                    <div class="clearfix"></div>
+                    <input type="checkbox" id="formLabel_upload">
+                    <label class="label-inline" for="formLabel_upload" id="formLabel_uploadLabel"> - upload
+                    </label>
 
+                    <div class="clearfix"></div>
+                    <!--comment box-->
+                    <label class="formLabel" for="formLabel_runComment">Comment</label>
+                    <textarea placeholder="insert any additional information" id="formLabel_runComment"></textarea>
+                    <div class="clearfix"></div>
                     <!--submit button-->
                     <div class="clearfix"></div>
                     <hr class="m-0 mb-2" />
-                    <input class="button-primary" type="submit" value="Create experiment">
+                    <input id="addRunButton" class="button" type="submit" value="Add run" disabled>
                 </fieldset>
             </form>
         </div>
@@ -121,13 +124,13 @@
                                 sample</span></i>
                     </label>
                     <input type="text" placeholder="sample xxx" id="formLabel_sampleLabel" required>
-                    <!--experiment-->
-                    <label class="formLabel" for="formLabel_sampleExperiment">Experiment
+                    <!--run-->
+                    <label class="formLabel" for="formLabel_sampleRun">Run
                         <i class="far fa-question-circle"><span class="tooltiptext">the
-                                experiment this sample belongs to</span></i>
+                                run this sample belongs to</span></i>
                     </label>
-                    <select id="formLabel_sampleExperiment" required>
-                        <option value="" disabled selected>create an experiment first!</option>
+                    <select id="formLabel_sampleRun" required>
+                        <option value="" disabled selected>add a run first!</option>
                     </select>
                     <!--barcode-->
                     <label class="formLabel" for="formLabel_sampleBarcode">Barcode</label>
@@ -153,9 +156,50 @@
                     <!--submit button-->
                     <div class="clearfix"></div>
                     <hr class="m-0 mb-2" />
-                    <input class="button-primary" type="submit" value="Add sample">
+                    <input class="button" type="submit" value="Add sample">
                 </fieldset>
             </form>
+        </div>
+    </div>
+
+    <!--EDIT CONFIG MODAL-->
+    <div id="editConfigModal" class="modal">
+        <div class="modal-content">
+            <span class="modal-close">&times;</span>
+            <h1>Edit config</h1>
+            <div class="clearfix"></div>
+            <hr class="m-0 mb-2" />
+            <form id="editConfigForm">
+                <fieldset>
+                    <!--input-->
+                    <label class="formLabel" for="formLabel_userName">User name
+                        <i class="far fa-question-circle"><span class="tooltiptext">name of user</span></i>
+                    </label>
+                    <input type="text" placeholder="" id="formLabel_userName" required>
+                    <label class="formLabel" for="formLabel_emailAddress">Email address
+                        <i class="far fa-question-circle"><span class="tooltiptext">email address for
+                                notifications</span></i>
+                    </label>
+                    <input type="email" placeholder="" id="formLabel_emailAddress" required>
+                    <!--submit button-->
+                    <div class="clearfix"></div>
+                    <hr class="m-0 mb-2" />
+                    <input class="button" type="submit" value="Save">
+                </fieldset>
+            </form>
+        </div>
+    </div>
+
+    <!--VIEW CONFIG MODAL-->
+    <div id="viewConfigModal" class="modal">
+        <div class="modal-content">
+            <span class="modal-close">&times;</span>
+            <h1>Config</h1>
+            <div class="clearfix"></div>
+            <hr class="m-0 mb-2" />
+            <pre id=viewConfigModalContent></pre>
+            <div class="clearfix"></div>
+            <hr class="m-0 mb-2" />
         </div>
     </div>
 
@@ -209,9 +253,9 @@
             <div class="row grid-responsive">
                 <div class="column page-heading">
                     <div class="large-card">
-                        <h1>Welcome to Herald</h1>
-                        <p class="text-large">Get started by creating an experiment and then adding some samples.</p>
-                        <button class="button" id="createExperimentModalOpen">create experiment</button>
+                        <h1>Welcome, <span> <a id="welcome_username"></a></span></h1>
+                        <p class="text-large">Get started by adding a run and then adding some samples to it.</p>
+                        <button class="button" id="addRunModalOpen">add run</button>
                         <button class="button" id="addSampleModalOpen" disabled>add sample</button>
                     </div>
                 </div>
@@ -229,13 +273,13 @@
                             <h2>Staging</h2>
                         </div>
                         <div class="card-block">
-                            <!--experiment count-->
+                            <!--run count-->
                             <div class="mt-1">
-                                <div class="badge background-primary float-left" id="staging_experimentCount">0</div>
+                                <div class="badge background-primary float-left" id="staging_runCount">0</div>
                                 <div class="float-left ml-1">
-                                    <p class="m-0"><strong>Experiments</strong> <span class="text-muted">in the
+                                    <p class="m-0"><strong>Runs</strong> <span class="text-muted">in the
                                             database</span></p>
-                                    <p class="text-small text-muted" id="staging_dbLocation">na</p>
+                                    <p class="text-small text-muted" id="staging_runRequests">na</p>
                                 </div>
                                 <div class="clearfix"></div>
                                 <hr class="m-0 mb-2" />
@@ -245,28 +289,28 @@
                                 <div class="badge background-primary float-left" id="staging_sampleCount">0</div>
                                 <div class="float-left ml-1">
                                     <p class="m-0"><strong>Samples</strong> <span class="text-muted">across all
-                                            experiments</span></p>
-                                    <p class="text-small text-muted">unused text field</p>
+                                            runs</span></p>
+                                    <p class="text-small text-muted" id="staging_sampleRequests"></p>
                                 </div>
                                 <div class="clearfix"></div>
                                 <hr class="m-0 mb-2" />
                             </div>
                             <!--Queued announcements-->
                             <div class="mt-1">
-                                <div class="badge background-primary float-left" id="staging_taggedCount">0</div>
+                                <div class="badge background-primary float-left" id="stagingAnnouncementQueueCount">0
+                                </div>
                                 <div class="float-left ml-1">
-                                    <p class="m-0"><strong>Tagged</strong> <span class="text-muted">records in the
-                                            queue</span></p>
-                                    <p class="text-small text-muted" id="staging_processCount">x experiments, y samples
-                                    </p>
+                                    <p class="m-0"><strong>Service requests</strong> <span class="text-muted"> in the
+                                            announcement queue</span></p>
+                                    <p class="text-small text-muted" id="stagingAnnouncementCount"></p>
                                 </div>
                                 <div class="clearfix"></div>
                                 <hr class="m-0 mb-2" />
                             </div>
                             <!--announce and unstage buttons-->
                             <div class="mt-1">
-                                <button class="button" id="staging_announce" disabled>announce</button>
-                                <button class="button button-outline" id="staging_unstage" disabled>unstage</button>
+                                <button class="button" id="stagingAnnounce" disabled>announce</button>
+                                <!--<button class="button button-outline" id="staging_unstage" disabled>unstage</button>-->
                             </div>
                         </div>
                     </div>
@@ -326,7 +370,7 @@
                 <div class="column column-50">
                     <div class="card">
                         <div class="card-title">
-                            <h2 class="float-left">Announcements</h2>
+                            <h2 class="float-left">Announcements (placeholder)</h2>
                             <div class="badge float-right">X In Progress</div>
                             <!--<div class="badge background-success float-right mr-1">5 Complete</div>-->
                             <div class="clearfix"></div>
@@ -375,7 +419,7 @@
                                 <thead>
                                     <tr>
                                         <th>Sample Label</th>
-                                        <th>Experiment Name</th>
+                                        <th>Run Name</th>
                                         <th></th>
                                     </tr>
                                 </thead>
@@ -394,9 +438,11 @@
                 <div class="column ">
                     <div class="card">
                         <div class="card-title">
-                            <h3>Database settings</h3>
+                            <h3>Configure Herald</h3>
                         </div>
                         <div class="card-block">
+                            <a class="button" id="editConfigModalOpen">edit config</a>
+                            <a class="button" id="viewConfigModalOpen">view config</a>
                             <a class="button" id="wipeDatabase">wipe database</a>
                         </div>
                     </div>
@@ -404,7 +450,7 @@
             </div>
 
             <!-- end of main section -->
-            <p class="credit">Built by <a href="https://www.willrowe.net">Will Rowe</a> as part of the <a href="https://artic.network/">ARTIC Network</a> project<br \> &copy 2020</p>
+            <p class="credit">Built by <a href="https://github.com/will-rowe" target="_blank">Will Rowe</a> for the <a href="https://artic.network/" target="_blank">ARTIC Network</a>.<br \> &copy 2021</p>
         </section>
     </div>
 

@@ -1,4 +1,4 @@
-// Package storage wraps two bit casks as the disk-backed key-value store for sample information and experiment information
+// Package storage wraps two bit casks as the disk-backed key-value store for sample information and run information
 package storage
 
 import (
@@ -9,7 +9,7 @@ import (
 	"github.com/golang/protobuf/proto"
 	"github.com/prologic/bitcask"
 
-	"github.com/will-rowe/herald/src/services"
+	"github.com/will-rowe/herald/src/records"
 )
 
 // dbMaxEntries is used to cap the number of db elements that can be added
@@ -20,9 +20,9 @@ const useSync = true
 
 // Storage holds a bitcask db and some extra stuff
 type Storage struct {
-	sampleDB     *bitcask.Bitcask // the key-value store for samples
-	experimentDB *bitcask.Bitcask // the key-value store for experiments
-	dbLocation   string           // where the store is stored
+	sampleDB   *bitcask.Bitcask // the key-value store for samples
+	runDB      *bitcask.Bitcask // the key-value store for runs
+	dbLocation string           // where the store is stored
 }
 
 // OpenStorage will create/open up the databases and return a storage struct or an error
@@ -30,23 +30,23 @@ func OpenStorage(dbLocation string) (*Storage, error) {
 
 	// get the names for both databases
 	sampleDBname := fmt.Sprintf("%s/sampleCask", dbLocation)
-	experimentDBname := fmt.Sprintf("%s/experimentCask", dbLocation)
+	runDBname := fmt.Sprintf("%s/runCask", dbLocation)
 
 	// open the databases
 	sdb, err := bitcask.Open(sampleDBname, bitcask.WithSync(useSync))
 	if err != nil {
 		return nil, err
 	}
-	edb, err := bitcask.Open(experimentDBname, bitcask.WithSync(useSync))
+	edb, err := bitcask.Open(runDBname, bitcask.WithSync(useSync))
 	if err != nil {
 		return nil, err
 	}
 
 	// create the storage struct
 	store := &Storage{
-		sampleDB:     sdb,
-		experimentDB: edb,
-		dbLocation:   dbLocation,
+		sampleDB:   sdb,
+		runDB:      edb,
+		dbLocation: dbLocation,
 	}
 	return store, nil
 }
@@ -59,18 +59,18 @@ func (storage *Storage) CloseStorage() error {
 	if err := storage.sampleDB.Close(); err != nil {
 		return err
 	}
-	if err := storage.experimentDB.Sync(); err != nil {
+	if err := storage.runDB.Sync(); err != nil {
 		return err
 	}
-	if err := storage.experimentDB.Close(); err != nil {
+	if err := storage.runDB.Close(); err != nil {
 		return err
 	}
 	return nil
 }
 
-// Wipe clears all entries from the samples and experiments databases
+// Wipe clears all entries from the samples and runs databases
 func (storage *Storage) Wipe() error {
-	if err := storage.experimentDB.DeleteAll(); err != nil {
+	if err := storage.runDB.DeleteAll(); err != nil {
 		return err
 	}
 	return storage.sampleDB.DeleteAll()
@@ -81,9 +81,9 @@ func (storage *Storage) GetNumSamples() int {
 	return storage.sampleDB.Len()
 }
 
-// GetNumExperiments returns the current number of experiments in storage
-func (storage *Storage) GetNumExperiments() int {
-	return storage.experimentDB.Len()
+// GetNumRuns returns the current number of runs in storage
+func (storage *Storage) GetNumRuns() int {
+	return storage.runDB.Len()
 }
 
 // GetSampleLabels returns a channel of sample labels (keys) held in storage
@@ -91,9 +91,9 @@ func (storage *Storage) GetSampleLabels() chan []byte {
 	return storage.sampleDB.Keys()
 }
 
-// GetExperimentLabels returns a channel of experiment names (keys) held in storage
-func (storage *Storage) GetExperimentLabels() chan []byte {
-	return storage.experimentDB.Keys()
+// GetRunLabels returns a channel of run names (keys) held in storage
+func (storage *Storage) GetRunLabels() chan []byte {
+	return storage.runDB.Keys()
 }
 
 // DeleteSample is a method to remove a sample from storage
@@ -101,13 +101,13 @@ func (storage *Storage) DeleteSample(sampleLabel string) error {
 	return storage.sampleDB.Delete([]byte(sampleLabel))
 }
 
-// DeleteExperiment is a method to remove an experiment from storage
-func (storage *Storage) DeleteExperiment(experimentName string) error {
-	return storage.experimentDB.Delete([]byte(experimentName))
+// DeleteRun is a method to remove an run from storage
+func (storage *Storage) DeleteRun(runName string) error {
+	return storage.runDB.Delete([]byte(runName))
 }
 
 // AddSample is a method to marshal a sample and store it
-func (storage *Storage) AddSample(sample *services.Sample) error {
+func (storage *Storage) AddSample(sample *records.Sample) error {
 
 	// check the DB limit hasn't been reached
 	if storage.sampleDB.Len() == dbMaxEntries {
@@ -132,34 +132,34 @@ func (storage *Storage) AddSample(sample *services.Sample) error {
 	return nil
 }
 
-// AddExperiment is a method to marshal an experiment and store it
-func (storage *Storage) AddExperiment(experiment *services.Experiment) error {
+// AddRun is a method to marshal an run and store it
+func (storage *Storage) AddRun(run *records.Run) error {
 
 	// check the DB limit hasn't been reached
-	if storage.experimentDB.Len() == dbMaxEntries {
+	if storage.runDB.Len() == dbMaxEntries {
 		return fmt.Errorf("database entry limit reached (%d)", dbMaxEntries)
 	}
 
 	// check the sample is not in the database already
-	if storage.experimentDB.Has([]byte(experiment.Metadata.Label)) {
-		return fmt.Errorf("duplicate experiment name can't be added to the database (%s)", experiment.Metadata.Label)
+	if storage.runDB.Has([]byte(run.Metadata.Label)) {
+		return fmt.Errorf("duplicate run name can't be added to the database (%s)", run.Metadata.Label)
 	}
 
 	// marshal the sample
-	data, err := proto.Marshal(experiment)
+	data, err := proto.Marshal(run)
 	if err != nil {
 		return err
 	}
 
 	// add the sample
-	if err := storage.experimentDB.Put([]byte(experiment.Metadata.Label), data); err != nil {
+	if err := storage.runDB.Put([]byte(run.Metadata.Label), data); err != nil {
 		return err
 	}
 	return nil
 }
 
 // GetSample is a method to retrieve a sample from storage and unmarshal it to a struct
-func (storage *Storage) GetSample(sampleLabel string) (*services.Sample, error) {
+func (storage *Storage) GetSample(sampleLabel string) (*records.Sample, error) {
 
 	// get the sample from the bit cask
 	dbData, err := storage.sampleDB.Get([]byte(sampleLabel))
@@ -168,24 +168,24 @@ func (storage *Storage) GetSample(sampleLabel string) (*services.Sample, error) 
 	}
 
 	// unmarshal the sample
-	sample := &services.Sample{}
+	sample := &records.Sample{}
 	if err := proto.Unmarshal(dbData, sample); err != nil {
 		return nil, err
 	}
 	return sample, nil
 }
 
-// GetExperiment is a method to retrieve an experiment from storage and unmarshal it to a struct
-func (storage *Storage) GetExperiment(experimentName string) (*services.Experiment, error) {
+// GetRun is a method to retrieve an run from storage and unmarshal it to a struct
+func (storage *Storage) GetRun(runName string) (*records.Run, error) {
 
-	// get the experiment from the bit cask
-	dbData, err := storage.experimentDB.Get([]byte(experimentName))
+	// get the run from the bit cask
+	dbData, err := storage.runDB.Get([]byte(runName))
 	if err != nil {
 		return nil, err
 	}
 
 	// unmarshal the sample
-	exp := &services.Experiment{}
+	exp := &records.Run{}
 	if err := proto.Unmarshal(dbData, exp); err != nil {
 		return nil, err
 	}
@@ -202,7 +202,7 @@ func (storage *Storage) GetSampleProtoDump(sampleLabel string) (string, error) {
 	}
 
 	// unmarshal the sample
-	sample := &services.Sample{}
+	sample := &records.Sample{}
 	if err := proto.Unmarshal(dbData, sample); err != nil {
 		return "", err
 	}
@@ -220,7 +220,7 @@ func (storage *Storage) GetSampleJSONDump(sampleLabel string) (string, error) {
 	}
 
 	// unmarshal the sample
-	sample := &services.Sample{}
+	sample := &records.Sample{}
 	if err := proto.Unmarshal(dbData, sample); err != nil {
 		return "", err
 	}

@@ -30,7 +30,7 @@ Once you have entered both `Experiment name` and `Output location` and have clic
 
 > **example**: if you entered `my experiment` and `/Users/myname/data`, the form will autocomplete your `FAST5 data` directory to `/Users/myname/data/my_experiment/fast5_pass`
 
-The app will also check the proposed directories - if `fast5_pass` or `fastq_pass` is found, the app will assume you are entering details for a historical experiment and will tag the sample as sequenced and basecalled already.
+The app will also check the proposed directories - if `fast5_pass` or `fastq_pass` is found, the app will assume you are entering details for an existing experiment and will tag the sample as sequenced and basecalled already.
 
 Fill in any other details and then click on the `create sample` button on the bottom of the form
 
@@ -42,4 +42,4 @@ A success message should appear and the number of available experiments will hav
 
 Once an experiment or sample has been tagged with a process, it can't be removed. The process will be marked as complete when it has finished.
 
-note: If an historic experiment has been added (which already has fast5 or fastq data), the `sequence` and `basecall` tags will be added but marked to `complete` straight away.
+note: If an existing experiment has been added (which already has fast5 or fastq data), the `sequence` and `basecall` tags will be added but marked to `complete` straight away.

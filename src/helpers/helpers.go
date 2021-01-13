@@ -11,6 +11,16 @@ import (
 	"github.com/will-rowe/herald/src/version"
 )
 
+// CheckFileExists checks a returns true if
+// a file exists and is not a directory.
+func CheckFileExists(filename string) bool {
+	info, err := os.Stat(filename)
+	if os.IsNotExist(err) {
+		return false
+	}
+	return !info.IsDir()
+}
+
 // CheckDirExists is used to check a directory exists
 func CheckDirExists(dirPath string) error {
 	fh, err := os.Stat(dirPath)

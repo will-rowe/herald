@@ -15,14 +15,6 @@ func (herald *Herald) AnnounceSamples() error {
 		return fmt.Errorf("announcement queue is empty")
 	}
 
-	// check service providers are available
-	// TODO: this should be done by the Herald server which manages the services, not the announcement queue
-	for _, service := range services.ServiceRegister {
-		if err := service.CheckAccess(); err != nil {
-			return err
-		}
-	}
-
 	// iterate once over the queue and process all the runs first
 	for request := herald.announcementQueue.Front(); request != nil; request = request.Next() {
 		switch v := request.Value.(type) {

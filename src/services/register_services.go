@@ -8,6 +8,12 @@ import (
 	"github.com/will-rowe/herald/src/records"
 )
 
+// DefaultAddress
+var DefaultAddress string = ""
+
+// DefaultTCPport
+var DefaultTCPport int = 50051
+
 // init is where we create the services
 // that we want to offer at runtime.
 // TODO: add more docs on this...
@@ -18,14 +24,13 @@ func init() {
 
 	///
 	// create the service definitions
-	//
+	//  - define the request callback function for your service (e.g. SubmitArcherUpload)
+	//  - call the registerService function to tell herald about the service and what record type to use
 	// Run services
-	registerService(records.RecordType_run, "upload", nil, DefaultTCPport, SubmitUpload)
+	registerService(records.RecordType_run, "Upload (archer)", nil, DefaultAddress, DefaultTCPport, SubmitArcherUpload)
 	//
 	// Sample services
-	registerService(records.RecordType_sample, "minion pipeline", nil, DefaultTCPport, SubmitMinionPipeline)
-	//
-	//
+	//registerService(records.RecordType_sample, "ARTIC pipeline (medaka)", nil, DefaultTCPport, SubmitMinionPipeline)
 	//registerService(RecordType_sample, "pipelineA", []string{"sequence", "basecall", "upload"}, 7780, SubmitSequencingProcess)
 }
 
@@ -34,6 +39,7 @@ type Service struct {
 	recordType      records.RecordType                                     // the type of Herald record this service operates on (sun or rample)
 	name            string                                                 // name of the service
 	dependsOn       []string                                               // the other services that should have completed prior to this one being contacted
+	address         string                                                 // the gRPC address of the service
 	port            int                                                    // the gRPC port the service is accepting requests on
 	requestCallback func(heraldRecord interface{}, service *Service) error // the function to run when contacting the service
 }
@@ -49,17 +55,24 @@ func (service *Service) GetRecordType() string {
 	return service.recordType.String()
 }
 
-// CheckAccess will check to see if
-// the service port can be accessed.
-func (service *Service) CheckAccess() error {
+// GetAddress will return the address of
+// the gRPC server running the service.
+func (service *Service) GetAddress() string {
+	return fmt.Sprintf("%v:%d", service.address, service.port)
+}
+
+// CheckAccess will return true if the
+// gRPC service can be accessed.
+func (service *Service) CheckAccess() bool {
+
 	// instantiate a client connection, on the TCP port the server is bound to
 	var conn *grpc.ClientConn
-	conn, err := grpc.Dial(fmt.Sprintf(":%d", service.port), grpc.WithInsecure())
+	conn, err := grpc.Dial(service.GetAddress(), grpc.WithInsecure())
 	if err != nil {
-		return fmt.Errorf("did not connect to port %d: %s", service.port, err)
+		return false
 	}
 	conn.Close()
-	return nil
+	return true
 }
 
 // GetDeps will return a slice
@@ -71,12 +84,19 @@ func (service *Service) GetDeps() []string {
 // SendRequest will run the
 // service callback function.
 func (service *Service) SendRequest(heraldRecord interface{}) error {
+
+	// check the access
+	if !service.CheckAccess() {
+		return fmt.Errorf("can't access %s service on %s", service.name, service.GetAddress())
+	}
+
+	// run the defined request
 	return service.requestCallback(heraldRecord, service)
 }
 
 // registerService will register a service to the
 // Herald runtime.
-func registerService(recordType records.RecordType, sName string, sDependsOn []string, sPort int, sFunc func(heraldRecord interface{}, service *Service) error) {
+func registerService(recordType records.RecordType, sName string, sDependsOn []string, sAddress string, sPort int, sFunc func(heraldRecord interface{}, service *Service) error) {
 
 	// check the record type is either sample or run
 	switch recordType {
@@ -98,6 +118,7 @@ func registerService(recordType records.RecordType, sName string, sDependsOn []s
 		recordType:      recordType,
 		name:            sName,
 		dependsOn:       []string{},
+		address:         sAddress,
 		port:            sPort,
 		requestCallback: sFunc,
 	}

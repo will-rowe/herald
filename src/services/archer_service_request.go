@@ -57,7 +57,6 @@ func (a *archerService) GetAddress() string {
 // CheckAccess returns true if the service is
 // accessible.
 func (a *archerService) CheckAccess() bool {
-
 	conn, err := net.DialTimeout("tcp", a.GetAddress(), time.Second)
 	if err != nil {
 		return false
@@ -72,7 +71,7 @@ func (a *archerService) GetDependencies() []string {
 	return a.dependsOn
 }
 
-// SendRequest will establish an archer client, formulat
+// SendRequest will establish an archer client, formulate
 // a request and submit it to the running service.
 func (a *archerService) SendRequest(record interface{}) error {
 

@@ -4,7 +4,7 @@ import (
 	"testing"
 )
 
-// test init
+// test init will run some basic checks on the provided services.
 func Test_init(t *testing.T) {
 
 	// check known processes populated
@@ -14,8 +14,14 @@ func Test_init(t *testing.T) {
 
 	// check that the services are offline
 	for name, service := range ServiceRegister {
-		if service.CheckAccess() == true {
-			t.Fatalf("%s service should be marked offline", name)
+		if service.GetServiceName() == "" {
+			t.Fatal("nameless service found")
+		}
+		if name != service.GetServiceName() {
+			t.Fatalf("name mismatch for: %s (%s)", name, service.GetServiceName())
+		}
+		if service.GetAddress() == "" {
+			t.Fatalf("no address found for: %s", name)
 		}
 	}
 }

@@ -34,7 +34,7 @@ func (herald *Herald) AnnounceSamples() error {
 				// get the service and submit the request
 				service := services.ServiceRegister[tag]
 				if service.CheckAccess() == false {
-					return ErrServiceOffline
+					return fmt.Errorf("%v: %v", ErrServiceOffline, tag)
 				}
 				if err := service.SendRequest(v); err != nil {
 					return err
@@ -76,7 +76,7 @@ func (herald *Herald) AnnounceSamples() error {
 			// get the service and submit the request
 			service := services.ServiceRegister[tag]
 			if service.CheckAccess() == false {
-				return ErrServiceOffline
+				return fmt.Errorf("%v: %v", ErrServiceOffline, tag)
 			}
 			if err := service.SendRequest(sample); err != nil {
 				return err

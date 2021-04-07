@@ -16,14 +16,15 @@ import (
 
 	"github.com/will-rowe/herald/src/helpers"
 	"github.com/will-rowe/herald/src/herald"
-	"github.com/will-rowe/herald/src/minknow"
 	"github.com/will-rowe/herald/src/services"
 )
 
 // dbLocation is where the db is stored - it is set at compile time to be platform specific
 var dbLocation string
 
-// getSampleServiceTagsHTML returns the HTML needed to display all available services for sample tagging
+// getSampleServiceTagsHTML collects the registered services for the
+// provided record type and returns the HTML block to display them
+// to the user.
 func getServiceTagsHTML(recordType string) string {
 	serviceTagsHTML := "<label>Service requests</label>"
 	for serviceName, service := range services.ServiceRegister {
@@ -34,7 +35,9 @@ func getServiceTagsHTML(recordType string) string {
 	return serviceTagsHTML
 }
 
-// getServiceStatusHTML returns the HTML needed to display service online/offline status
+// getServiceStatusHTML checks the status of all registered
+// services and returns the HTML block to display the
+// service names and statuses.
 func getServiceStatusHTML() string {
 	currentTime := time.Now()
 	serviceStatusHTML := ""
@@ -96,7 +99,6 @@ func main() {
 
 	// Bind helper functions to the UI
 	ui.Bind("checkDirExists", helpers.CheckDirExists)
-	ui.Bind("checkAPIstatus", minknow.CheckAPIstatus)
 	ui.Bind("getServiceStatusHTML", getServiceStatusHTML)
 
 	// Setup a JS function to init the HERALD and populate all storage data fields in the app
@@ -122,8 +124,11 @@ func main() {
 			ui.Eval(`document.getElementById('addSampleModalOpen').disabled = false`)
 		}
 
-		// update the add sample form with the available services for tagging and update the service status
+		// update the add sample form with the available services for tagging
 		ui.Eval(fmt.Sprintf(`document.getElementById('sampleTags').innerHTML = '%v'`, getServiceTagsHTML("sample")))
+
+		// update the add run form with the available services for tagging
+		ui.Eval(fmt.Sprintf(`document.getElementById('runTags').innerHTML = '%v'`, getServiceTagsHTML("run")))
 
 		// enable the announce button if there are tagged service requests for runs/samples in the queue
 		if heraldObj.GetAnnouncementQueueSize() == 0 {

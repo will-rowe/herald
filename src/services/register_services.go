@@ -6,12 +6,6 @@ import (
 	"github.com/will-rowe/herald/src/records"
 )
 
-// DefaultAddress
-var DefaultAddress string = "127.0.0.1"
-
-// DefaultTCPport
-var DefaultTCPport int = 60742
-
 // DefaultArcherVersion is the API version to use for Archer
 var DefaultArcherVersion string = "1"
 
@@ -23,13 +17,12 @@ func init() {
 	// init the process checker
 	ServiceRegister = make(map[string]Service)
 
-	///
 	// create the service definitions
-	//
-	archerService := NewArcherService("Archer upload", records.RecordType_run, nil, DefaultAddress, DefaultTCPport)
+	archerService := NewArcherService("Archer upload", records.RecordType_run, nil, "127.0.0.1", 60742)
+	minknowService := NewMinknowService("Minknow test", records.RecordType_run, nil, "127.0.0.1", 9501)
 
 	// check and register the services
-	checkAndRegister(archerService)
+	checkAndRegister(archerService, minknowService)
 }
 
 // Service is an interface that allows Herald to submit requests to a service.
@@ -49,45 +42,47 @@ var ServiceRegister map[string]Service
 
 // checkAndRegister will perform a few sanity checks
 // and then register a service.
-func checkAndRegister(service Service) {
+func checkAndRegister(services ...Service) {
 
-	// check service name isn't taken
-	if name, ok := ServiceRegister[service.GetServiceName()]; ok {
-		panic(fmt.Sprintf("service name already exists: %v", name))
-	}
-
-	// check the record type is either sample or run
-	switch service.GetRecordType() {
-	case records.RecordType_run:
-		break
-	case records.RecordType_sample:
-		break
-	default:
-		panic(fmt.Sprintf("unsupported record type: %v", service.GetRecordType()))
-	}
-
-	// check the dependencies
-	deps := service.GetDependencies()
-	if len(deps) != 0 {
-		for _, depName := range deps {
-
-			// can't depend on itself
-			if depName == service.GetServiceName() {
-				panic("process can't depend on itself")
-			}
-
-			// dependency must already be registered
-			dependency, ok := ServiceRegister[depName]
-			if !ok {
-				panic(fmt.Sprintf("service dependency not registered, make sure to register %v first", depName))
-			}
-			// TODO: resolve the dependencies
-			_ = dependency
+	for _, service := range services {
+		// check service name isn't taken
+		if name, ok := ServiceRegister[service.GetServiceName()]; ok {
+			panic(fmt.Sprintf("service name already exists: %v", name))
 		}
-	}
 
-	// register the service
-	ServiceRegister[service.GetServiceName()] = service
+		// check the record type is either sample or run
+		switch service.GetRecordType() {
+		case records.RecordType_run:
+			break
+		case records.RecordType_sample:
+			break
+		default:
+			panic(fmt.Sprintf("unsupported record type: %v", service.GetRecordType()))
+		}
+
+		// check the dependencies
+		deps := service.GetDependencies()
+		if len(deps) != 0 {
+			for _, depName := range deps {
+
+				// can't depend on itself
+				if depName == service.GetServiceName() {
+					panic("process can't depend on itself")
+				}
+
+				// dependency must already be registered
+				dependency, ok := ServiceRegister[depName]
+				if !ok {
+					panic(fmt.Sprintf("service dependency not registered, make sure to register %v first", depName))
+				}
+				// TODO: resolve the dependencies
+				_ = dependency
+			}
+		}
+
+		// register the service
+		ServiceRegister[service.GetServiceName()] = service
+	}
 }
 
 /*

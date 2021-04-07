@@ -59,6 +59,7 @@ message Run {
     string outputDirectory = 2;                 // where the run is stored
     string fast5OutputDirectory = 3;            // where the run fast5 data is stored
     string fastqOutputDirectory = 4;            // where the run fastq data is stored
+    string primerScheme = 5;                    // the ARTIC primer scheme name for this run
 }
 
 /*

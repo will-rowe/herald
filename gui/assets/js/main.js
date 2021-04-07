@@ -401,6 +401,7 @@ addRunForm.addEventListener('submit', async() => {
             runOutputLocation.value,
             formLabel_outputFAST5location.value,
             formLabel_outputFASTQlocation.value,
+            formLabel_primerScheme.value,
             document.getElementById('formLabel_runComment').value,
             tags,
             existingRun
@@ -594,6 +595,22 @@ const buildTable = async() => {
     }
 }
 
+// buildRunForm will get the primer schemes via Go and then populate the run form
+const buildRunForm = async() => {
+    console.log('getting primer schemes')
+    var s = `${await window.getPrimerSchemes()}`
+    var schemes = s.split(',')
+    schemes.forEach(addScheme)
+
+    function addScheme(value, index, array) {
+        console.log(value, index, array)
+        var opt = document.createElement('option')
+        opt.text = value
+        opt.value = value
+        document.getElementById('formLabel_primerScheme').options.add(opt)
+    }
+}
+
 ////////////////////////////////////////////////////////////////////
 // PAGE RENDERING
 // setup the time stamps
@@ -724,4 +741,5 @@ const pageRefresh = async() => {
 const fullPageRender = async() => {
     await pageRefresh()
     await buildTable()
+    await buildRunForm()
 }

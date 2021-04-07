@@ -7,6 +7,9 @@ import (
 	"fmt"
 	"sync"
 
+	"github.com/will-rowe/archer/pkg/amplicons"
+	archer "github.com/will-rowe/archer/pkg/api/v1"
+
 	"github.com/will-rowe/herald/src/config"
 	"github.com/will-rowe/herald/src/records"
 	"github.com/will-rowe/herald/src/storage"
@@ -23,6 +26,7 @@ type Herald struct {
 	config            *config.Config   // a copy of the config being used by the current Herald instance
 	store             *storage.Storage // the key-value store for the samples
 	announcementQueue *list.List       // a FIFO queue for announcements
+	articManifest     *archer.Manifest // ARTIC primer scheme manifest
 
 	// runtime count info for JS:
 	runCount              int    // the number of runs currently in the store
@@ -53,11 +57,18 @@ func InitHerald(storeLocation string) (*Herald, error) {
 		return nil, err
 	}
 
+	// load the manifest
+	manifest, err := amplicons.GetManifest(config.GetArticManifestURL())
+	if err != nil {
+		return nil, err
+	}
+
 	// get a new instance
 	heraldObj := &Herald{
 		config:            config,
 		store:             store,
 		announcementQueue: list.New(),
+		articManifest:     manifest,
 		sampleDetails:     make([][]string, 3),
 		storeLocation:     storeLocation,
 	}
@@ -96,6 +107,7 @@ func (herald *Herald) EditConfig(userName, emailAddress string) error {
 	// this is a bit hacky, I'd like to add some config methods
 	// and validation of inputs etc. but for now:
 	// update the in-memory config
+	// Need to think about reloading scheme manifest etc.
 	herald.config.User = &config.User{
 		Name:  userName,
 		Email: emailAddress,
@@ -103,6 +115,17 @@ func (herald *Herald) EditConfig(userName, emailAddress string) error {
 
 	// write the in-memory config back to disk
 	return herald.config.Write()
+}
+
+// GetPrimerSchemes will return the primer schemes listed in the
+// manifest.
+func (herald *Herald) GetPrimerSchemes() []string {
+	schemeMap := herald.articManifest.GetSchemes()
+	schemeNames := []string{}
+	for name := range schemeMap {
+		schemeNames = append(schemeNames, name)
+	}
+	return schemeNames
 }
 
 // GetRuntimeInfo makes a pass of the run and sample stores before populating the Herald instance with data:
@@ -193,12 +216,12 @@ func (herald *Herald) GetRuntimeInfo() error {
 
 // AddRun creates an run record, updates the runtime info and adds the record to storage
 // TODO: this might be bypassed later and instead get JS to encode the form to protobuf directly
-func (herald *Herald) AddRun(runLabel, outDir, fast5Dir, fastqDir, comment string, tags []string, existingRun bool) error {
+func (herald *Herald) AddRun(runLabel, outDir, fast5Dir, fastqDir, primerScheme, comment string, tags []string, existingRun bool) error {
 	herald.Lock()
 	defer herald.Unlock()
 
 	// create the run
-	newRun := records.InitRun(runLabel, outDir, fast5Dir, fastqDir)
+	newRun := records.InitRun(runLabel, outDir, fast5Dir, fastqDir, primerScheme)
 
 	// add any comment
 	if len(comment) != 0 {

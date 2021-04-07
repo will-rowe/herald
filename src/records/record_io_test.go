@@ -35,7 +35,7 @@ func TestProtobufSample(t *testing.T) {
 func TestProtobufExp(t *testing.T) {
 
 	// set up a basic run
-	test := InitRun("testRun", "", "", "")
+	test := InitRun("testRun", "", "", "", "")
 
 	// marshal it
 	data, err := proto.Marshal(test)
@@ -60,7 +60,7 @@ func TestProtobufExp(t *testing.T) {
 func TestTaggingExp(t *testing.T) {
 
 	// set up a basic sample
-	test := InitRun("testRun", "", "", "")
+	test := InitRun("testRun", "", "", "", "")
 
 	// check that tags are required to method call
 	if err := test.Metadata.AddTags(nil); err == nil {

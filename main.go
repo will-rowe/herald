@@ -100,6 +100,7 @@ func main() {
 	// Bind helper functions to the UI
 	ui.Bind("checkDirExists", helpers.CheckDirExists)
 	ui.Bind("getServiceStatusHTML", getServiceStatusHTML)
+	ui.Bind("getPrimerSchemes", heraldObj.GetPrimerSchemes)
 
 	// Setup a JS function to init the HERALD and populate all storage data fields in the app
 	ui.Bind("loadRuntimeInfo", func() error {
@@ -124,11 +125,11 @@ func main() {
 			ui.Eval(`document.getElementById('addSampleModalOpen').disabled = false`)
 		}
 
-		// update the add sample form with the available services for tagging
-		ui.Eval(fmt.Sprintf(`document.getElementById('sampleTags').innerHTML = '%v'`, getServiceTagsHTML("sample")))
-
 		// update the add run form with the available services for tagging
 		ui.Eval(fmt.Sprintf(`document.getElementById('runTags').innerHTML = '%v'`, getServiceTagsHTML("run")))
+
+		// update the add sample form with the available services for tagging
+		ui.Eval(fmt.Sprintf(`document.getElementById('sampleTags').innerHTML = '%v'`, getServiceTagsHTML("sample")))
 
 		// enable the announce button if there are tagged service requests for runs/samples in the queue
 		if heraldObj.GetAnnouncementQueueSize() == 0 {

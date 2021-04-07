@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"net/http"
 	"os"
+	"path/filepath"
 
 	"github.com/google/go-github/github"
 	"github.com/will-rowe/herald/src/version"
@@ -32,6 +33,22 @@ func CheckDirExists(dirPath string) error {
 	default:
 		return fmt.Errorf("not a directory: %v", dirPath)
 	}
+}
+
+// GlobFiles will take a search directory and a pattern,
+// returning all matching filenames in a slice.
+// E.g. files, err := GlobFiles(/tmp, []string{"*.fastq", "*.fq"})
+func GlobFiles(searchDir string, patterns []string) ([]string, error) {
+	matches := []string{}
+	for _, pattern := range patterns {
+		search := fmt.Sprintf("%s/%s", searchDir, pattern)
+		result, err := filepath.Glob(search)
+		if err != nil {
+			return nil, err
+		}
+		matches = append(matches, result...)
+	}
+	return matches, nil
 }
 
 // DeduplicateStringSlice returns a slice with duplicate entries removed

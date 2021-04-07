@@ -86,9 +86,21 @@ func (a *archerService) SendRequest(record interface{}) error {
 		return fmt.Errorf("unsupported Herald record type")
 	}
 
+	fastqs, err := run.GetFastqFiles()
+	if err != nil {
+		return err
+	}
+	return fmt.Errorf("HERE: %v", fastqs)
+
 	// form an archer request
-	var request *archer.ProcessRequest
-	_ = run
+	request := &archer.ProcessRequest{
+		ApiVersion:      DefaultArcherVersion,
+		SampleID:        run.GetMetadata().GetLabel(),
+		InputFASTQfiles: fastqs,
+		Scheme:          run.GetPrimerScheme(),
+		SchemeVersion:   3,
+		//SchemeVersion: run.GetSchemeVersion(),
+	}
 
 	// connect to the gRPC server
 	conn, err := grpc.Dial(a.GetAddress(), grpc.WithInsecure())

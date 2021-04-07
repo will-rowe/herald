@@ -90,7 +90,6 @@ func (a *archerService) SendRequest(record interface{}) error {
 	if err != nil {
 		return err
 	}
-	return fmt.Errorf("HERE: %v", fastqs)
 
 	// form an archer request
 	request := &archer.ProcessRequest{

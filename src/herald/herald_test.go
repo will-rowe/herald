@@ -16,7 +16,7 @@ func TestHerald(t *testing.T) {
 
 	// create and add a run
 	testExpName := "test run"
-	if err := tmp.AddRun(testExpName, "/tmp", "/tmp/fast5_pass", "/tmp/fastq_pass", "", []string{"sequence", "basecall"}, false); err != nil {
+	if err := tmp.AddRun(testExpName, "/tmp", "/tmp/fast5_pass", "/tmp/fastq_pass", "", "", []string{"sequence", "basecall"}, false); err != nil {
 		t.Fatal(err)
 	}
 

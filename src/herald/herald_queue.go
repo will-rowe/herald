@@ -31,11 +31,11 @@ func (herald *Herald) AnnounceSamples() error {
 					continue
 				}
 
-				// TODO: double dipping here - change the recieving method to do this
-				// get the service details
+				// get the service and submit the request
 				service := services.ServiceRegister[tag]
-
-				// run the service request
+				if service.CheckAccess() == false {
+					return ErrServiceOffline
+				}
 				if err := service.SendRequest(v); err != nil {
 					return err
 				}
@@ -73,11 +73,11 @@ func (herald *Herald) AnnounceSamples() error {
 				continue
 			}
 
-			// TODO: double dipping here - change the recieving method to do this
-			// get the service details
+			// get the service and submit the request
 			service := services.ServiceRegister[tag]
-
-			// run the service request
+			if service.CheckAccess() == false {
+				return ErrServiceOffline
+			}
 			if err := service.SendRequest(sample); err != nil {
 				return err
 			}

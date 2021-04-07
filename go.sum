@@ -403,8 +403,8 @@ github.com/tmc/grpc-websocket-proxy v0.0.0-20190109142713-0ad062ec5ee5/go.mod h1
 github.com/ugorji/go v1.1.4/go.mod h1:uQMGLiO92mf5W77hV/PUCpI3pbzQx3CRekS0kk+RGrc=
 github.com/vanadium/go-mdns-sd v0.0.0-20181006014439-f1a1ccd1252e/go.mod h1:35fXDjvKtzyf89fHHhyTTNLHaG2CkI7u/GvO59PIjP4=
 github.com/vitessio/vitess v2.1.1+incompatible/go.mod h1:A11WWLimUfZAYYm8P1I63RryRPP2GdpHRgQcfa++OnQ=
-github.com/will-rowe/archer v0.1.0 h1:MaeiKCu4aKzLZBm5edi38m5HYQHMAVDA9AYOPK5aOXc=
-github.com/will-rowe/archer v0.1.0/go.mod h1:Xk/rp8hPs3+x1uXcpyLTRTzZWvGSvpyrkmJaERn8r9M=
+github.com/will-rowe/archer v0.1.1 h1:yyg91Ig5M8dldck7GQmONl2SV0w9gtam7NWADkCKfkk=
+github.com/will-rowe/archer v0.1.1/go.mod h1:Xk/rp8hPs3+x1uXcpyLTRTzZWvGSvpyrkmJaERn8r9M=
 github.com/will-rowe/nthash v0.3.0/go.mod h1:5ezweuK0J5j+/7lih/RkrSmnxI3hoaPpQiVWJ7rd960=
 github.com/willf/bitset v1.1.9/go.mod h1:RjeCKbqT1RxIR/KWY6phxZiaY1IyutSBfGjNPySAYV4=
 github.com/willf/bitset v1.1.10/go.mod h1:RjeCKbqT1RxIR/KWY6phxZiaY1IyutSBfGjNPySAYV4=

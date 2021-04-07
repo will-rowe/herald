@@ -27,7 +27,7 @@ var dbLocation string
 func getServiceTagsHTML(recordType string) string {
 	serviceTagsHTML := "<label>Service requests</label>"
 	for serviceName, service := range services.ServiceRegister {
-		if recordType == service.GetRecordType() {
+		if recordType == service.GetRecordType().String() {
 			serviceTagsHTML += fmt.Sprintf("<input type=\"checkbox\" id=\"formLabel_%v\" value=\"%v\"><label class=\"label-inline\" for=\"formLabel_%v\"> - %v</label><div class=\"clearfix\"></div>", serviceName, serviceName, serviceName, serviceName)
 		}
 	}
@@ -39,7 +39,7 @@ func getServiceStatusHTML() string {
 	currentTime := time.Now()
 	serviceStatusHTML := ""
 	for serviceName, service := range services.ServiceRegister {
-		if service.CheckAccess() {
+		if service.CheckAccess() == true {
 			serviceStatusHTML += fmt.Sprintf("<div class=\"mt-1\"><div class=\"float-left\"><i class=\"far fa-check-circle\" style=\"color: #35cebe;\"></i></div><div class=\"float-left ml-1\"><p class=\"m-0\"><strong>%s</strong> <span class=\"text-muted\">service</span></p><p class=\"text-small text-muted\">checked at %d:%d</p></div><div class=\"clearfix\"></div></div>", serviceName, currentTime.Hour(), currentTime.Minute())
 		} else {
 			serviceStatusHTML += fmt.Sprintf("<div class=\"mt-1\"><div class=\"float-left\"><i class=\"far fa-times-circle\" style=\"color: red;\"></i></div><div class=\"float-left ml-1\"><p class=\"m-0\"><strong>%s</strong> <span class=\"text-muted\">service</span></p><p class=\"text-small text-muted\">checked at %d:%d</p></div><div class=\"clearfix\"></div></div>", serviceName, currentTime.Hour(), currentTime.Minute())

@@ -3,16 +3,17 @@ package services
 import (
 	"fmt"
 
-	"google.golang.org/grpc"
-
 	"github.com/will-rowe/herald/src/records"
 )
 
 // DefaultAddress
-var DefaultAddress string = ""
+var DefaultAddress string = "127.0.0.1"
 
 // DefaultTCPport
-var DefaultTCPport int = 50051
+var DefaultTCPport int = 60742
+
+// DefaultArcherVersion is the API version to use for Archer
+var DefaultArcherVersion string = "1"
 
 // init is where we create the services
 // that we want to offer at runtime.
@@ -20,135 +21,73 @@ var DefaultTCPport int = 50051
 func init() {
 
 	// init the process checker
-	ServiceRegister = make(map[string]*Service)
+	ServiceRegister = make(map[string]Service)
 
 	///
 	// create the service definitions
-	//  - define the request callback function for your service (e.g. SubmitArcherUpload)
-	//  - call the registerService function to tell herald about the service and what record type to use
-	// Run services
-	registerService(records.RecordType_run, "Upload (archer)", nil, DefaultAddress, DefaultTCPport, SubmitArcherUpload)
 	//
-	// Sample services
-	//registerService(records.RecordType_sample, "ARTIC pipeline (medaka)", nil, DefaultTCPport, SubmitMinionPipeline)
-	//registerService(RecordType_sample, "pipelineA", []string{"sequence", "basecall", "upload"}, 7780, SubmitSequencingProcess)
+	archerService := NewArcherService("Archer upload", records.RecordType_run, nil, DefaultAddress, DefaultTCPport)
+
+	// check and register the services
+	checkAndRegister(archerService)
 }
 
-// Service is holds the information needed by Herald to send messages to a service provider
-type Service struct {
-	recordType      records.RecordType                                     // the type of Herald record this service operates on (sun or rample)
-	name            string                                                 // name of the service
-	dependsOn       []string                                               // the other services that should have completed prior to this one being contacted
-	address         string                                                 // the gRPC address of the service
-	port            int                                                    // the gRPC port the service is accepting requests on
-	requestCallback func(heraldRecord interface{}, service *Service) error // the function to run when contacting the service
+// Service is an interface that allows Herald to submit requests to a service.
+type Service interface {
+	GetServiceName() string               // returns the name of the service
+	GetRecordType() records.RecordType    // returns the record type (sample/run) that the service accepts
+	GetAddress() string                   // returns the address of the server offering the service
+	CheckAccess() bool                    // returns true if the service is accessible
+	GetDependencies() []string            // retuns service dependencies as a slice of service names
+	SendRequest(record interface{}) error // function to establish a client and submit the service request
 }
 
-// ServiceRegister is used to register
-// all the available services to the
-// current Herald runtime.
-var ServiceRegister map[string]*Service
+// ServiceRegister is used to register all the
+// available services to the current Herald
+// runtime.
+var ServiceRegister map[string]Service
 
-// GetRecordType will return what type of
-// Herald record the service will run on.
-func (service *Service) GetRecordType() string {
-	return service.recordType.String()
-}
+// checkAndRegister will perform a few sanity checks
+// and then register a service.
+func checkAndRegister(service Service) {
 
-// GetAddress will return the address of
-// the gRPC server running the service.
-func (service *Service) GetAddress() string {
-	return fmt.Sprintf("%v:%d", service.address, service.port)
-}
-
-// CheckAccess will return true if the
-// gRPC service can be accessed.
-func (service *Service) CheckAccess() bool {
-
-	// instantiate a client connection, on the TCP port the server is bound to
-	var conn *grpc.ClientConn
-	conn, err := grpc.Dial(service.GetAddress(), grpc.WithInsecure())
-	if err != nil {
-		return false
+	// check service name isn't taken
+	if name, ok := ServiceRegister[service.GetServiceName()]; ok {
+		panic(fmt.Sprintf("service name already exists: %v", name))
 	}
-	conn.Close()
-	return true
-}
-
-// GetDeps will return a slice
-// of the dependency names.
-func (service *Service) GetDeps() []string {
-	return service.dependsOn
-}
-
-// SendRequest will run the
-// service callback function.
-func (service *Service) SendRequest(heraldRecord interface{}) error {
-
-	// check the access
-	if !service.CheckAccess() {
-		return fmt.Errorf("can't access %s service on %s", service.name, service.GetAddress())
-	}
-
-	// run the defined request
-	return service.requestCallback(heraldRecord, service)
-}
-
-// registerService will register a service to the
-// Herald runtime.
-func registerService(recordType records.RecordType, sName string, sDependsOn []string, sAddress string, sPort int, sFunc func(heraldRecord interface{}, service *Service) error) {
 
 	// check the record type is either sample or run
-	switch recordType {
+	switch service.GetRecordType() {
 	case records.RecordType_run:
 		break
 	case records.RecordType_sample:
 		break
 	default:
-		panic(fmt.Sprintf("unsupported record type: %v", recordType))
-	}
-
-	// check the process does not already exist
-	if _, exists := ServiceRegister[sName]; exists {
-		panic(fmt.Sprintf("process already exists: %v", sName))
-	}
-
-	// init the process
-	newService := &Service{
-		recordType:      recordType,
-		name:            sName,
-		dependsOn:       []string{},
-		address:         sAddress,
-		port:            sPort,
-		requestCallback: sFunc,
+		panic(fmt.Sprintf("unsupported record type: %v", service.GetRecordType()))
 	}
 
 	// check the dependencies
-	if len(sDependsOn) != 0 {
-		for _, depName := range sDependsOn {
+	deps := service.GetDependencies()
+	if len(deps) != 0 {
+		for _, depName := range deps {
 
 			// can't depend on itself
-			if depName == sName {
+			if depName == service.GetServiceName() {
 				panic("process can't depend on itself")
 			}
 
 			// dependency must already be registered
 			dependency, ok := ServiceRegister[depName]
 			if !ok {
-				panic(fmt.Sprintf("process dependency not registered: %v", depName))
+				panic(fmt.Sprintf("service dependency not registered, make sure to register %v first", depName))
 			}
-
-			// TODO: this needs proper checking and probably lends itself to some sort of DAG scenario
-			// then we can check for infinite loops etc.
-
-			// add the dependency name
-			newService.dependsOn = append(newService.dependsOn, dependency.name)
+			// TODO: resolve the dependencies
+			_ = dependency
 		}
 	}
 
-	// register the process
-	ServiceRegister[sName] = newService
-	return
+	// register the service
+	ServiceRegister[service.GetServiceName()] = service
 }
 
 /*

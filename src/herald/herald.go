@@ -3,12 +3,18 @@ package herald
 
 import (
 	"container/list"
+	"errors"
 	"fmt"
 	"sync"
 
 	"github.com/will-rowe/herald/src/config"
 	"github.com/will-rowe/herald/src/records"
 	"github.com/will-rowe/herald/src/storage"
+)
+
+var (
+	// ErrServiceOffline is returned if the service check return false
+	ErrServiceOffline = errors.New("the requested service is offline")
 )
 
 // Herald is the struct for holding runtime data

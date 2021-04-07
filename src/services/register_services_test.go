@@ -14,7 +14,7 @@ func Test_init(t *testing.T) {
 
 	// check that the services are offline
 	for name, service := range ServiceRegister {
-		if service.CheckAccess() {
+		if service.CheckAccess() == true {
 			t.Fatalf("%s service should be marked offline", name)
 		}
 	}

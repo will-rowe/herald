@@ -9,7 +9,7 @@ require (
 	github.com/mitchellh/go-homedir v1.1.0
 	github.com/prologic/bitcask v0.3.10
 	github.com/spf13/viper v1.7.1
-	github.com/will-rowe/archer v0.1.0
+	github.com/will-rowe/archer v0.1.1
 	github.com/zserge/lorca v0.1.9
 	google.golang.org/grpc v1.36.0
 	google.golang.org/protobuf v1.25.0

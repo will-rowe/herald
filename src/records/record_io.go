@@ -166,5 +166,5 @@ func (r *Run) GetFastqFiles() ([]string, error) {
 	if len(r.GetFastqOutputDirectory()) == 0 {
 		return nil, errors.New("no FASTQ directory found for run")
 	}
-	return helpers.GlobFiles(r.GetFast5OutputDirectory(), DefaultFastqExtensions)
+	return helpers.GlobFiles(r.GetFastqOutputDirectory(), DefaultFastqExtensions)
 }

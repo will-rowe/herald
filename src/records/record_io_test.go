@@ -31,8 +31,8 @@ func TestProtobufSample(t *testing.T) {
 	}
 }
 
-// TestProtobufExp tests the marshalling of an run
-func TestProtobufExp(t *testing.T) {
+// TestProtobufRun tests the marshalling of an run
+func TestProtobufRun(t *testing.T) {
 
 	// set up a basic run
 	test := InitRun("testRun", "", "", "", "")

@@ -27,5 +27,5 @@ else
 endif
 
 clean:
-		rm -r herald
+		rm -r herald*
 		rm assets.go

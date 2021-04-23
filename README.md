@@ -11,7 +11,7 @@
 ---
 
 ```
-this is a work in progress and currently unstable
+this is a proof of concept release of a desktop app for scheduling CLIMB jobs
 ```
 
 ## Overview

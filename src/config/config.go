@@ -33,16 +33,20 @@ var (
 	// DefaultServerlog file path.
 	DefaultServerlog = fmt.Sprintf("%s/herald-server.log", DefaultConfigDir)
 
+	// DefaultManifestURL for the ARTIC primer schemes.
+	DefaultManifestURL = "https://raw.githubusercontent.com/artic-network/primer-schemes/master/schemes_manifest.json"
+
 	// ErrInvalidPath is used when the config file path is bad or doesn't exist.
 	ErrInvalidPath = fmt.Errorf("invalid config filepath")
 
 	// DefaultConfig is the basic info, filled on first run of Herald.
 	DefaultConfig = &Config{
-		Filepath:   DefaultConfigPath,
-		Fileformat: DefaultConfigType,
-		User:       &User{},
-		Version:    version.VERSION,
-		Serverlog:  DefaultServerlog,
+		Filepath:         DefaultConfigPath,
+		Fileformat:       DefaultConfigType,
+		User:             &User{},
+		Version:          version.VERSION,
+		Serverlog:        DefaultServerlog,
+		ArticManifestURL: DefaultManifestURL,
 	}
 )
 

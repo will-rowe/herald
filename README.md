@@ -2,7 +2,7 @@
     <img src="misc/logo-with-text.png?raw=true?" alt="herald-logo" width="250">
     <h3>announce your samples</h3>
     <hr>
-    <a href="https://travis-ci.org/will-rowe/herald"><img src="https://travis-ci.org/will-rowe/herald.svg?branch=master" alt="travis"></a>
+    <a href="https://github.com/will-rowe/herald/actions/workflows/tests.yml"><img src="https://github.com/will-rowe/herald/actions/workflows/tests.yml/badge.svg" alt="actions"></a>
     <a href='http://herald-docs.readthedocs.io/en/latest/?badge=latest'><img src='https://readthedocs.org/projects/herald/badge/?version=latest' alt='Documentation Status' /></a>
     <a href="https://goreportcard.com/report/github.com/will-rowe/herald"><img src="https://goreportcard.com/badge/github.com/will-rowe/herald" alt="reportcard"></a>
     <a href="https://github.com/will-rowe/herald/blob/master/LICENSE"><img src="https://img.shields.io/badge/license-MIT-orange.svg" alt="License"></a>
@@ -37,14 +37,12 @@ When announcing a sample, **Herald** will:
 
 ### Building from source
 
-You will need the [Go tool chain](https://golang.org/) (**Herald** tested with v1.13) to build from source.
-
-The build script will build the app for you, just run the one for your system. E.g., for OSX:
+You will need the [Go tool chain](https://golang.org/) (**Herald** tested with v1.16) to build from source.
 
 ```sh
 git clone https://github.com/will-rowe/herald
 cd herald
-sh build-osx.sh
+make all
 ```
 
 ## Documentation

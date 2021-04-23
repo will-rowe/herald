@@ -1,13 +1,19 @@
 package records
 
 import (
+	"errors"
 	"fmt"
 
 	"github.com/golang/protobuf/ptypes"
+
+	"github.com/will-rowe/herald/src/helpers"
 )
 
+// DefaultFastqExtensions is used to glob the files from directories
+var DefaultFastqExtensions []string = []string{"*.fastq", "*.fq"}
+
 // InitRun will init a run struct with the minimum required values
-func InitRun(label, outputDir, fast5Dir, fastqDir string) *Run {
+func InitRun(label, outputDir, fast5Dir, fastqDir, primerScheme string) *Run {
 
 	// create the run
 	run := &Run{
@@ -22,6 +28,7 @@ func InitRun(label, outputDir, fast5Dir, fastqDir string) *Run {
 		OutputDirectory:      outputDir,
 		Fast5OutputDirectory: fast5Dir,
 		FastqOutputDirectory: fastqDir,
+		PrimerScheme:         primerScheme,
 	}
 
 	// create the history
@@ -150,4 +157,14 @@ func (heraldData *HeraldData) CheckStatus() error {
 	default:
 		return fmt.Errorf("unknown status: %d", status)
 	}
+}
+
+// GetFastqFiles will return a list of all
+// fastq files found in the Run FASTQ
+// directory.
+func (r *Run) GetFastqFiles() ([]string, error) {
+	if len(r.GetFastqOutputDirectory()) == 0 {
+		return nil, errors.New("no FASTQ directory found for run")
+	}
+	return helpers.GlobFiles(r.GetFastqOutputDirectory(), DefaultFastqExtensions)
 }

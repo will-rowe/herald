@@ -10,27 +10,45 @@ import (
 	"os"
 	"os/signal"
 	"runtime"
+	"time"
 
 	"github.com/zserge/lorca"
 
 	"github.com/will-rowe/herald/src/helpers"
 	"github.com/will-rowe/herald/src/herald"
-	"github.com/will-rowe/herald/src/minknow"
 	"github.com/will-rowe/herald/src/services"
 )
 
 // dbLocation is where the db is stored - it is set at compile time to be platform specific
 var dbLocation string
 
-// getSampleServiceTagsHTML returns the HTML needed to display all available services for sample tagging
+// getSampleServiceTagsHTML collects the registered services for the
+// provided record type and returns the HTML block to display them
+// to the user.
 func getServiceTagsHTML(recordType string) string {
-	ServiceTagsHTML := "<label>Service requests</label>"
+	serviceTagsHTML := "<label>Service requests</label>"
 	for serviceName, service := range services.ServiceRegister {
-		if recordType == service.GetRecordType() {
-			ServiceTagsHTML += fmt.Sprintf("<input type=\"checkbox\" id=\"formLabel_%v\" value=\"%v\"><label class=\"label-inline\" for=\"formLabel_%v\"> - %v</label><div class=\"clearfix\"></div>", serviceName, serviceName, serviceName, serviceName)
+		if recordType == service.GetRecordType().String() {
+			serviceTagsHTML += fmt.Sprintf("<input type=\"checkbox\" id=\"formLabel_%v\" value=\"%v\"><label class=\"label-inline\" for=\"formLabel_%v\"> - %v</label><div class=\"clearfix\"></div>", serviceName, serviceName, serviceName, serviceName)
 		}
 	}
-	return ServiceTagsHTML
+	return serviceTagsHTML
+}
+
+// getServiceStatusHTML checks the status of all registered
+// services and returns the HTML block to display the
+// service names and statuses.
+func getServiceStatusHTML() string {
+	currentTime := time.Now()
+	serviceStatusHTML := ""
+	for serviceName, service := range services.ServiceRegister {
+		if service.CheckAccess() == true {
+			serviceStatusHTML += fmt.Sprintf("<div class=\"mt-1\"><div class=\"float-left\"><i class=\"far fa-check-circle\" style=\"color: #35cebe;\"></i></div><div class=\"float-left ml-1\"><p class=\"m-0\"><strong>%s</strong> <span class=\"text-muted\">service</span></p><p class=\"text-small text-muted\">checked at %d:%d</p></div><div class=\"clearfix\"></div></div>", serviceName, currentTime.Hour(), currentTime.Minute())
+		} else {
+			serviceStatusHTML += fmt.Sprintf("<div class=\"mt-1\"><div class=\"float-left\"><i class=\"far fa-times-circle\" style=\"color: red;\"></i></div><div class=\"float-left ml-1\"><p class=\"m-0\"><strong>%s</strong> <span class=\"text-muted\">service</span></p><p class=\"text-small text-muted\">checked at %d:%d</p></div><div class=\"clearfix\"></div></div>", serviceName, currentTime.Hour(), currentTime.Minute())
+		}
+	}
+	return serviceStatusHTML
 }
 
 // main is the app entrypoint
@@ -53,13 +71,6 @@ func main() {
 		ui.Eval(fmt.Sprintf(`console.log('failed to init herald: %v')`, err))
 	}
 	defer heraldObj.Destroy()
-
-	// start up the gRPC server to handle background service requests
-	heraldServer, err := services.NewServer(services.SetLog(heraldObj.GetServerLogfile()))
-	if err != nil {
-		log.Fatal(err)
-	}
-	go heraldServer.Start()
 
 	// Bind HERALD methods to the UI
 	// buttons
@@ -88,7 +99,8 @@ func main() {
 
 	// Bind helper functions to the UI
 	ui.Bind("checkDirExists", helpers.CheckDirExists)
-	ui.Bind("checkAPIstatus", minknow.CheckAPIstatus)
+	ui.Bind("getServiceStatusHTML", getServiceStatusHTML)
+	ui.Bind("getPrimerSchemes", heraldObj.GetPrimerSchemes)
 
 	// Setup a JS function to init the HERALD and populate all storage data fields in the app
 	ui.Bind("loadRuntimeInfo", func() error {
@@ -113,6 +125,9 @@ func main() {
 			ui.Eval(`document.getElementById('addSampleModalOpen').disabled = false`)
 		}
 
+		// update the add run form with the available services for tagging
+		ui.Eval(fmt.Sprintf(`document.getElementById('runTags').innerHTML = '%v'`, getServiceTagsHTML("run")))
+
 		// update the add sample form with the available services for tagging
 		ui.Eval(fmt.Sprintf(`document.getElementById('sampleTags').innerHTML = '%v'`, getServiceTagsHTML("sample")))
 
@@ -123,12 +138,13 @@ func main() {
 			ui.Eval(`document.getElementById('stagingAnnounce').disabled = false`)
 		}
 
-		// check the network connection
+		// check the network connection and update the service tags
 		if helpers.NetworkActive() {
 			ui.Eval(`document.getElementById('status_network').innerHTML = '<i class="far fa-check-circle" style="color: #35cebe;"></i>'`)
 		} else {
 			ui.Eval(`document.getElementById('status_network').innerHTML = '<i class="far fa-times-circle" style="color: red;"></i>'`)
 		}
+		ui.Eval(fmt.Sprintf(`document.getElementById('serviceStatus').innerHTML = '%s'`, getServiceStatusHTML()))
 
 		return nil
 	})

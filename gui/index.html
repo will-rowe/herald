@@ -76,13 +76,16 @@
                         <label class="formLabel" for="formLabel_outputFASTQlocation">FASTQ data:</label>
                         <input type="text" id="formLabel_outputFASTQlocation" style="background: #d3d3d3;" readonly>
                     </fieldset>
+                    <!--primer scheme-->
+                    <label class="formLabel" for="formLabel_primerScheme">Primer scheme:</label>
+                    <select id="formLabel_primerScheme" required>
+                    </select>
                     <!--validation output-->
                     <div id="addRunValidationMessage"></div>
-                    <!--settings-->
-                    <label class="formLabel">Service requests
-                        <i class="far fa-question-circle"><span class="tooltiptext">tag this run with services
-                                requests</span></i>
-                    </label>
+                    <!--service tags-->
+                    <fieldset id="runTags">
+                    </fieldset>
+                    <!--hard coded service tags (placeholders)-->
                     <input type="checkbox" id="formLabel_sequence" checked disabled>
                     <label class="label-inline" for="formLabel_sequence" id="formLabel_sequenceLabel" style="color: #d3d3d3;"> - sequence
                     </label>
@@ -90,11 +93,6 @@
                     <input type="checkbox" id="formLabel_basecall" checked disabled>
                     <label class="label-inline" for="formLabel_basecall" id="formLabel_basecallLabel" style="color: #d3d3d3;"> - basecall
                     </label>
-                    <div class="clearfix"></div>
-                    <input type="checkbox" id="formLabel_upload">
-                    <label class="label-inline" for="formLabel_upload" id="formLabel_uploadLabel"> - upload
-                    </label>
-
                     <div class="clearfix"></div>
                     <!--comment box-->
                     <label class="formLabel" for="formLabel_runComment">Comment</label>
@@ -150,7 +148,7 @@
                     <label class="formLabel" for="formLabel_sampleComment">Comment</label>
                     <textarea placeholder="insert any additional information" id="formLabel_sampleComment"></textarea>
                     <div class="clearfix"></div>
-                    <!--tags-->
+                    <!--service tags-->
                     <fieldset id="sampleTags">
                     </fieldset>
                     <!--submit button-->
@@ -351,17 +349,8 @@
                                 </div>
                                 <div class="clearfix"></div>
                             </div>
-                            <!--minknow-->
-                            <div class="mt-1">
-                                <div class="float-left" id="status_minknow"></div>
-                                <div class="float-left ml-1">
-                                    <p class="m-0"><strong>MinKNOW</strong> <span class="text-muted">API</span>
-                                    </p>
-                                    <p class="text-small text-muted" id="status_minknow_timestamp">no change since startup
-                                    </p>
-                                </div>
-                                <div class="clearfix"></div>
-                            </div>
+                            <!--services registered by Herald-->
+                            <div id="serviceStatus"></div>
                         </div>
                     </div>
                 </div>

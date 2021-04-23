@@ -15,14 +15,6 @@ func (herald *Herald) AnnounceSamples() error {
 		return fmt.Errorf("announcement queue is empty")
 	}
 
-	// check service providers are available
-	// TODO: this should be done by the Herald server which manages the services, not the announcement queue
-	for _, service := range services.ServiceRegister {
-		if err := service.CheckAccess(); err != nil {
-			return err
-		}
-	}
-
 	// iterate once over the queue and process all the runs first
 	for request := herald.announcementQueue.Front(); request != nil; request = request.Next() {
 		switch v := request.Value.(type) {
@@ -39,11 +31,11 @@ func (herald *Herald) AnnounceSamples() error {
 					continue
 				}
 
-				// TODO: double dipping here - change the recieving method to do this
-				// get the service details
+				// get the service and submit the request
 				service := services.ServiceRegister[tag]
-
-				// run the service request
+				if service.CheckAccess() == false {
+					return fmt.Errorf("%v: %v", ErrServiceOffline, tag)
+				}
 				if err := service.SendRequest(v); err != nil {
 					return err
 				}
@@ -81,11 +73,11 @@ func (herald *Herald) AnnounceSamples() error {
 				continue
 			}
 
-			// TODO: double dipping here - change the recieving method to do this
-			// get the service details
+			// get the service and submit the request
 			service := services.ServiceRegister[tag]
-
-			// run the service request
+			if service.CheckAccess() == false {
+				return fmt.Errorf("%v: %v", ErrServiceOffline, tag)
+			}
 			if err := service.SendRequest(sample); err != nil {
 				return err
 			}

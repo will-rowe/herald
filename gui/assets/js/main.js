@@ -216,7 +216,6 @@ var formLabel_outputFASTQlocation = document.getElementById(
 var formLabel_sequence = document.getElementById('formLabel_sequence')
 var formLabel_basecall = document.getElementById('formLabel_basecall')
 var formLabel_basecallLabel = document.getElementById('formLabel_basecallLabel')
-var formLabel_upload = document.getElementById('formLabel_upload')
 var msgDiv = document.getElementById('addRunValidationMessage')
 
 // reset func to clear the form changes
@@ -228,7 +227,6 @@ function addRunFormReset() {
     formLabel_outputFASTQlocation.value = ''
     formLabel_sequence.checked = true
     formLabel_basecall.checked = true
-    formLabel_upload.checked = false
     formLabel_basecallLabel.style.color = '#d3d3d3'
     formLabel_basecall.disabled = true
     msgDiv.innerHTML = ''
@@ -385,17 +383,15 @@ formLabel_basecall.addEventListener('click', async() => {
 // add an event listener to the addRunForm submit button
 addRunForm.addEventListener('submit', async() => {
     console.log('creating run')
+    var elements = addRunForm.elements
 
-    // create sequence and basecall tags
+    // grab the service tags from the form
     var tags = []
-    if (formLabel_sequence.checked === true) {
-        tags.push('sequence')
-    }
-    if (formLabel_basecall.checked === true) {
-        tags.push('basecall')
-    }
-    if (formLabel_upload.checked === true) {
-        tags.push('upload')
+    for (var i = 0, element;
+        (element = elements[i++]);) {
+        if (element.type === 'checkbox' && element.checked) {
+            tags.push(element.value)
+        }
     }
 
     // create a run and add it to the store
@@ -405,6 +401,7 @@ addRunForm.addEventListener('submit', async() => {
             runOutputLocation.value,
             formLabel_outputFAST5location.value,
             formLabel_outputFASTQlocation.value,
+            formLabel_primerScheme.value,
             document.getElementById('formLabel_runComment').value,
             tags,
             existingRun
@@ -598,6 +595,22 @@ const buildTable = async() => {
     }
 }
 
+// buildRunForm will get the primer schemes via Go and then populate the run form
+const buildRunForm = async() => {
+    console.log('getting primer schemes')
+    var s = `${await window.getPrimerSchemes()}`
+    var schemes = s.split(',')
+    schemes.forEach(addScheme)
+
+    function addScheme(value, index, array) {
+        console.log(value, index, array)
+        var opt = document.createElement('option')
+        opt.text = value
+        opt.value = value
+        document.getElementById('formLabel_primerScheme').options.add(opt)
+    }
+}
+
 ////////////////////////////////////////////////////////////////////
 // PAGE RENDERING
 // setup the time stamps
@@ -680,14 +693,6 @@ const updatePieChart = async() => {
 const pageRefresh = async() => {
     console.log('refreshing runtime info and re-rendering the page')
 
-    // reload the Go Herald instance and repopulate the page data
-    try {
-        await loadRuntimeInfo()
-    } catch (e) {
-        printErrorMsg(e)
-        return
-    }
-
     // config check
     // TODO: just checking user field as this is req field during config edits
     // it works but might be better to have a Go func to check config valid
@@ -714,15 +719,19 @@ const pageRefresh = async() => {
         }
     })
 
+    // reload the Go Herald instance and repopulate the page data
+    try {
+        await loadRuntimeInfo()
+    } catch (e) {
+        printErrorMsg(e)
+        return
+    }
+
     // update the run drop down
     await updateRunDropDown()
 
     // update the pie chart
     await updatePieChart()
-
-    // check the minKNOW status TODO: do this in Go via routine
-    var minknowStatus = `${await checkAPIstatus()}`
-    updateStatus('status_minknow', minknowStatus)
 
     // print a new timestamp
     printTimeStamps()
@@ -732,4 +741,5 @@ const pageRefresh = async() => {
 const fullPageRender = async() => {
     await pageRefresh()
     await buildTable()
+    await buildRunForm()
 }

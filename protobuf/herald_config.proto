@@ -24,4 +24,5 @@ message Config {
     string version = 4;                         // version of Herald used   
     User user = 5;                              // user details
     string serverlog = 6;                       // filepath to logfile
+    string articManifestURL = 7;                // url of the ARTIC manifest for primer schemes
 }

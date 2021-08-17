@@ -7,7 +7,7 @@ import (
 
 	"github.com/golang/protobuf/jsonpb"
 	"github.com/golang/protobuf/proto"
-	"github.com/prologic/bitcask"
+	"git.mills.io/prologic/bitcask"
 
 	"github.com/will-rowe/herald/src/records"
 )

@@ -49,6 +49,6 @@ protoc --go_out=plugins=grpc:src/ont_rpc -I protobuf/minknow/rpc protobuf/minkno
 
 ## Database
 
-Sample records are stored via [bitcask db](https://pkg.go.dev/github.com/prologic/bitcask), which is currently hardcoded to live in `/tmp/db`.
+Sample records are stored via [bitcask db](https://pkg.go.dev/git.mills.io/prologic/bitcask), which is currently hardcoded to live in `/tmp/db`.
 
 Sample records are stored in a keyvalue store, where the label is the key and the sample protobuf message is the value.
